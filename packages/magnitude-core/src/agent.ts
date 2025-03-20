@@ -5,12 +5,16 @@ import { chromium } from "playwright";
 import { WebHarness } from "./web/harness";
 import { TestCase } from "@/types";
 import { Ingredient } from "./recipe/types";
-import { NavigationError, ActionExecutionError } from "@/errors";
+import { NavigationError, ActionExecutionError, ActionConversionError, TestCaseError } from "@/errors";
 import { CheckIngredient } from "./ai/baml_client";
 
 export interface TestCaseResult {
     passed: boolean
-    recipe: Ingredient[]
+    // if passed the cached recipe will be returned
+    recipe?: Ingredient[],
+    // idk
+    error?: TestCaseError
+    // ^ prob should have this be - if passed provide recipe, if failed provide failure reason (error)
 }
 
 export interface TestCaseAgentConfig {
@@ -40,6 +44,8 @@ export class TestCaseAgent {
     }
 
     async run(testCase: TestCase): Promise<TestCaseResult> {
+        // Should NOT throw unless truly unexpected error occurs
+
         // Setup browser
         // TODO: Set browser options and stuff
         const browser = await chromium.launch({ headless: false });
@@ -49,12 +55,20 @@ export class TestCaseAgent {
 
         try {
             return await this._run(testCase, harness);
+        } catch (error) {
+            if (error instanceof TestCaseError) {
+                return { passed: false, error: error };
+            } else {
+                console.error("Unexpected error:", error);
+                throw error;
+            }
         } finally {
             await browser.close();
         }
     }
 
     private async _run(testCase: TestCase, harness: WebHarness): Promise<TestCaseResult> {
+        // May throw TestCaseErrors that get handled by run()
         try {
             await harness.goto(testCase.url);
         } catch (error) {
@@ -77,8 +91,16 @@ export class TestCaseAgent {
                 // Execute partial recipe
                 for (const ingredient of actions) {
                     const screenshot = await harness.screenshot();
+                    let action: WebAction;
                     // TODO: Handle conversion parsing/confidence failures
-                    const action = await this.micro.convertAction(screenshot, ingredient);
+                    try {
+                        // does catch make sense here? essentially indicates very low confidence
+                        // bad cases either 1. action with low confidence
+                        // 2. no action (target not identified at all)
+                        action = await this.micro.convertAction(screenshot, ingredient);
+                    } catch(error) {
+                        throw new ActionConversionError(ingredient, error as Error);
+                    }
 
                     console.log('Action:', action);
 

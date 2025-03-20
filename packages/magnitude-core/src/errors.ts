@@ -1,9 +1,12 @@
 // Agent will only throw these types of errors
 
+import { ActionIngredient } from "./recipe/types";
 import { WebAction } from "./web/types";
 
+export class TestCaseError extends Error {};
+
 // Base class for wrapping errors
-class WrapperError extends Error {
+class WrapperError extends TestCaseError {
     public readonly originalError: Error;
 
     constructor(message: string, originalError: Error) {
@@ -33,6 +36,16 @@ export class ActionExecutionError extends WrapperError {
 
     constructor(action: WebAction, originalError: Error) {
         super(`Browser encountered error while executing action: ${action}`, originalError);
+        this.action = action;
+    }
+}
+
+export class ActionConversionError extends WrapperError {
+    public readonly action: ActionIngredient;
+    public readonly statusCode?: number;
+
+    constructor(action: ActionIngredient, originalError: Error) {
+        super(`Micro failed to convert action (does the target line up with the screenshot?): ${action}`, originalError);
         this.action = action;
     }
 }
