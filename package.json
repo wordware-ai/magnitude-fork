@@ -1,0 +1,34 @@
+{
+  "name": "magnitude",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "check-types": "turbo run check-types"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "turbo": "^2.4.4",
+    "typescript": "5.8.2"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "bun@1.1.37",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "author": {
+    "name": "Magnitude",
+    "email": "founders@magnitude.run",
+    "url": "https://magnitude.run"
+  },
+  "contributors": [
+    "Anders Lie <anders@magnitude.run>",
+    "Tom Greenwald <tom@magnitude.run>"
+  ],
+  "license": "Apache-2.0"
+}

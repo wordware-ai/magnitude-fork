@@ -1,0 +1,67 @@
+{
+  "name": "magnitude-core",
+  "version": "0.0.1",
+  "description": "Magnitude e2e testing agent",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.cts",
+  "bin": {
+    "magnus": "dist/cli.js"
+  },
+  "exports": {
+    "require": {
+      "types": "./dist/index.d.cts",
+      "default": "./dist/index.cjs"
+    },
+    "import": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/magnitudedev/magnitude.git"
+  },
+  "homepage": "https://github.com/magnitudedev/magnitude#readme",
+  "bugs": {
+    "url": "https://github.com/magnitudedev/magnitude/issues"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "ai",
+    "agent",
+    "testing",
+    "ui-testing",
+    "automation",
+    "magnitude",
+    "typescript"
+  ],
+  "scripts": {
+    "build": "tsc && pkgroll",
+    "check": "tsc --noEmit",
+    "cli": "bun ./src/cli.ts"
+  },
+  "author": {
+    "name": "Magnitude",
+    "email": "founders@magnitude.run",
+    "url": "https://magnitude.run"
+  },
+  "contributors": [
+    "Anders Lie <anders@magnitude.run>"
+  ],
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "pkgroll": "^2.10.0",
+    "typescript": "~5.7.2"
+  },
+  "dependencies": {
+    "@boundaryml/baml": "^0.80.0",
+    "commander": "^13.1.0",
+    "openai": "^4.87.3",
+    "playwright": "^1.51.0",
+    "sharp": "^0.33.5"
+  }
+}
