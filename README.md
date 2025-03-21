@@ -38,7 +38,7 @@ Then, you'll need to initialize the Magnitude client with your API key. You can 
 
 1. Configure in the generated `magnitude.config.ts`:
 ```ts
-import { defineConfig } from 'magnitude-ts';
+import { defineConfig } from 'magnitude-test';
 
 export default defineConfig({
     baseUrl: "localhost:5173",
@@ -63,7 +63,7 @@ This will run all Magnitude test files discovered with the `*.mag.ts` pattern.
 Here's an example of a basic test case:
 ```ts
 // tests/example.mag.ts
-import { test } from 'magnitude-ts';
+import { test } from 'magnitude-test';
 
 // Example URL override, defaults to configured baseUrl
 test('can login with valid credentials', { url: "https://qa-bench.com" })
