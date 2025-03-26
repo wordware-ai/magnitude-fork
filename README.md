@@ -3,34 +3,12 @@
     <img src="https://magnitude.run/logo.svg" alt="Magnitude Logo" width="100" style="vertical-align: middle; margin-right: 20px" />
   </p>
 
-  <p style="font-size: 1.2em; color: #666; margin-bottom: 20px;">
+  <h3 align="center">
     Build AI-powered E2E tests in natural language
-  </p>
+  </h3>
 
   <p>
-    <a href="https://discord.gg/VcdpMh9tTy">
-      <img src="https://img.shields.io/discord/1305570963206836295?style=flat-square&color=5865F2&logo=discord&logoColor=white&label=Discord" alt="Discord" />
-    </a>
-    <a href="https://magnitude.run/">
-      <img src="https://img.shields.io/badge/Homepage-magnitude.run-blue?style=flat-square&logo=homebridge&logoColor=white" alt="Homepage" />
-    </a>
-    <a href="https://docs.magnitude.run/getting-started/introduction">
-      <img src="https://img.shields.io/badge/Docs-docs.magnitude.run-blue?style=flat-square&logo=readthedocs&logoColor=white" alt="Documentation" />
-    </a>
-    <a href="https://x.com/tgrnwld">
-      <img src="https://img.shields.io/badge/follow-%40tgrnwld-000000?style=flat-square&logo=x&logoColor=white" alt="Follow @tgrnwld" />
-    </a>
-    <a href="https://x.com/ndrskl">
-      <img src="https://img.shields.io/badge/follow-%40ndrskl-000000?style=flat-square&logo=x&logoColor=white" alt="Follow @ndrskl" />
-    </a>
-  </p>
-
-  <p>
-    <img src="https://img.shields.io/npm/v/magnitude-test?style=flat-square&logo=npm&label=magnitude-test" alt="magnitude-test version" />
-    <img src="https://img.shields.io/npm/v/magnitude-core?style=flat-square&logo=npm&label=magnitude-core" alt="magnitude-core version" />
-    <img src="https://img.shields.io/npm/dm/magnitude-test?style=flat-square&logo=npm&label=test%20downloads" alt="magnitude-test downloads" />
-    <img src="https://img.shields.io/npm/dm/magnitude-core?style=flat-square&logo=npm&label=core%20downloads" alt="magnitude-core downloads" />
-    <img src="https://img.shields.io/github/license/magnitudedev/magnitude?style=flat-square" alt="License" />
+    <a href="https://discord.gg/VcdpMh9tTy" target="_blank"><img src="https://img.shields.io/discord/1305570963206836295?style=flat-square&color=5865F2&logo=discord&logoColor=white&label=Discord" alt="Discord" /></a> <a href="https://magnitude.run/" target="_blank"><img src="https://img.shields.io/badge/Homepage-blue?style=flat-square&logo=homebridge&logoColor=white" alt="Homepage" /></a> <a href="https://docs.magnitude.run/getting-started/introduction" target="_blank"><img src="https://img.shields.io/badge/Docs-blue?style=flat-square&logo=readthedocs&logoColor=white" alt="Documentation" /></a> <img src="https://img.shields.io/github/license/magnitudedev/magnitude?style=flat-square" alt="License" /> <a href="https://x.com/tgrnwld" target="_blank"><img src="https://img.shields.io/badge/follow-%40tgrnwld-000000?style=flat-square&logo=x&logoColor=white" alt="Follow @tgrnwld" /></a> <a href="https://x.com/ndrskl" target="_blank"><img src="https://img.shields.io/badge/follow-%40ndrskl-000000?style=flat-square&logo=x&logoColor=white" alt="Follow @ndrskl" /></a>
   </p>
 
   <hr style="height: 1px; border: none; background-color: #e1e4e8; margin: 24px 0;">
@@ -66,7 +44,7 @@ npm install magnitude-core
 ## Setup
 
 Once installed, setup Magnitude in your project by running:
-```
+```bash
 npx magnitude init
 ```
 This will create a basic tests directory `tests/magnitude` with:
@@ -94,7 +72,7 @@ export MAGNITUDE_API_KEY=your-api-key-here
 ## Running Test Cases
 
 To run your Magnitude tests, simply run:
-```
+```bash
 npx magnitude
 ```
 This will run all Magnitude test files discovered with the `*.mag.ts` pattern.
