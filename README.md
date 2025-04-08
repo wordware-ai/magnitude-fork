@@ -14,11 +14,11 @@
   <hr style="height: 1px; border: none; background-color: #e1e4e8; margin: 24px 0;">
 </div>
 
-End-to-end testing framework powered by visual AI agents that see your interface and adapt to any changes in it.
+🤖 **Magnitude**: End-to-end testing framework powered by visual AI agents that see your interface and adapt to any changes in it.
 
-Available as a [hosted service](#how-to-run-your-first-test) or you can [self-host](#self-hosting) since we're open source!
+It's available as a [hosted service](#how-to-run-your-first-test) or you can [self-host](#self-hosting) since we're open source!
 
-## How it works
+## How it Works
 - ✍️ Build test cases easily with natural language
 - 🧠 Strong reasoning agent to plan and adjust tests
 - 👁️ Fast visual agent to reliably execute runs
@@ -29,7 +29,7 @@ Available as a [hosted service](#how-to-run-your-first-test) or you can [self-ho
 ![Video showing Magnitude tests running in a terminal and agent taking actions in the browser](assets/demo.gif)
 
 
-## Running your first test
+## Running your First Test
 
 **1. Install our test runner** in the node project you want to test (or see our [demo repo](https://github.com/magnitudedev/magnitude-demo-repo) if you don't have a project to try it on)
 ```sh
@@ -90,7 +90,7 @@ To run Magnitude without using our hosted option, you will need:
 - An Anthropic API key
 - A self-hosted deployment of [Molmo 7B](https://huggingface.co/allenai/Molmo-7B-D-0924) (we are working with providers to get this available as an inference endpoint ASAP!)
 
-### Playwright setup
+### Playwright Setup
 The Magnitude test runner has `playwright` as an optional peer dependency when you're self-hosting and running browsers locally.
 Install it in the same project as `magnitude-test`:
 ```sh
@@ -100,7 +100,7 @@ You will also need to run `playwright install` and ensure browsers are installed
 
 For staging or containerized environments, you may need to also install and run a virtual display server like `xvfb` since Magnitude runs browsers in headful mode.
 
-### LLM configuration
+### LLM Configuration
 Magnitude relies on two LLM models to plan and execute test cases:
 1. A larger model for planning and reasoning ("planner")
 2. A smaller, fast, vision capable model with pixel-perfect accuracy ("executor")
@@ -135,6 +135,11 @@ This will use your local **Playwright** installation, **ANTHROPIC_API_KEY**, **M
 | 🎮 Test playground (design and debug tests visually!) | ❌ | ✅ |
 | 📊 Test Console (manage test cases + view past runs!) | ❌ | ✅ |
 | 💸 Free tier + per-run [pricing](https://magnitude.run/pricing) (simple + affordable!)  | ❌ | ✅ |
+
+## FAQ
+
+### Why not OpenAI Operator / Claude Computer Use?
+We use separate planning / execution models in order to plan effective tests while executing them quickly and reliably. OpenAI or Anthropic's Computer Use APIs are better suited to general purpose desktop/web tasks but lack the speed, reliability, and cost-effectiveness for running test cases. Magnitude's agent is designed from the ground up to plan and execute test cases, and provides a native test runner purpose-built for designing and running these tests.
 
 ## FAQ
 
