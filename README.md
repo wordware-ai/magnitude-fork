@@ -134,7 +134,7 @@ This will use your local **Playwright** installation, **ANTHROPIC_API_KEY**, **M
 | 🧠 Managed LLM infra (only need Magnitude API key!) | ❌ | ✅ |
 | 🎮 Test playground (design and debug tests visually!) | ❌ | ✅ |
 | 📊 Test Console (manage test cases + view past runs!) | ❌ | ✅ |
-| 🪙 Free tier + per-run [pricing](https://magnitude.run/pricing) (simple + affordable!)  | ❌ | ✅ |
+| 💸 Free tier + per-run [pricing](https://magnitude.run/pricing) (simple + affordable!)  | ❌ | ✅ |
 
 ## FAQ
 
