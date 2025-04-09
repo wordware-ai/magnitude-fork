@@ -153,8 +153,6 @@ export class TestCaseAgent {
                         throw new ActionExecutionError(action, error as Error);
                     }
                     stepRecipe.push(ingredient);
-                    // Fixed wait for now
-                    await new Promise(resolve => setTimeout(resolve, 1000));
 
                     const postActionScreenshot = await harness.screenshot();
                     for (const listener of this.listeners) if(listener.onActionTaken) listener.onActionTaken({...ingredient, ...action, screenshot: postActionScreenshot.image});

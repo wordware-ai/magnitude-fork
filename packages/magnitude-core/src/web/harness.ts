@@ -1,5 +1,6 @@
 import { Page, Browser } from "playwright";
 import { ClickWebAction, TypeWebAction, WebAction } from '@/web/types';
+import { PageStabilityAnalyzer } from "./stability";
 
 export class WebHarness {
     /**
@@ -7,10 +8,12 @@ export class WebHarness {
      * Not responsible for browser lifecycle
      */
     private page: Page;
+    private stability: PageStabilityAnalyzer;
     private visualElementId: string = 'action-visual-indicator';
 
     constructor(page: Page) {
         this.page = page;
+        this.stability = new PageStabilityAnalyzer(this.page);
     }
 
     async screenshot(): Promise<{ image: string, dimensions: { width: number, height: number } }> {
@@ -62,7 +65,12 @@ export class WebHarness {
         } else {
             throw Error(`Unhandled web action variant: ${(action as any).variant}`);
         }
+        await this.stability.waitForStability();
     }
+
+    // async waitForStability(timeout?: number): Promise<void> {
+    //     await this.stability.waitForStability(timeout);
+    // }
 
     // async visualizeAction() {
 
