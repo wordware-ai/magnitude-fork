@@ -21,5 +21,7 @@ test DoNotOverplan {
 
         ]
     }
-    @@assert( {{ this.actions|length == 1 }} )
+    @@assert( one_action, {{ this.actions|length == 1 }} )
+    @@assert( not_marked_finished, {{ this.finished == false }} )
 }
+

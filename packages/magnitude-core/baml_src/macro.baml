@@ -44,6 +44,7 @@ type Ingredient = ActionIngredient | CheckIngredient
 type ActionIngredient = ClickIngredient | TypeIngredient
 
 class PartialRecipe {
+    reasoning string
     actions ActionIngredient[]
     finished bool
 }
@@ -55,7 +56,10 @@ function CreatePartialRecipe (screenshot: image, step: TestStep, previousActions
         Plan out web actions that should be executed in order to complete the step: {{ step.description }}
         Specified targets should be very descriptive.
         Make as much progress towards the step without making guesses about things you can't see or know.
+        
+        {{ ctx.output_format }}
 
+        {{ _.role("user") }}
         {%if previousActions %}
         Keep in mind that you've already taken these actions:
         {%for action in previousActions%}
@@ -76,8 +80,6 @@ function CreatePartialRecipe (screenshot: image, step: TestStep, previousActions
         {%endif%}
 
         {{ screenshot }}
-
-        {{ ctx.output_format }}
     "# 
 }
 

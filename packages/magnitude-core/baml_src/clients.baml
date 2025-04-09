@@ -1,21 +1,41 @@
 // Learn more about clients at https://docs.boundaryml.com/docs/snippets/clients/overview
 
+// client<llm> Macro {
+//     provider aws-bedrock
+//     options {
+//         inference_configuration {
+//             temperature 0.0
+//         }
+//         model_id "anthropic.claude-3-5-sonnet-20240620-v1:0"
+//     }
+// }
+
 client<llm> Macro {
-    provider aws-bedrock
+    provider anthropic
     options {
-        inference_configuration {
-            temperature 0.0
-        }
-        model_id "anthropic.claude-3-5-sonnet-20240620-v1:0"
+        model "claude-3-5-sonnet-20241022"
+        api_key env.ANTHROPIC_API_KEY
+        temperature 0.0
     }
 }
 
 // client<llm> Macro {
-//     provider anthropic
+//     provider openai
 //     options {
-//         model "claude-3-5-sonnet-20241022"
-//         api_key env.ANTHROPIC_API_KEY
+//         model "gpt-4o"
+//         api_key env.OPENAI_API_KEY
 //         temperature 0.0
+//     }
+// }
+
+// client<llm> Macro {
+//     provider "openai-generic"
+//     options {
+//         base_url "https://api.novita.ai/v3/openai"
+//         api_key env.NOVITA_API_KEY
+//         model "meta-llama/llama-4-maverick-17b-128e-instruct-fp8"
+//         temperature 0.0
+//         logprobs true
 //     }
 // }
 

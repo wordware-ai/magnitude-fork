@@ -8,13 +8,14 @@ import modal
 
 # Create an image with all required dependencies
 molmo_image = modal.Image.debian_slim(python_version="3.10").pip_install(
-    "vllm==0.8.3", 
+    "vllm==0.6.3post1", 
     "fastapi[standard]==0.115.4",
+    "tensorflow",
     "transformers>=4.42.0",
     "torch>=2.0.0",
     "accelerate",  # Helps with model loading
     "pillow",  # For image processing
-    #force_build=True
+    force_build=True
 )
 
 MODELS_DIR = "/molmo"
@@ -37,12 +38,13 @@ HOURS = 60 * MINUTES
 @app.function(
     image=molmo_image,
     gpu="A10G",
-    container_idle_timeout=20 * MINUTES,
+    scaledown_window=20 * MINUTES,
     timeout=24 * HOURS,
     allow_concurrent_inputs=1000,
     volumes={MODELS_DIR: volume},
     enable_memory_snapshot=True,
-    secrets=[modal.Secret.from_name("vllm-api-key")]
+    secrets=[modal.Secret.from_name("vllm-api-key")],
+    #keep_warm=1
 )
 @modal.asgi_app()
 def serve():
