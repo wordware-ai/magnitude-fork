@@ -1,7 +1,7 @@
 ## Deploying Molmo vLLM Server on Modal
 
 ### Modal Setup
-Before deploying anything you'll need to create an account on <a href="https://modal.com" target="_blank">Modal</a> and set up your modal package. See https://modal.com/docs/guide for instructions.
+Before deploying anything you'll need to create an account on <a href="https://modal.com" target="_blank">Modal</a> and set up your modal package. See <a href="https://modal.com/docs/guide" target="_blank">modal.com/docs/guide</a> for instructions.
 
 ### Downloading Molmo
 Run the following to download Molmo 7B and cache it in a Modal volume to use in your deployment:
@@ -10,7 +10,7 @@ modal run download_molmo.py
 ```
 
 ### Secret Configuration
-The deploy script looks for a secret called `vllm-api-key` to use as an API key for the vLLM OpenAI-compatible server. Create one here https://modal.com/secrets. You can use any value, but make sure to keep track of it.
+The deploy script looks for a secret called `vllm-api-key` to use as an API key for the vLLM OpenAI-compatible server. Create one here <a href="https://modal.com/secrets" target="_blank">modal.com/secrets</a> . You can use any value, but make sure to keep track of it.
 
 You'll need the `vllm-api-key` in this environment variable locally:
 ```sh
