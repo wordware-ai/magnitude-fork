@@ -48,7 +48,7 @@ This will create a basic tests directory `tests/magnitude` with:
 
 For hosted, you just need a Magnitude API key. To use your own LLM providers and browser infra, see [self-hosting](#self-hosting).
 
-You can get a free API key by signing up at https://app.magnitude.run/signup in Settings -> API Keys. Then set the `MAGNITUDE_API_KEY` environment variable:
+You can get a free API key by signing up at <a href="https://app.magnitude.run/signup" target="_blank">app.magnitude.run/signup</a> in Settings -> API Keys. Then set the `MAGNITUDE_API_KEY` environment variable:
 ```sh
 export MAGNITUDE_API_KEY=<your-api-key-here>
 ```

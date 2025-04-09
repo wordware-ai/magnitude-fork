@@ -1,7 +1,7 @@
 ## Deploying Molmo vLLM Server on Modal
 
 ### Modal Setup
-Before deploying anything you'll need to create an account on [Modal](https://modal.com) and set up your modal package. See https://modal.com/docs/guide for instructions.
+Before deploying anything you'll need to create an account on <a href="https://modal.com" target="_blank">Modal</a> and set up your modal package. See https://modal.com/docs/guide for instructions.
 
 ### Downloading Molmo
 Run the following to download Molmo 7B and cache it in a Modal volume to use in your deployment:
