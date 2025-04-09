@@ -28,6 +28,17 @@ Available as a [hosted service](#how-to-run-your-first-test) or you can [self-ho
 
 ![Video showing Magnitude tests running in a terminal and agent taking actions in the browser](assets/demo.gif)
 
+↕️ Magnitude test case in action! ↕️
+```ts
+test('can log in and create company')
+    .step('Log in to the app')
+        .data({ username: 'test-user@magnitude.run' }) // arbitrary key/values
+        .secureData({ password: 'test' }) // sensitive data
+        .check('Can see dashboard') // natural language assertion
+    .step('Create a new company')
+        .data('Make up the first 2 values and use defaults for the rest')
+        .check('Company added successfully');
+```
 
 ## Running your first test
 
@@ -58,22 +69,22 @@ export MAGNITUDE_API_KEY=<your-api-key-here>
 npx magnitude
 ```
 
-This will run all Magnitude test files discovered with the `*.mag.ts` pattern.
+This will run all Magnitude test files discovered with the `*.mag.ts` pattern. Click the URL that pops up to view the test in the Magnitude dashboard! For more information see docs on [running tests](https://docs.magnitude.run/core-concepts/running-tests) or [CLI reference](https://docs.magnitude.run/reference/cli).
 
-Here's an example of a basic test case:
+**5. Add your own test cases!**
+
+Now that you've got Magnitude set up, you can create real test cases for your app. Here's an example for a general idea:
 ```ts
-// tests/example.mag.ts
 import { test } from 'magnitude-test';
 
-// Example URL override, defaults to configured baseUrl
-test('can login with valid credentials', { url: "https://qa-bench.com" })
+test('can log in and create company')
     .step('Log in to the app')
-        .data({ username: "test-user@magnitude.run" }) // arbitrary key/values
-        .secureData({ password: "test" }) // sensitive data
+        .data({ username: 'test-user@magnitude.run' }) // arbitrary key/values
+        .secureData({ password: 'test' }) // sensitive data
         .check('Can see dashboard') // natural language assertion
     .step('Create a new company')
-        .data("Make up the first 2 values and use defaults for the rest")
-        .check("Company added successfully");
+        .data('Make up the first 2 values and use defaults for the rest')
+        .check('Company added successfully');
 ```
 
 Steps, checks, and data are all natural language. Think of it like you're describing how to test a particular flow to a co-worker - what steps they need to take, what they should check for, and what test data to use.
