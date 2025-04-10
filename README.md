@@ -4,7 +4,7 @@
   </p>
 
   <h3 align="center">
-    Magnitude: Robust AI web testing framework
+    Magnitude: Open source AI agents for web testing
   </h3>
 
   <p>
@@ -16,7 +16,7 @@
 
 End-to-end testing framework powered by visual AI agents that see your interface and adapt to any changes in it.
 
-Available as a [hosted service](#how-to-run-your-first-test) or you can [self-host](#self-hosting) since we're open source!
+Available as a [hosted service](#running-your-first-test) or you can [self-host](#self-hosting)!
 
 ## How it works
 - ✍️ Build test cases easily with natural language
