@@ -42,6 +42,8 @@ test('can log in and create company')
 
 ## Running your first test
 
+> To try Magnitude with zero setup, check out our [test playground](https://app.magnitude.run/signup?seedpg=true)
+
 **1. Install our test runner** in the node project you want to test (or see our [demo repo](https://github.com/magnitudedev/magnitude-demo-repo) if you don't have a project to try it on)
 ```sh
 npm install --save-dev magnitude-test
@@ -91,49 +93,9 @@ Steps, checks, and data are all natural language. Think of it like you're descri
 
 For more information on how to build test cases see <a href="https://docs.magnitude.run/core-concepts/building-test-cases" target="_blank">our docs.</a>
 
-
-
 ## Self-hosting
 
-To run Magnitude without using our hosted option, you will need:
-- Playwright and chromium installed in the environment where tests are running
-  - In staging environments, installing a virtual display server like `xvfb` may also be necessary to run browsers properly in headful mode
-- An Anthropic API key
-- A self-hosted deployment of <a href="https://huggingface.co/allenai/Molmo-7B-D-0924" target="_blank">Molmo 7B</a> (we are working with providers to get this available as an inference endpoint ASAP!)
-
-### Playwright setup
-The Magnitude test runner has `playwright` as an optional peer dependency when you're self-hosting and running browsers locally.
-Install it in the same project as `magnitude-test`:
-```sh
-npm install playwright
-```
-You will also need to run `npx playwright install` and ensure browsers are installed correctly.
-
-For staging or containerized environments, you may need to also install and run a virtual display server like `xvfb` since Magnitude runs browsers in headful mode.
-
-### LLM configuration
-Magnitude relies on two LLM models to plan and execute test cases:
-1. A larger model for planning and reasoning ("planner")
-2. A smaller, fast, vision capable model with pixel-perfect accuracy ("executor")
-
-For the planner model, we strongly recommend Anthropic's Sonnet 3.5 or 3.7. To get an Anthropic API key, go to <a href="https://console.anthropic.com" target="_blank">Anthropic Console</a>, then set it as an environment variable:
-```
-export ANTHROPIC_API_KEY=<your-anthropic-api-key>
-```
-
-For the executor model, currently the only compatible models are the Molmo models by Allen AI. Specifically we recommend <a href="https://huggingface.co/allenai/Molmo-7B-D-0924" target="_blank">Molmo-7B-D</a> . Currently this model is not available through any providers, so you will need to self-host it. We recommend doing so with <a href="https://modal.com" target="_blank">Modal</a>. To deploy Molmo with Modal see [Deploying Molmo](infra/modal). Once deployed configure these environment variables:
-```sh
-export MOLMO_VLLM_BASE_URL="https://<your-modal-username>--molmo-vllm-serve.modal.run/v1"
-export MOLMO_VLLM_API_KEY=<your-anthropic-api-key>
-```
-
-### Running in self-hosted mode
-
-Once everything is configured properly, you can run your tests using the same test runner, just pass the `-l/--local` flag:
-```
-npx magnitude -l
-```
-This will use your local **Playwright** installation, **ANTHROPIC_API_KEY**, **MOLMO_URL**, and **MOLMO_API_KEY** instead of the **MAGNITUDE_API_KEY** and remote agent.
+We are commited to being open source and allowing developers to run Magnitude with their own browser infrastructure and LLM providers. Check out our [docs](https://docs.magnitude.run/advanced/self-hosting) for comprehensive self-hosting instructions.
 
 ## Self-hosted vs. Hosted
 
