@@ -103,6 +103,10 @@ export class RemoteTestRunner {
     }
 
     async start() {
+        logger.info(`BOUNDARY_PROJECT_ID: ${process.env.BOUNDARY_PROJECT_ID || 'Not set'}`);
+        logger.info(`BOUNDARY_SECRET available? ${process.env.BOUNDARY_SECRET !== undefined}`);
+        logger.info(`BAML_LOG level: ${process.env.BAML_LOG || 'Not set'}`);
+
         this.browser = await chromium.launch({ headless: false, args: ['--enable-logging', '--v=1', `--log-file=/tmp/chrome-debug.log`], });
         this.server = Bun.serve({
             hostname: "0.0.0.0",
