@@ -1,5 +1,11 @@
 # magnitude-test
 
+## 0.0.9
+
+### Patch Changes
+
+- handle empty protocol, fix filter
+
 ## 0.0.8
 
 ### Patch Changes
