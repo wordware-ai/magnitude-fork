@@ -2,7 +2,7 @@ import { TestAgentListener, TestCaseAgent, TestCaseDefinition, TestCaseResult } 
 import { Browser, chromium } from 'playwright';
 import { BASE_TEST_RUNNER_DEFAULT_CONFIG, BaseTestRunner, BaseTestRunnerConfig } from './baseRunner';
 import { RemoteTestCaseAgent } from 'magnitude-remote';
-import { isLocalUrl } from '@/util';
+import { isPrivateUrl } from '@/util';
 
 export interface RemoteRunnerConfig extends BaseTestRunnerConfig {
     remoteRunnerUrl: string;
@@ -39,7 +39,7 @@ export class RemoteTestRunner extends BaseTestRunner {
          */
         const url = testCase.url;
         
-        const useTunnel = this.config.forceUseTunnel || isLocalUrl(url);
+        const useTunnel = this.config.forceUseTunnel || isPrivateUrl(url);
 
         const agent = new RemoteTestCaseAgent({
             listeners: [listener],

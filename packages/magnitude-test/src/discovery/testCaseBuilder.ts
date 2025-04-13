@@ -1,3 +1,4 @@
+import { isLoopbackUrl } from '@/util';
 import { TestCaseDefinition, TestStepDefinition } from 'magnitude-core';
 
 class TestStepBuilder {
@@ -89,11 +90,22 @@ export class TestCaseBuilder {
     }
 
     public toDefinition(): TestCaseDefinition {
+        // Sanitize URL (add protocol if missing)
+        let urlWithProtocol: string;
+        if (!this.url.includes('://')) {
+            if (isLoopbackUrl(this.url)) {
+                // If local, assume HTTP
+                urlWithProtocol = `http://${this.url}`;
+            } else {
+                // Otherwise assume HTTPS
+                urlWithProtocol = `https://${this.url}`;
+            }
+        } else {
+            urlWithProtocol = this.url;
+        }
+        
         return {
-            // id: this.id,
-            // name: this.name,
-            // // If tunneling, provide tunnel url instead
-            url: this.url,//this.tunnelUrl ?? this.url,
+            url: urlWithProtocol,
             steps: this.steps.map(step => step.toDefinition())
         }
     }

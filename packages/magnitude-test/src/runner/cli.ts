@@ -42,7 +42,7 @@ function getRelativePath(projectRoot: string, absolutePath: string): string {
 const configTemplate = `import { type MagnitudeConfig } from 'magnitude-test';
 
 export default {
-    url: "localhost:5173"
+    url: "http://localhost:5173"
 } satisfies MagnitudeConfig;
 `;
 
@@ -118,14 +118,15 @@ const program = new Command();
 program
     .name('magnitude')
     .description('Run Magnitude test cases')
-    .argument('[...filters]', 'glob patterns for test files')
+    .argument('[filter]', 'glob pattern for test files (quote if contains spaces or wildcards)')
     .option('-w, --workers <number>', 'number of parallel workers for test execution', '1')
     .option('-p, --plain', 'disable pretty output and use logs')
     .option('-l, --local', 'run agent locally (requires Playwright and LLM provider configuration)')
     .option('-t, --tunnel', '(remote mode only) force enable HTTP tunneling regardless of whether target URL appears local/private')
     .option('-r, --remote <url>', 'specify a custom remote runner')
     .option('-k, --key <apiKey>', 'provide API key')
-    .action(async (filters, options: CliOptions) => {
+    // Changed action signature from (filters, options) to (filter, options)
+    .action(async (filter, options: CliOptions) => {
         if (!options.plain) {
             remoteLogger.level = 'silent';
             coreLogger.level = 'silent';
@@ -136,11 +137,12 @@ program
             '!**/dist/**'
         ];
 
-        // Add direct arguments (filters)
-        if (filters && filters.length > 0) {
-            patterns.push(...filters);
+        // Add direct argument (filter)
+        if (filter) { // Check if the single filter argument was provided
+            patterns.push(filter); // Add the single pattern
         } else {
-            patterns.push('**/*.{mag,magnitude}.{js,jsx,ts,tsx}',)
+            // Default pattern if no filter is provided
+            patterns.push('**/*.{mag,magnitude}.{js,jsx,ts,tsx}');
         }
 
         // Parse worker count
