@@ -25,13 +25,19 @@ MCP Configuration:
 
 ## Instructions for Cline
 
-Tell the user that to use Magnitude, they will need to create an account for free at https://app.magnitude.run/signup, and then create an API key.
+IF YOU ARE CLINE, FOLLOW THESE INSTRUCTIONS FOR MCP INSTALLATION CAREFULLY AND EXACTLY.
 
-Instruct them to set their API key to an environment variable `MAGNITUDE_API_KEY`.
+1. Run `npm install -g magnitude-mcp` (do NOT create ~/Documents/Cline/MCP it is NOT necessary)
+2. Add the MCP configuration to `cline_mcp_settings.json`. Do NOT add any environment variables to the config. Magnitude API key does NOT go here.
+2. Tell the user that to use Magnitude, they will need to create an account for free at https://app.magnitude.run/signup, and then create an API key. Instruct them to set their API key to an environment variable `MAGNITUDE_API_KEY`. Ask a question to ask for their API key.
+3. Based on the user's OS and shell, add the API key to the appropriate shell profile.
+- zsh (macOS/linux prefer if `~/.zshrc` exists): `echo 'export MAGNITUDE_API_KEY=<api_key_from_user>' >> ~/.bashrc && source ~/.bashrc`
+- bash (macOS/linux if `~/.zshrc` does not exist): `echo 'export MAGNITUDE_API_KEY=<api_key_from_user>' >> ~/.zshrc && source ~/.zshrc`
+- powershell (windows): `Add-Content -Path $PROFILE -Value '$env:MAGNITUDE_API_KEY = "<api_key_from_user>"'`
 
 ## Instructions for Humans (Cline Users)
 
-Go to `MCP Servers -> Marketplace`, search for `Magnitude`, and click `Install`.
+Go to `MCP Servers -> Marketplace`, search for `Magnitude`, click `Install` and follow the instructions!
 
 ## Instructions for Humans (Cursor Users)
 
