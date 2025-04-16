@@ -57,7 +57,7 @@ const sampleTodos = [
     "Build more test cases with Magnitude"
 ];
 
-test('can add and complete todos', { url: 'https://demo.playwright.dev/todomvc' })
+test('can add and complete todos', { url: 'https://magnitodo.com' })
     .step('create 3 todos')
         .data(sampleTodos.join(", "))
         .check('should see all 3 todos')

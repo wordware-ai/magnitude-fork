@@ -30,19 +30,17 @@ Available as a [hosted service](#running-your-first-test) or you can [self-host]
 
 ↕️ Magnitude test case in action! ↕️
 ```ts
-test('can log in and create company')
-    .step('Log in to the app')
-        .data({ username: 'test-user@magnitude.run' }) // arbitrary key/values
-        .secureData({ password: 'test' }) // sensitive data
-        .check('Can see dashboard') // natural language assertion
-    .step('Create a new company')
-        .data('Make up the first 2 values and use defaults for the rest')
-        .check('Company added successfully');
+test('can add and complete todos', { url: 'https://magnitodo.com' })
+    .step('create 3 todos')
+        .data('Take out the trash, Buy groceries, Build more test cases with Magnitude')
+        .check('should see all 3 todos')
+    .step('mark each todo complete')
+        .check('says no items left')
 ```
 
 ## Running your first test
 
-> To try Magnitude with zero setup, check out our [test playground](https://app.magnitude.run/signup?seedpg=true)
+> To try Magnitude with zero setup, check out our [test playground](https://app.magnitude.run/signup?seedpg=true) 🛝
 
 **1. Install our test runner** in the node project you want to test (or see our [demo repo](https://github.com/magnitudedev/magnitude-demo-repo) if you don't have a project to try it on)
 ```sh
