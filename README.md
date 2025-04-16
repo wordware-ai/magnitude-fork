@@ -40,7 +40,7 @@ test('can add and complete todos', { url: 'https://magnitodo.com' })
 
 ## Running your first test
 
-> To try Magnitude with zero setup, check out our [test playground](https://app.magnitude.run/signup?seedpg=true) 🛝
+> 🚀 Check out our free [test playground](https://app.magnitude.run/signup?seedpg=true) to try Magnitude with **zero setup**
 
 **1. Install our test runner** in the node project you want to test (or see our [demo repo](https://github.com/magnitudedev/magnitude-demo-repo) if you don't have a project to try it on)
 ```sh
