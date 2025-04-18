@@ -4,19 +4,14 @@ import { MacroAgent } from "@/ai/macro";
 import { Browser } from "playwright";
 import { WebHarness } from "@/web/harness";
 import { TestCaseDefinition, TestCaseResult } from "@/types";
-import { NavigationError, ActionExecutionError, ActionConversionError, TestCaseError } from "@/errors";
+//import { NavigationError, ActionExecutionError, ActionConversionError, TestCaseError } from "@/errors";
 import { CheckIngredient } from "./ai/baml_client";
 import { TestAgentListener } from "./common/events";
 import logger from './logger';
+import { ActionIngredient } from "./recipe/types";
+import { traceAsync } from '@/ai/baml_client/tracing';
 
 export interface TestCaseAgentConfig {
-    // Event listeners
-    //onActionTaken: (ingredient: ActionIngredient, action: WebAction) => void;
-    //onStepCompleted: (step: TestStep) => void;
-    // testCaseCheck: check provided in test case
-    // ingredient: contains transformed check
-    //onCheckCompleted: (testCaseCheck: string, ingredient: CheckIngredient) => void;
-    //onRecipeUpdated()
     listeners: TestAgentListener[]
     plannerModelProvider: 'SonnetBedrock' | 'SonnetAnthropic'
     // Browser options
@@ -27,20 +22,15 @@ export interface TestCaseAgentConfig {
 const DEFAULT_CONFIG: TestCaseAgentConfig = {
     listeners: [],
     plannerModelProvider: 'SonnetBedrock'
-    // onActionTaken: () => {},
-    // onStepCompleted: () => {},
-    // onCheckCompleted: () => {}
 }
 
 export class TestCaseAgent {
-    //private testCase: TestCase;
     private config: TestCaseAgentConfig;
     private listeners: TestAgentListener[];
     private macro: MacroAgent;
     private micro: MicroAgent;
     
     constructor (config: Partial<TestCaseAgentConfig> = {})  {
-        //this.testCase = testCase;
         this.config = { ...DEFAULT_CONFIG, ...config };
         this.listeners = config.listeners || [];
         this.macro = new MacroAgent({ provider: this.config.plannerModelProvider });
@@ -48,44 +38,45 @@ export class TestCaseAgent {
     }
 
     async run(browser: Browser, testCase: TestCaseDefinition): Promise<TestCaseResult> {
+        /**
+         * Wrapper for running to set up / cleanup browser context and handle unexpected errors.
+         */
         // Should NOT throw unless truly unexpected error occurs
         //console.log("Agent is running test case:", testCase);
 
-        // Setup browser
         // TODO: Set browser options and stuff
-        //const browser = await chromium.launch({ headless: false });
         logger.info("Creating browser context");
         const context = await browser.newContext({ viewport: { width: 1280, height: 720 }});
         const page = await context.newPage();
         const harness = new WebHarness(page);
 
+        let result: TestCaseResult;
+
         try {
-            const result = await this._run(testCase, harness);
-            for (const listener of this.listeners) if(listener.onDone) listener.onDone(result);
-            return result;
+            // only passthrough test case so that input gets logged in BAML dashboard
+            result = await traceAsync('magnus', async (testCase): Promise<TestCaseResult> => { return await this._run(testCase, harness) })(testCase);
         } catch (error) {
-            if (error instanceof TestCaseError) {
-                //console.log("got error:", error)
-                // Not necessarily a real "error"
-                logger.info(`Exception during run: ${error}`);
-                const failure = { description: error.message };
-                const result: TestCaseResult = { passed: false, failure: failure };
-                for (const listener of this.listeners) if(listener.onDone) listener.onDone(result);
-                return { passed: false, failure: failure };
-            } else {
-                // ^ these can also be unexpected tho
-                // TODO: still wrap error into a special variant to prevent any straight up crashes?
-                logger.warn(`Unexpected error: ${error}`, );
-                throw error;
+            // Any unhandled errors are not expected, but wrap to prevent crashes
+            logger.error(`Unexpected error: ${(error as Error).message}`);
+            result = {
+                passed: false,
+                failure: {
+                    variant: 'unknown',
+                    message: `Unexpected error: ${(error as Error).message}`
+                }
             }
         } finally {
-            //console.log("Agent done running test case");
-            await context.close();//browser.close();
+            await context.close();
         }
+
+        logger.info({ result }, "Test run complete");
+        
+        for (const listener of this.listeners) if(listener.onDone) listener.onDone(result);
+        return result;
     }
 
     private async _run(testCase: TestCaseDefinition, harness: WebHarness): Promise<TestCaseResult> {
-        // May throw TestCaseErrors that get handled by run()
+        // Not expected to throw errors. If it does - gets caught by run and converted to UnknownFailure result
         
         logger.info("Agent started");
 
@@ -105,7 +96,15 @@ export class TestCaseAgent {
             
             logger.info(`Successfully navigated to starting URL: ${testCase.url}`);   
         } catch (error) {
-            throw new NavigationError(testCase.url, error as Error);
+            //throw new NavigationError(testCase.url, error as Error);
+            logger.warn(`Failed to navigate to starting URL: ${testCase.url}`);
+            return {
+                passed: false,
+                failure: {
+                    variant: 'network',
+                    message: `Could not connect to starting URL ${testCase.url}. Is the site running and accessible?`
+                }
+            }
         }
 
         const recipe = [];
@@ -114,11 +113,11 @@ export class TestCaseAgent {
             logger.info(`Begin Step: ${step.description}`);
             //console.log(`Step: ${step.description}`);
 
-            const stepRecipe = [];
+            const stepActionIngredients: ActionIngredient[] = [];
 
             while (true) {
                 const screenshot = await harness.screenshot();
-                const { actions, finished } = await this.macro.createPartialRecipe(screenshot, step, stepRecipe);
+                const { actions, finished } = await this.macro.createPartialRecipe(screenshot, step, stepActionIngredients);
 
                 logger.info({ actions, finished }, `Partial recipe created`);
                 //console.log('Partial recipe:', actions);
@@ -133,11 +132,43 @@ export class TestCaseAgent {
                         // does catch make sense here? essentially indicates very low confidence
                         // bad cases either 1. action with low confidence
                         // 2. no action (target not identified at all)
+                        
                         action = await this.micro.convertAction(screenshot, ingredient);
                         logger.info({ ingredient, action }, `Converted action`);
                     } catch(error) {
                         logger.error(`Error converting action: ${error}`);
-                        throw new ActionConversionError(ingredient, error as Error);
+                        /**
+                         * When an action cannot convert, currently always because a target could not be found by micro model.
+                         * Two cases:
+                         * (a) The target is actually there, but the description written by macro could not be identified with micro
+                         * (b) The target is not there
+                         *    (i) because macro overplanned (most likely)
+                         *    (ii) because macro gave nonsense (unlikely)
+                         *    [ assume (i) - if (ii) you have bigger problems ]
+                         * 
+                         * We should diagnose (a) vs (b) to decide next course of action:
+                         * (a) should trigger target description rewrite
+                         * (b) should trigger recipe adjustment
+                         */
+                        
+                        // action conversion error = bug in app or misalignment
+                        // TODO: adjust plan for minor misalignments
+                        // - should only actually fail if it's (1) a bug or (2) a test case misalignment that cannot be treated by recipe adjustment
+                        // const failure = await this.macro.diagnoseTargetNotFound(screenshot, step, ingredient.target, stepActionIngredients);
+                        // return {
+                        //     passed: false,
+                        //     failure: failure
+                        // }
+                        // This requires more thought
+                        // TODO: MAG-103/MAG-104
+                        return {
+                            passed: false,
+                            failure: {
+                                'variant': 'misalignment',
+                                'message': `Could not align ${ingredient.variant} action`
+                            }
+                        };
+                        //throw new ActionConversionError(ingredient, error as Error);
                     }
 
                     //console.log('Action:', action);
@@ -149,9 +180,16 @@ export class TestCaseAgent {
                     } catch (error) {
                         logger.error(`Error executing action: ${error}`);
                         // TODO: retries
-                        throw new ActionExecutionError(action, error as Error);
+                        //throw new ActionExecutionError(action, error as Error);
+                        return {
+                            passed: false,
+                            failure: {
+                                variant: 'browser',
+                                message: `Failed to execute ${action.variant} action`
+                            }
+                        };
                     }
-                    stepRecipe.push(ingredient);
+                    stepActionIngredients.push(ingredient);
 
                     const postActionScreenshot = await harness.screenshot();
 
@@ -167,7 +205,7 @@ export class TestCaseAgent {
                 }
             }
 
-            const stepChecks = [];
+            const stepCheckIngredients = [];
 
             const checkScreenshot = await harness.screenshot();
             for (const check of step.checks) {
@@ -175,14 +213,14 @@ export class TestCaseAgent {
                 
                 // Remove implicit context
                 // This could be done in a batch for all checks in this step
-                const checkNoContext = await this.macro.removeImplicitCheckContext(checkScreenshot, check, stepRecipe);
+                const checkNoContext = await this.macro.removeImplicitCheckContext(checkScreenshot, check, stepActionIngredients);
 
                 //console.log('Check without context:', checkNoContext);
                 logger.info(`Augmented check: ${checkNoContext}`);
 
                 const checkIngredient: CheckIngredient = { "variant": "check", description: checkNoContext };
 
-                stepChecks.push(checkIngredient);
+                stepCheckIngredients.push(checkIngredient);
 
                 // TODO: Utilize check confidence
                 const result = await this.micro.evaluateCheck(
@@ -197,13 +235,37 @@ export class TestCaseAgent {
                 } else {
                     // Failed check
                     logger.info(`Failed check`);
-                    return { passed: false, failure: { description: `Failed check: ${check}` } };//, recipe: recipe };
+                    /**
+                     * If check failed, one of:
+                     * (a) Check should have passed
+                     *   (i) but failed because converted check description was poorly written by macro (misalignment - agent fault)
+                     * (b) Check failed correctly
+                     *   (i) because the web app has a bug (bug)
+                     *   (ii) because the check is unrelated to the current screenshot
+                     *     (1) because step actions were not executed as expected (misalignment - agent fault)
+                     *     (2) because the test case is written poorly or nonsensically (misalignment - test fault)
+                     */
+                    // TODO: adjust plan for minor misalignments
+                    // - should only actually fail if it's (1) a bug or (2) a test case misalignment that cannot be treated by recipe adjustment
+                    const failure = await this.macro.classifyCheckFailure(checkScreenshot, check, stepActionIngredients);
+                    return {
+                        passed: false,
+                        failure: failure
+                    }
+                    // return {
+                    //     passed: false,
+                    //     failure: {
+                    //         'variant': 'misalignment',
+                    //         'message': `Failed check: ${check}`
+                    //     }
+                    // };
+                    //return { passed: false, failure: { description: `Failed check: ${check}` } };//, recipe: recipe };
                 }
             }
 
             // If checks pass, update cached recipe
-            for (const ing of stepRecipe) recipe.push(ing);
-            for (const check of stepChecks) recipe.push(check);
+            for (const ing of stepActionIngredients) recipe.push(ing);
+            for (const check of stepCheckIngredients) recipe.push(check);
         }
 
         logger.info({ recipe }, `Final recipe`);

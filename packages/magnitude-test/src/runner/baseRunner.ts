@@ -10,6 +10,8 @@ import { CategorizedTestCasesWithRenderIds, RenderIdTestCasePair } from './types
 import { TestAgentListener, TestCaseAgent, TestCaseDefinition, TestCaseResult, TestCaseStateTracker } from 'magnitude-core';
 import { Browser, chromium } from 'playwright';
 import path from 'path';
+import { logger } from '@/logger';
+import { isServerUp } from '@/util';
 
 export interface BaseTestRunnerConfig {
     workerCount: number;
@@ -75,7 +77,7 @@ export abstract class BaseTestRunner {
         }
     }
 
-    protected collectTestsForExecution(): Array<{ filePath: string, groupName: string | null, renderId: string, testCase: TestCaseBuilder }> {
+    public collectTestsForExecution(): Array<{ filePath: string, groupName: string | null, renderId: string, testCase: TestCaseBuilder }> {
         const tests: Array<{ filePath: string, groupName: string | null, renderId: string, testCase: TestCaseBuilder }> = [];
         
         // First, collect all tests into a flat array for easier parallelization
@@ -137,10 +139,10 @@ export abstract class BaseTestRunner {
             if (result.passed) {
             
                 // Update test status to passed
-                this.viewer.updateTestStatus(renderId, 'passed');
+                this.viewer.updateTestStatus(renderId, 'passed', result);
             } else {
                 // jank AF
-                this.viewer.updateTestStatus(renderId, 'failed', new Error(result.failure.description));
+                this.viewer.updateTestStatus(renderId, 'failed', result);
             }
 
             await new Promise(resolve => setTimeout(resolve, 2000));
@@ -153,10 +155,13 @@ export abstract class BaseTestRunner {
             return true;
         } catch (error) {
             // UNEXPECTED ERROR
-            console.error("Unexpected error!")
+            logger.error("Unexpected error!")
             //console.log("Caught error in runSingleTest")
             // Update test status to failed
-            this.viewer.updateTestStatus(renderId, 'failed', error as Error);
+            this.viewer.updateTestStatus(renderId, 'failed', {
+                passed: false,
+                failure: { variant: 'unknown', message: (error as Error).message }
+            });
             //console.log("updated test status")
 
             await new Promise(resolve => setTimeout(resolve, 2000));
@@ -235,6 +240,25 @@ export abstract class BaseTestRunner {
         
         // Collect all tests into a flat array for parallelization
         const tests = this.collectTestsForExecution();
+
+        // Check all servers are up
+        let urls = new Set<string>();
+        for (const test of tests) {
+            const url = test.testCase.getUrl();
+            urls = urls.add(url);
+        }
+        const urlList = [...urls];
+        const isEachUrlUp = await Promise.all(urlList.map(url => isServerUp(url)));
+        let anyUrlDown = false;
+        for (let i = 0; i < urlList.length; i++) {
+            if (!isEachUrlUp[i]) {
+                anyUrlDown = true;
+                console.error(`No server running on URL: ${urlList[i]}`);
+            }
+        }
+        if (anyUrlDown) {
+            throw new Error("At least one test case URL has no server running, aborting tests");
+        }
         
         // Create a queue of pending tests
         const pendingTests = [...tests];

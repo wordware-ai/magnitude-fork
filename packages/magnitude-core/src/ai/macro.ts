@@ -7,6 +7,7 @@ import { TestCaseDefinition, TestStepDefinition } from "@/types";
 import { BamlAsyncClient } from "./baml_client/async_client";
 import logger from "@/logger";
 import { Logger } from 'pino';
+import { BugDetectedFailure, MisalignmentFailure } from "@/common";
 
 
 interface MacroAgentConfig {
@@ -94,4 +95,78 @@ export class MacroAgent {
         return response.check;
     }
 
+    async classifyCheckFailure(screenshot: Screenshot, check: string, existingRecipe: ActionIngredient[]): Promise<BugDetectedFailure | MisalignmentFailure> {
+        const downscaledScreenshot = await this.transformScreenshot(screenshot);
+
+        const stringifiedExistingRecipe = [];
+        for (const action of existingRecipe) {
+            stringifiedExistingRecipe.push(JSON.stringify(action, null, 4))
+        }
+
+        const start = Date.now();
+        const response = await this.baml.ClassifyCheckFailure(
+            Image.fromBase64('image/png', downscaledScreenshot.image),
+            check,
+            stringifiedExistingRecipe
+        );
+        this.logger.trace(`classifyCheckFailure took ${Date.now()-start}ms`);
+        //return response.check;
+
+        if (response.classification === 'bug') {
+            return {
+                variant: 'bug',
+                title: response.title,
+                expectedResult: response.expectedResult,
+                actualResult: response.actualResult,
+                severity: response.severity
+            }
+        }
+        else {
+            return {
+                variant: 'misalignment',
+                message: response.message
+            }
+        }
+    }
+
+    // async diagnoseTargetNotFound(
+    //     screenshot: Screenshot,
+    //     step: TestStepDefinition,
+    //     target: string,
+    //     existingRecipe: ActionIngredient[]
+    // ): Promise<BugDetectedFailure | MisalignmentFailure> {
+    //     const downscaledScreenshot = await this.transformScreenshot(screenshot);
+
+    //     const stringifiedExistingRecipe = [];
+    //     for (const action of existingRecipe) {
+    //         stringifiedExistingRecipe.push(JSON.stringify(action, null, 4))
+    //     }
+
+    //     const start = Date.now();
+    //     const response = await this.baml.DiagnoseTargetNotFound(
+    //         Image.fromBase64('image/png', downscaledScreenshot.image),
+    //         step,
+    //         target,
+    //         //action.target,
+    //         //JSON.stringify(action, null, 4),//action,
+    //         stringifiedExistingRecipe
+    //     );
+    //     this.logger.trace(`classifyStepActionFailure took ${Date.now()-start}ms`);
+
+    //     if (response.classification === 'bug') {
+    //         return {
+    //             variant: 'bug',
+    //             title: response.title,
+    //             expectedResult: response.expectedResult,
+    //             actualResult: response.actualResult,
+    //             severity: response.severity
+    //         }
+    //     }
+    //     else {
+    //         return {
+    //             variant: 'misalignment',
+    //             message: response.message
+    //         }
+    //     }
+    // }
 }
