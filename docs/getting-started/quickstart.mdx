@@ -1,0 +1,79 @@
+---
+title: 'Quickstart'
+description: 'Get up and running with Magnitude in under 5 minutes'
+---
+
+
+## Setup
+First, in your codebase, install our typescript SDK for creating and running Magnitude test cases.
+```
+npm install magnitude-test
+```
+
+Then to setup a Magnitude tests directory, run:
+```
+npx magnitude init
+```
+This will create a basic tests directory `tests/magnitude` with:
+- `magnitude.config.ts`: Magnitude test configuration file
+- `example.mag.ts`: An example test file
+
+## Run Tests
+Before you can start running Magnitude tests, you'll need to generate your API key (for free!).
+To do so, head to the [Magnitude Dashboard](https://app.magnitude.run/signup) and sign up, then go to Settings and create a key.
+
+Once you do that, you can add it to an environment variable `MAGNITUDE_API_KEY`, or initialize in your `magnitude.config.ts` like this:
+```typescript
+import { MagnitudeConfig } from "magnitude-test";
+
+export default {
+    url: "localhost:5173",
+    apiKey: "your-api-key-here"
+} satisifes MagnitudeConfig;
+```
+
+To start your Magnitude tests, simply run:
+```
+npx magnitude
+```
+This will run all Magnitude test files discovered with the `*.mag.ts` pattern.
+
+## Adding Tests
+To add more tests, create a file with a name following the pattern `*.mag.ts` anywhere in your project for Magnitude to discover it.
+
+Here's an example of a basic test case:
+```ts
+// tests/magnitude/example.mag.ts
+import { test } from 'magnitude-test';
+
+test('can add and complete todos', { url: 'https://magnitodo.com' })
+    .step('create 3 todos')
+        .data("Take out trash, Buy groceries, Pay Anthropic bill")
+        .check('should see all 3 todos')
+    .step('mark each todo complete')
+        .check('says no items left')
+```
+
+You can also group tests with `test.group`, and configure options for the whole group:
+```ts
+import { test } from 'magnitude-test';
+
+test.group('todo list', { url: 'https://magnitodo.com' }, () => {
+    test('can add and complete todos')
+        .step('create 3 todos')
+            .data('Take out trash, Buy groceries, Pay Anthropic bill')
+            .check('should see all 3 todos')
+        .step('mark each todo complete')
+            .check('says no items left')
+    
+     test('can clear completed')
+        .step('create a todo')
+            .data('Build test cases with Magnitude')
+        .step('mark todo complete')
+        .step('clear completed')
+            .check('no more todos')
+})
+```
+
+## Example Repository
+To see a simple example of how Magnitude is used in an actual project, check out https://github.com/magnitudedev/magnitude-demo-repo

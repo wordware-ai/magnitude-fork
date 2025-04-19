@@ -1,0 +1,23 @@
+---
+title: 'Windsurf MCP'
+description: 'Enable Windsurf to build and run Magnitude tests with MCP'
+---
+
+1. Install MCP server via npm:
+```
+npm i -g magnitude-mcp
+```
+2. Get API key at https://app.magnitude.run/signup and make accessible as `MAGNITUDE_API_KEY` environment variable (e.g. by adding to `~/.bashrc`/`~/.zshrc`)
+3. Add this to your `./codeium/windsurf/model_config.json`:
+```json
+{
+  "mcpServers": {
+    "magnitude": {
+      "command": "npx",
+      "args": [
+        "magnitude-mcp"
+      ]
+    }
+  }
+}
+```

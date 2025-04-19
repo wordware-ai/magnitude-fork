@@ -1,0 +1,31 @@
+---
+title: Test Groups
+description: "Create groups of related test cases"
+---
+
+### `test.group(groupName: string, options?: TestOptions, tests: () => void)`
+
+#### Parameters
+
+`groupName: string` - Name of the test group
+`options?: TestOptions` - Test options to apply to all test cases in the group
+`tests: () => void` - Function containing test declarations
+
+```typescript
+TestOptions {
+    url?: string;
+}
+```
+
+## Usage
+```typescript
+test.group("Authentication Tests", { url: "localhost:3000/login" }, () => {
+    test('can log in')
+        .step('Log in to the app')
+            .data({ email: "foo@bar.com" })
+            .secureData({ password: process.env.SUPER_SECRET_PASSWORD })
+            .check('Can see dashboard')
+
+    // more tests...
+});
+```

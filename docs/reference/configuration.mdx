@@ -1,0 +1,33 @@
+---
+title: Test Configuration
+description: "Configure Magnitude tests"
+---
+
+To configure your tests, add or edit `magnitude.config.ts`.
+
+### `type MagnitudeConfig`
+`export default` this from your `magnitude.config.ts` to set your Magnitude global configuration options.
+
+```typescript
+MagnitudeConfig {
+    apiKey?: string;
+    url?: string;
+}
+```
+
+`apiKey`: Your Magnitude API Key (get a free one [here](https://app.magnitude.run/signup))
+
+`url`: Default starting URL for test cases. If local (e.g. `localhost:3000`), a secure web tunnel is established to allow
+Magniude to run its browser agent on your local port.
+
+## Usage
+
+```typescript
+import { type MagnitudeConfig } from "magnitude-test";
+
+export default {
+    url: "http://localhost:5173",
+    apiKey: process.env.MAGNITUDE_API_KEY
+} satisfies MagnitudeConfig;
+```
+

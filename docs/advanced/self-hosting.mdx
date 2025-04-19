@@ -1,0 +1,81 @@
+---
+title: Self-hosting
+description: "Run Magnitude tests using local browser and self-configured LLMs"
+---
+
+Magnitude provides a hosted option for ease of use, but we are also committed to being open source and enabling developers to use Magnitude with their own browser infrastructure and LLM providers.
+
+If you would prefer to self-host Magnitude rather than using our hosted option, there's a few things you'll need:
+- **Playwright** and **Chromium** installed in the environment where tests are running
+- An **Anthropic** API key
+- A self-hosted deployment of <a href="https://huggingface.co/allenai/Molmo-7B-D-0924" target="_blank">Molmo 7B</a> (we are working with providers to get this available as an inference endpoint ASAP!)
+
+This is a step-by-step guide on how to configure each of these and run tests in self-hosted mode.
+
+## Playwright Setup
+The Magnitude test runner has `playwright` as an optional peer dependency when you're self-hosting and running browsers locally.
+Install it in the same project as `magnitude-test`:
+```sh
+npm install playwright
+```
+You will also need to run `npx playwright install` and ensure browsers are installed correctly.
+
+For staging or containerized environments, you may need to also install and run a virtual display server like `xvfb` since Magnitude runs browsers in headful mode.
+
+## LLM Configuration
+Magnitude relies on two LLM models to plan and execute test cases:
+1. A larger model for planning and reasoning ("planner")
+2. A smaller, fast, vision capable model with pixel-perfect accuracy ("executor")
+
+### Planner Model (Anthropic) Setup
+For the planner model, we strongly recommend Anthropic's Sonnet 3.5 or 3.7. To get an Anthropic API key, go to <a href="https://console.anthropic.com" target="_blank">Anthropic Console</a>, then set it as an environment variable:
+```
+export ANTHROPIC_API_KEY=<your-anthropic-api-key>
+```
+
+### Executor Model (Molmo) Setup
+For the executor model, currently the only compatible models are the Molmo models by Allen AI. Specifically we recommend <a href="https://huggingface.co/allenai/Molmo-7B-D-0924" target="_blank">Molmo-7B-D</a> . Currently this model is not available through any providers, so you will need to self-host it. We recommend doing so with <a href="https://modal.com" target="_blank">Modal</a>.
+
+We provide scripts to download and deploy Molmo on Modal [here](https://github.com/magnitudedev/magnitude/tree/main/infra/modal).
+
+First clone the `magnitude` repo and navigate to where these deployment scripts are:
+```sh
+git clone https://github.com/magnitudedev/magnitude.git && cd magnitude/infra/modal
+```
+
+#### Modal Setup
+
+Before deploying anything you'll need to create an account on <a href="https://modal.com" target="_blank">Modal</a> and set up your modal package. See <a href="https://modal.com/docs/guide" target="_blank">modal.com/docs/guide</a> for instructions.
+
+#### Downloading Molmo
+Run the following to download Molmo 7B and cache it in a Modal volume to use in your deployment:
+```sh
+modal run download_molmo.py
+```
+
+#### Deploying the Molmo vLLM Server
+
+Run this script to deploy the vLLM server serving the downloaded Molmo model as an OpenAI-compatible API.
+```sh
+modal deploy molmo_vllm.py
+```
+
+<Info>Note on cold starts: Modal containers scale to 0 when not in use - but this means it takes 1-2 minutes to boot up when not in use after a while - meaning your test cases will be delayed if you haven't run tests in the past 20 minutes. Uncomment `keep_warm=1` to keep a container warm. Note that with an A10G this will cost approximately $800/month on Modal.</Info>
+
+#### Secret Configuration
+The deploy script looks for a secret called `vllm-api-key` to use as an API key for the vLLM OpenAI-compatible server. Create one here <a href="https://modal.com/secrets" target="_blank">modal.com/secrets</a> . You can use any value, but make sure to keep track of it.
+
+Once deployed configure these environment variables locally:
+```sh
+export MOLMO_VLLM_BASE_URL="https://<your-modal-username>--molmo-vllm-serve.modal.run/v1"
+export MOLMO_VLLM_API_KEY=<your-vllm-api-key>
+```
+
+
+## Running in Self-hosted Mode
+
+Once everything is configured properly, you can run your tests using the same test runner, just pass the `-l/--local` flag:
+```
+npx magnitude -l
+```
+This will use your local **Playwright** installation, **ANTHROPIC_API_KEY**, **MOLMO_URL**, and **MOLMO_API_KEY** instead of the **MAGNITUDE_API_KEY** and remote agent.

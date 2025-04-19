@@ -1,0 +1,126 @@
+---
+title: Building Test Cases
+description: "How to design and build effective test cases"
+---
+
+## Test Cases
+
+Each Magnitude test case navigates to a URL in a browser, executes **Test Steps** on the web application at that URL, and verifies any **Checks** along the way.
+
+For example:
+```typescript
+test('can add and remove todos')
+    .step('Add a todo')
+    .step('Remove the todo')
+```
+
+<Info>A test case is designed to represent a single user flow in your web app.</Info>
+
+
+### Configure Test Cases
+
+Each test can additionally be configured with a different starting URL (defaults to configured `baseUrl`):
+
+```typescript
+test('can add and remove todos', { url: "https://mytodoapp.com" })
+    .step('Add a todo')
+    .step('Remove the todo')
+```
+
+## Test Steps
+
+When you define a step, you provide a description for what Magnitude should do during that step, for example:
+```typescript
+test('example')
+    .step('Log in') // step description
+```
+Each step should make sense on its own and describe a portion of the user flow.
+
+Steps should only be specific enough that it's clear from your app's interface how to complete the step. For example - to log into an app, you don't need to say type into each field or what buttons to press - just provide any necessary data and say "Log in".
+
+### Checks
+
+A **check** is a **natural language visual assertion** that you can add to any step in your test case.
+
+<Info>Think `assert` in other testing frameworks, except it can "see" the website and understand natural language descriptions.</Info>
+
+Examples of valid checks:
+- "Only 3 todos should be listed"
+- "Make sure image of giraffe is visible"
+- "The response from the chat bot should make sense and answer the user's question"
+
+<Info>Checks are validated after the step they are attached to is executed.</Info>
+
+To actually use a check in a test case, chain it to a `step` like this:
+```typescript
+test('example')
+    .step('Log in')
+        .check('Dashboard is visible')
+```
+
+### Test Data
+
+You can provide additional **test data** relevant to specific step like this:
+
+```typescript
+test('example')
+    .step('Log in')
+        .data({ email: "foo@bar.com", password: "foo" })
+        .check('Dashboard is visible')
+```
+
+<Info>The key/value pairs are completely up to you, but it should be clear enough what they should be used for.</Info>
+
+But yikes! That password doesn't look secure. For sensitive information, use `secureData` instead.
+
+```typescript
+test('example')
+    .step('Log in')
+        .data({ email: "foo@bar.com" })
+        .secureData({ password: process.env.MY_SUPER_SECRET_PASSWORD })
+        .check('Dashboard is visible')
+```
+
+This will ensure that the secure data fields are encrypted end-to-end on Magnitude's servers.
+
+You can also provide completely freeform data by passing in a string instead of a key/value object:
+```typescript
+test('example')
+    .step('Add 3 todos')
+        .data('Use "Take out trash" for the first todo and make up the other 2')
+```
+
+### Example of migrating a Playwright test case to Magnitude
+
+A simple test case from the Playwright demo TODO app:
+```typescript  
+test('should allow me to add todo items', async ({ page }) => {
+    const newTodo = page.getByPlaceholder('What needs to be done?');
+
+    await newTodo.fill(TODO_ITEMS[0]);
+    await newTodo.press('Enter');
+
+    await expect(page.getByTestId('todo-title')).toHaveText([
+        TODO_ITEMS[0]
+    ]);
+
+    await newTodo.fill(TODO_ITEMS[1]);
+    await newTodo.press('Enter');
+
+    await expect(page.getByTestId('todo-title')).toHaveText([
+        TODO_ITEMS[0],
+        TODO_ITEMS[1]
+    ]);
+  });
+```
+
+The same test case in Magnitude:
+```typescript
+test('should allow me to add todo items')
+    .step('Create todo')
+        .data(TODO_ITEMS[0])
+        .check('First todo appears in list')
+    .step('Create another todo')
+        .data(TODO_ITEMS[1])
+        .check('List has two todos')
+```

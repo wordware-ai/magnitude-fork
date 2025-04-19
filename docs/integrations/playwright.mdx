@@ -1,0 +1,26 @@
+---
+title: 'Playwright'
+description: 'Use Magnitude alongside Playwright tests'
+---
+
+Using Magnitude alongside existing E2E tests is simple.
+
+You can add Magnitude test files matching the pattern `*.mag.ts` either in your existing test folders, or in a new one.
+
+The Magnitude CLI will automatically discover these Magnitude tests.
+
+For example, if you've got both playwright and Magnitude tests, you could set up scripts to run either suite, or both:
+
+```json
+{
+    "scripts": [
+        "test:playwright": "npx playwright test",
+        "test:magnitude": "npx magnitude",
+        "test:all": "npx playwright test && npx magnitude"
+    ]
+}
+```
+
+If mixing Playwright and Magnitude tests, we recommend covering your core flows and flows that are prone to change frequently with Magnitude, and testing smaller or more stable flows that don't break as often with Playwright.
+
+<Info>You can also go all-in and replace your whole E2E test suite with Magnitude, we don't mind :)</Info>

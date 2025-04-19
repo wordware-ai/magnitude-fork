@@ -1,0 +1,140 @@
+{
+    "$schema": "https://mintlify.com/docs.json",
+    "name": "Magnitude",
+    "theme": "mint",
+    "description": "Open source AI agents for web testing",
+    "logo": "/logo.svg",
+    "favicon": "/favicon.png",
+    "colors": {
+        "primary": "#0369a1",
+        "light": "#0ea5e9",
+        "dark": "#075985"
+    },
+    "navbar": {
+        "links": [
+            {
+                "label": "Login",
+                "href": "https://app.magnitude.run/login"
+            }
+        ],
+        "primary": {
+            "type": "button",
+            "label": "Sign Up",
+            "href": "https://app.magnitude.run/signup"
+        }
+    },
+    "navigation": {
+        "global": {
+            "anchors": [
+                {
+                    "anchor": "GitHub",
+                    "icon": "github",
+                    "href": "https://github.com/magnitudedev/magnitude"
+                },
+                {
+                    "anchor": "Community",
+                    "icon": "discord",
+                    "href": "https://discord.gg/VcdpMh9tTy"
+                },
+                {
+                    "anchor": "Contact",
+                    "icon": "envelope",
+                    "href": "mailto:founders@magnitude.run"
+                }
+            ]
+        },
+        "groups": [
+            {
+                "group": "Getting Started",
+                "pages": [
+                    "getting-started/introduction",
+                    "getting-started/quickstart"
+                ]
+            },
+            {
+                "group": "Core Concepts",
+                "pages": [
+                    "core-concepts/building-test-cases",
+                    "core-concepts/running-tests"
+                ]
+            },
+            {
+                "group": "Integrations",
+                "pages": [
+                    "integrations/playwright",
+                    "integrations/github-actions",
+                    "integrations/cline-mcp",
+                    "integrations/cursor-mcp",
+                    "integrations/windsurf-mcp"
+                ]
+            },
+            {
+                "group": "Advanced",
+                "pages": [
+                    "advanced/self-hosting"
+                ]
+            },
+            {
+                "group": "Reference",
+                "pages": [
+                    "reference/configuration",
+                    "reference/test-cases",
+                    "reference/test-steps",
+                    "reference/test-groups",
+                    "reference/cli"
+                ]
+            }
+        ]
+    },
+    "footer": {
+        "socials": {
+            "github": "https://github.com/magnitudedev/magnitude",
+            "discord": "https://discord.gg/VcdpMh9tTy",
+            "linkedin": "https://linkedin.com/company/magnitude-ai",
+            "twitter": "https://twitter.com/magnitudeqa"
+        },
+        "links": [
+            {
+                "header": "Product",
+                "items": [
+                    {
+                        "label": "Sign Up",
+                        "href": "https://app.magnitude.run/signup"
+                    },
+                    {
+                        "label": "Documentation",
+                        "href": "https://docs.magnitude.run"
+                    }
+                ]
+            },
+            {
+                "header": "Community",
+                "items": [
+                    {
+                        "label": "Discord",
+                        "href": "https://discord.gg/VcdpMh9tTy"
+                    },
+                    {
+                        "label": "GitHub",
+                        "href": "https://github.com/magnitudedev/magnitude"
+                    }
+                ]
+            },
+            {
+                "header": "Company",
+                "items": [
+                    {
+                        "label": "Contact",
+                        "href": "mailto:founders@magnitude.run"
+                    }
+                ]
+            }
+        ]
+    },
+    "search": {
+        "prompt": "Search Magnitude docs...."
+    },
+    "seo": {
+        "indexing": "all"
+    }
+}
