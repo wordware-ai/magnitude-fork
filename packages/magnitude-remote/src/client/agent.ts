@@ -128,7 +128,7 @@ export class RemoteTestCaseAgent {
             });
 
             this.controlSocket.addEventListener('close', (event) => {
-                logger.info(`WebSocket closed: ${event.code} ${event.reason}`);
+                logger.trace(`WebSocket closed: ${event.code} ${event.reason}`);
             });
 
             this.controlSocket.addEventListener('error', (event) => {
@@ -159,7 +159,7 @@ export class RemoteTestCaseAgent {
             });
 
             sock.addEventListener('close', async (event) => {
-                logger.info(`Tunnel WebSocket closed: ${event.code} ${event.reason}`);
+                logger.trace(`Tunnel WebSocket closed: ${event.code} ${event.reason}`);
             });
 
             sock.addEventListener('error', async (event) => {
@@ -179,7 +179,7 @@ export class RemoteTestCaseAgent {
                             logger.error(`Error message from server on tunnel socket: ${msg.payload.message}`);
                             sock.close(1011);
                         } else if (msg.kind === 'accept:tunnel') {
-                            logger.info(`Accept message received, setting tunnel ${i} to active`)
+                            logger.trace(`Accept message received, setting tunnel ${i} to active`)
                             this.tunnelSockets[i].status = 'active';
                         } else {
                             logger.warn(`Unexpected message type received to inactive tunnel socket: ${msg.kind}`)
@@ -198,7 +198,7 @@ export class RemoteTestCaseAgent {
                         const req = msg.payload;
 
                         //console.log("Forwarding request traffic:", msg);
-                        logger.info(msg, `Tunnel socket ${i} forwarding request traffic`);
+                        logger.trace(msg, `Tunnel socket ${i} forwarding request traffic`);
 
                         //const request = await deserializeRequest(event.data);
                         const localResponse = await fetch(`${this.testCase!.url}${req.path}`, {
@@ -219,7 +219,7 @@ export class RemoteTestCaseAgent {
                             }
                         };
                         
-                        logger.info(responseMessage, `Tunnel socket ${i} returning response traffic`);
+                        logger.trace(responseMessage, `Tunnel socket ${i} returning response traffic`);
 
                         sock.send(JSON.stringify(responseMessage));
                     } catch (error) {
