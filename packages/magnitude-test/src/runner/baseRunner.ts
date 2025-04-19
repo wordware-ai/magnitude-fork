@@ -15,11 +15,13 @@ import { isServerUp } from '@/util';
 
 export interface BaseTestRunnerConfig {
     workerCount: number;
+    //printLogs: boolean;
     prettyDisplay: boolean;
 }
 
 export const BASE_TEST_RUNNER_DEFAULT_CONFIG: BaseTestRunnerConfig = {
     workerCount: 1,
+    //printLogs: false,
     prettyDisplay: true
 };
 

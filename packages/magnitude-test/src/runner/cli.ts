@@ -15,11 +15,13 @@ import { BaseTestRunner, BaseTestRunnerConfig } from './baseRunner';
 import { RemoteTestRunner } from './remoteRunner';
 import { logger as remoteLogger } from 'magnitude-remote';
 import { logger as coreLogger } from 'magnitude-core';
+import logger from '@/logger';
 
 interface CliOptions {
     workers?: number;
     local: boolean;
     plain: boolean;
+    debug: boolean;
     tunnel: boolean;
     remote: string;
     key: string;
@@ -120,17 +122,26 @@ program
     .description('Run Magnitude test cases')
     .argument('[filter]', 'glob pattern for test files (quote if contains spaces or wildcards)')
     .option('-w, --workers <number>', 'number of parallel workers for test execution', '1')
-    .option('-p, --plain', 'disable pretty output and use logs')
+    .option('-p, --plain', 'disable pretty output and print lines instead')
+    .option('-d, --debug', 'enable debug logs')
     .option('-l, --local', 'run agent locally (requires Playwright and LLM provider configuration)')
     .option('-t, --tunnel', '(remote mode only) force enable HTTP tunneling regardless of whether target URL appears local/private')
     .option('-r, --remote <url>', 'specify a custom remote runner')
     .option('-k, --key <apiKey>', 'provide API key')
     // Changed action signature from (filters, options) to (filter, options)
     .action(async (filter, options: CliOptions) => {
-        if (!options.plain) {
-            remoteLogger.level = 'silent';
-            coreLogger.level = 'silent';
+        let logLevel: string;
+        if (options.debug) {
+            logLevel = 'trace';
+        } else if (options.plain) {
+            // TODO: have distinct / nicer clean logs for plain output instead of just changing log level
+            logLevel = 'info';
+        } else {
+            logLevel = 'silent';
         }
+        remoteLogger.level = logLevel;
+        coreLogger.level = logLevel;
+        logger.level =logLevel;
 
         const patterns = [
             '!**/node_modules/**',
@@ -175,7 +186,8 @@ program
 
         const runnerConfig: BaseTestRunnerConfig = {
             workerCount: workerCount,
-            prettyDisplay: !options.plain,
+            //printLogs: options.plain,
+            prettyDisplay: !(options.plain || options.debug),
             //forceUseTunnel: options.tunnel
         };
 
