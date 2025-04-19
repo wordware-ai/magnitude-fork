@@ -9,7 +9,7 @@ import { test } from 'magnitude-test';
 //         .check('see todo')
 
 
-test('can add and complete todos', { url: 'http://localhost:5173' })
+test('can add and complete todos')
     .step('create a todos')
         .data('Buy groceries')
         .check('should see a todo')

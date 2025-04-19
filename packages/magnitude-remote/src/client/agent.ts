@@ -36,6 +36,7 @@ export class RemoteTestCaseAgent {
     private runId: string | null = null;
     private tunnelSockets: TunnelSocket[] = [];
     private testCase: TestCaseDefinition | null = null;
+    private expectingControlSocketClose: boolean = false;
 
     constructor(config: Partial<RemoteTestCaseAgentConfig> = {}) {
         this.config = { ...DEFAULT_CONFIG, ...config };
@@ -115,6 +116,7 @@ export class RemoteTestCaseAgent {
                         logger.info({ result: msg.payload.result }, "Agent done");
                         for (const listener of this.config.listeners)
                             if (listener.onDone) listener.onDone(msg.payload.result);
+                        this.expectingControlSocketClose = true;
                         this.controlSocket!.close(1000);
                         // close tunnel sockets
                         for (const tunnel of this.tunnelSockets) {
@@ -128,7 +130,12 @@ export class RemoteTestCaseAgent {
             });
 
             this.controlSocket.addEventListener('close', (event) => {
-                logger.trace(`WebSocket closed: ${event.code} ${event.reason}`);
+                if (!this.expectingControlSocketClose) {
+                    logger.error(`Control socket closed abrubtly! ${event.code} ${event.reason}`);
+                    reject(new Error("Control socket closed unexpectedly"));
+                } else {
+                    logger.trace(`WebSocket closed: ${event.code} ${event.reason}`);
+                }
             });
 
             this.controlSocket.addEventListener('error', (event) => {
