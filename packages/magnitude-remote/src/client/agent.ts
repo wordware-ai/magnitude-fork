@@ -2,6 +2,7 @@ import logger from '../logger';
 import { InitTunnelMessage, RequestStartRunMessage, ServerMessage, TunneledRequestMessage, TunneledResponseMessage } from '@/messages';
 import { TestAgentListener, TestCaseDefinition, TestCaseResult } from 'magnitude-core';
 //import { deserializeRequest, serializeResponse } from './serde';
+import { VERSION } from '@/version';
 
 interface RemoteTestCaseAgentConfig {
     serverUrl: string;
@@ -55,6 +56,7 @@ export class RemoteTestCaseAgent {
                 const message: RequestStartRunMessage = {
                     kind: 'init:run',
                     payload: {
+                        version: VERSION,
                         testCase: testCase,
                         testCaseId: testCaseId,
                         // If tunnel URL provided, request to establish tunnel sockets with server
@@ -62,11 +64,13 @@ export class RemoteTestCaseAgent {
                         apiKey: this.config.apiKey
                     }
                 };
+                
                 this.controlSocket!.send(JSON.stringify(message));
             });
 
             this.controlSocket.addEventListener('message', async (event) => {
                 //console.log(event)
+                //logger.info({ event }, `${Date.now()}`)
                 try {
                     const msg = JSON.parse(event.data) as ServerMessage;
                     //console.log("Control socket Received message:", msg);
@@ -86,8 +90,9 @@ export class RemoteTestCaseAgent {
                         // Some unexpected error occurred on the server's side
                         logger.error(`Error message from server: ${msg.payload.message}`);
                         // probably close sockets
+                        this.expectingControlSocketClose = true;
                         this.controlSocket!.close(1011);
-                        reject(new Error(`Error message from server: ${msg.payload.message}`));
+                        reject(new Error(`${msg.payload.message}`));
                     }
                     // Translate socket message to listener callbacks
                     else if (msg.kind === 'event:start') {

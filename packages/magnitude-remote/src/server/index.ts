@@ -8,6 +8,7 @@ import { Browser, chromium } from 'playwright';
 import { ObserverConnection } from '@/server/observer';
 import { TunnelManager } from './tunnel';
 import { SocketMetadata } from './types';
+import { VERSION } from '@/version';
 //import { deserializeResponse, serializeRequest } from './serde';
 //import { pipeline } from 'stream';
 
@@ -103,6 +104,7 @@ export class RemoteTestRunner {
     }
 
     async start() {
+        logger.info(`RemoteTestRunner v${VERSION} starting`);
         logger.info(`BOUNDARY_PROJECT_ID: ${process.env.BOUNDARY_PROJECT_ID || 'Not set'}`);
         logger.info(`BOUNDARY_SECRET available? ${process.env.BOUNDARY_SECRET !== undefined}`);
         logger.info(`BAML_LOG level: ${process.env.BAML_LOG || 'Not set'}`);
@@ -165,7 +167,7 @@ export class RemoteTestRunner {
 
         // (4) Health check
         if (!runId && req.method === 'GET' && url.pathname === '/') {
-            return new Response('Tunnel server is running', { 
+            return new Response(`Tunnel server (v${VERSION}) is running`, { 
                 status: 200,
                 headers: { 'Content-Type': 'text/plain' }
             });
@@ -257,6 +259,13 @@ export class RemoteTestRunner {
     }
 
     private async initializeRun(ws: ServerWebSocket<SocketMetadata>, msg: RequestStartRunMessage) {
+        // First check that connected client version is compatible before doing anything else
+        const clientVersion = msg.payload.version;
+        logger.info(`Handshake begun, client version ${clientVersion}`);
+        if (VERSION !== clientVersion) {
+            throw new Error(`Mismatched client and server versions!\nClient: magnitude-remote -> ${clientVersion}\nServer: magnitude-remote -> ${VERSION}\nRun 'npm i magnitude-test@latest' to update`);
+        }
+
         const testCaseDefinition = msg.payload.testCase;
         const testCaseId = msg.payload.testCaseId;
 
@@ -444,7 +453,7 @@ export class RemoteTestRunner {
             logger.error(`Error while handling client websocket message: ${error}`);
         
             // Send error back to client
-            this.sendErrorMessage(ws, `Unexpected error: ${(error as Error).message}`);
+            this.sendErrorMessage(ws, `${(error as Error).message}`);
         }
     }
 

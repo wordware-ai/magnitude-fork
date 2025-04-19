@@ -20,6 +20,8 @@ export type AgentEventMessage = StartEventMessage | ActionTakenEventMessage | St
 export interface RequestStartRunMessage {
     kind: 'init:run',
     payload: {
+        // client magnitude-remote version
+        version: string,
         testCase: TestCaseDefinition,
         testCaseId: string, // aka "SDK ID"
         // True if requesting to open tunnel sockets
@@ -33,7 +35,6 @@ export interface AcceptStartRunMessage {
     // Returned by server
     kind: 'accept:run',
     payload: {
-        // TODO
         runId: string;
         // If tunneling requested, server will return # of tunnel socket connections it will accept for the run
         approvedTunnelSockets: number;
