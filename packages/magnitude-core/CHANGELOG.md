@@ -1,5 +1,11 @@
 # magnitude-core
 
+## 0.0.8
+
+### Patch Changes
+
+- update baml, fix dual export
+
 ## 0.0.7
 
 ### Patch Changes
