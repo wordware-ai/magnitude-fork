@@ -1,5 +1,11 @@
 # magnitude-test
 
+## 0.0.12
+
+### Patch Changes
+
+- fix import
+
 ## 0.0.11
 
 ### Patch Changes
