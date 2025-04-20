@@ -285,6 +285,7 @@ export class RemoteTestRunner {
         
         if (this.config.observerUrl) {
             const apiKey = msg.payload.apiKey;
+            const clientSource = msg.payload.source;
             if (!apiKey) {
                 throw new Error("Missing API key");
             }
@@ -295,7 +296,7 @@ export class RemoteTestRunner {
                 logger.info("Attempting authorization");
                 
                 // is hanging here - doesnt reject properly
-                const msg = await observerConnection.connect(apiKey, testCaseId, testCaseDefinition);
+                const msg = await observerConnection.connect(apiKey, testCaseId, testCaseDefinition, clientSource);
                 //orgName = msg.payload.orgName;
                 runMetadata = { orgName: msg.payload.orgName, dashboardUrl: msg.payload.dashboardUrl };
 

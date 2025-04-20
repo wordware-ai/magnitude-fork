@@ -56,6 +56,7 @@ export class RemoteTestCaseAgent {
                 const message: RequestStartRunMessage = {
                     kind: 'init:run',
                     payload: {
+                        source: 'cli',
                         version: VERSION,
                         // tmp: until warnings for diff patch version implemented (and not just throw), ignore version mismatch
                         ignoreVersion: true,

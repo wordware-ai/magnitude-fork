@@ -20,6 +20,8 @@ export type AgentEventMessage = StartEventMessage | ActionTakenEventMessage | St
 export interface RequestStartRunMessage {
     kind: 'init:run',
     payload: {
+        // Is this client connecting from the magntiude-test CLI or from magnitude dashboard backend?
+        source: 'cli' | 'dashboard',
         // client magnitude-remote version
         version: string,
         // if true, will ignore version mismatches
@@ -140,6 +142,7 @@ export interface TunneledResponseMessage {
 export interface RequestAuthorizationMessage {
     kind: 'init:authorize'
     payload: {
+        source: 'cli' | 'dashboard',
         testCaseId: string
         testCase: TestCaseDefinition
         apiKey: string

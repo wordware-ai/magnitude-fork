@@ -13,7 +13,7 @@ export class ObserverConnection {
         this.observerUrl = observerUrl;
     }
 
-    async connect(apiKey: string, testCaseId: string, testCase: TestCaseDefinition): Promise<ApproveAuthorizationMessage> {
+    async connect(apiKey: string, testCaseId: string, testCase: TestCaseDefinition, clientSource: 'cli' | 'dashboard'): Promise<ApproveAuthorizationMessage> {
         /**
          * Connect socket to observer and authorize
          * testCaseId: SDK ID
@@ -53,6 +53,7 @@ export class ObserverConnection {
                         this.socket!.send(JSON.stringify({
                             kind: 'init:authorize',
                             payload: {
+                                source: clientSource,
                                 testCaseId: testCaseId,
                                 testCase: testCase,
                                 apiKey: apiKey
