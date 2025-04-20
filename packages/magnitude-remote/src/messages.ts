@@ -29,6 +29,8 @@ export interface RequestStartRunMessage {
         ignoreVersion: boolean, 
         testCase: TestCaseDefinition,
         testCaseId: string, // aka "SDK ID"
+        // Whether client is interested in receiving events. If false, server will expect the client to terminate socket after client receives accept:run
+        listen: boolean,
         // True if requesting to open tunnel sockets
         needTunnel: boolean;
         // Required if observer/authorizer is configured

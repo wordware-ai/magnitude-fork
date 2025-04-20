@@ -310,7 +310,12 @@ export class RemoteTestRunner {
         
         const runId = createId();
 
-        const agentListeners: TestAgentListener[] = [this.buildSocketForwardingListener(ws, runMetadata)];
+        const agentListeners: TestAgentListener[] = [];
+
+        // If client control socket wants to listen, subscribe to event messages
+        if (msg.payload.listen) {
+            agentListeners.push(this.buildSocketForwardingListener(ws, runMetadata));
+        }
 
         // If observer, subscribe it to event messages
         if (this.config.observerUrl) {
