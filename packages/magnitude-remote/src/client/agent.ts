@@ -57,6 +57,8 @@ export class RemoteTestCaseAgent {
                     kind: 'init:run',
                     payload: {
                         version: VERSION,
+                        // tmp: until warnings for diff patch version implemented (and not just throw), ignore version mismatch
+                        ignoreVersion: true,
                         testCase: testCase,
                         testCaseId: testCaseId,
                         // If tunnel URL provided, request to establish tunnel sockets with server

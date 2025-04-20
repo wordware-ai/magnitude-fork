@@ -22,6 +22,9 @@ export interface RequestStartRunMessage {
     payload: {
         // client magnitude-remote version
         version: string,
+        // if true, will ignore version mismatches
+        // if false, will throw err if minor version diff, will show info/warning if patch version diff
+        ignoreVersion: boolean, 
         testCase: TestCaseDefinition,
         testCaseId: string, // aka "SDK ID"
         // True if requesting to open tunnel sockets

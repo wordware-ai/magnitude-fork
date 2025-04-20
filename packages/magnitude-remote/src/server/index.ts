@@ -263,7 +263,12 @@ export class RemoteTestRunner {
         const clientVersion = msg.payload.version;
         logger.info(`Handshake begun, client version ${clientVersion}`);
         if (VERSION !== clientVersion) {
-            throw new Error(`Mismatched client and server versions!\nClient: magnitude-remote -> ${clientVersion}\nServer: magnitude-remote -> ${VERSION}\nRun 'npm i magnitude-test@latest' to update`);
+            if (msg.payload.ignoreVersion) {
+                logger.warn("Detected version mismatch but client opted to ignore version discrepancies");
+            } else {
+                logger.warn(`Refused client with version mismatch`);
+                throw new Error(`Mismatched client and server versions!\nClient: magnitude-remote -> ${clientVersion}\nServer: magnitude-remote -> ${VERSION}\nRun 'npm i magnitude-test@latest' to update`);
+            }
         }
 
         const testCaseDefinition = msg.payload.testCase;
