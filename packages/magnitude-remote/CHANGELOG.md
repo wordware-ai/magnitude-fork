@@ -1,5 +1,11 @@
 # magnitude-remote
 
+## 0.0.9
+
+### Patch Changes
+
+- support new agent on ui
+
 ## 0.0.8
 
 ### Patch Changes

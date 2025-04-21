@@ -1,6 +1,6 @@
 {
   "name": "magnitude-remote",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Magnitude e2e testing agent",
   "publishConfig": {
     "access": "public"
