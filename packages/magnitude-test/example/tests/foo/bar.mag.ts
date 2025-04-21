@@ -5,7 +5,7 @@ import { test } from 'magnitude-test';
 //         .check('picture of a sloth is visible')
 //     //.step('click on the sloth')
 //     .step('create a todo')
-//         .data("Pay Antropic bill")
+//         .data("Pay Anthropic bill")
 //         .check('see todo')
 
 

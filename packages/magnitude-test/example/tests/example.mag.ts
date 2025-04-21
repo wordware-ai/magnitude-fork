@@ -19,7 +19,7 @@ const sampleTodos = [
 // test.group('more todo tests', () => {
 //     test('can add one todo')//, { url: "https://asdfjisdoajfasjfklejlf.com" })
 //         .step('create a todo')
-//             .data("Pay Antropic bill")
+//             .data("Pay Anthropic bill")
 //             .check('see todo')
     
 //     test('can add one todo')

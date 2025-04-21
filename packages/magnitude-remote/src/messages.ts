@@ -36,7 +36,7 @@ export interface RequestStartRunMessage {
         // Required if observer/authorizer is configured
         apiKey: string | null;
         // if source is dashboard and run is already created, use existing run ID
-        runId: string | null;
+        //runId: string | null;
     }
 }
 
@@ -150,7 +150,7 @@ export interface RequestAuthorizationMessage {
         testCaseId: string
         testCase: TestCaseDefinition
         apiKey: string,
-        runId: string
+        //runId: string
     }
 }
 
@@ -159,6 +159,7 @@ export interface ApproveAuthorizationMessage {
     payload: {
         orgName: string
         dashboardUrl: string
+        runId: string
         //orgCredits: number
     }
 }

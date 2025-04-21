@@ -13,7 +13,7 @@ export class ObserverConnection {
         this.observerUrl = observerUrl;
     }
 
-    async connect(apiKey: string, testCaseId: string, testCase: TestCaseDefinition, clientSource: 'cli' | 'dashboard', runId: string): Promise<ApproveAuthorizationMessage> {
+    async connect(apiKey: string, testCaseId: string, testCase: TestCaseDefinition, clientSource: 'cli' | 'dashboard',): Promise<ApproveAuthorizationMessage> {
         /**
          * Connect socket to observer and authorize
          * testCaseId: SDK ID
@@ -57,7 +57,7 @@ export class ObserverConnection {
                                 testCaseId: testCaseId,
                                 testCase: testCase,
                                 apiKey: apiKey,
-                                runId: runId
+                                //runId: runId
                             }
                         } satisfies RequestAuthorizationMessage));
                     };

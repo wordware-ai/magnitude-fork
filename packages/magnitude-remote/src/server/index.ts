@@ -274,8 +274,9 @@ export class RemoteTestRunner {
         const testCaseDefinition = msg.payload.testCase;
         const testCaseId = msg.payload.testCaseId;
         // Run ID is provided from dashboard client so that it can sync the correct run
-        const runId = msg.payload.runId || createId();
-
+        //const runId = msg.payload.runId || createId();
+        //const runId = createId();
+        let runId;
         // If observer is configured, first need to acquire authorization
 
         //let orgName: string | null = null;
@@ -298,9 +299,12 @@ export class RemoteTestRunner {
                 logger.info("Attempting authorization");
                 
                 // is hanging here - doesnt reject properly
-                const msg = await observerConnection.connect(apiKey, testCaseId, testCaseDefinition, clientSource, runId);
+                const msg = await observerConnection.connect(apiKey, testCaseId, testCaseDefinition, clientSource);
                 //orgName = msg.payload.orgName;
                 runMetadata = { orgName: msg.payload.orgName, dashboardUrl: msg.payload.dashboardUrl };
+                
+                // If we have observer/authorizer, use the runId they return as source of truth
+                runId = msg.payload.runId;
 
                 logger.info(runMetadata, "Authorization succeeded");
             } catch (error) {
@@ -308,6 +312,9 @@ export class RemoteTestRunner {
 
                 throw new Error(`Failed to authorize with observer: ${error}`);
             }
+        } else {
+            // If no observer/authorizer, use arbitrary generated ID
+            runId = createId();
         }
         
         const agentListeners: TestAgentListener[] = [];
