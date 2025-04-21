@@ -13,38 +13,9 @@
         "typescript": "5.8.2",
       },
     },
-    "packages/bar": {
-      "name": "bar",
-      "version": "0.0.1",
-      "dependencies": {
-        "@boundaryml/baml": "^0.84.4",
-        "foo": "workspace:*",
-      },
-      "devDependencies": {
-        "@types/bun": "latest",
-        "pkgroll": "^2.10.0",
-      },
-      "peerDependencies": {
-        "typescript": "^5",
-      },
-    },
-    "packages/foo": {
-      "name": "foo",
-      "version": "0.0.1",
-      "dependencies": {
-        "@boundaryml/baml": "^0.84.4",
-      },
-      "devDependencies": {
-        "@types/bun": "latest",
-        "pkgroll": "^2.10.0",
-      },
-      "peerDependencies": {
-        "typescript": "^5",
-      },
-    },
     "packages/magnitude-core": {
       "name": "magnitude-core",
-      "version": "0.0.7",
+      "version": "0.0.8",
       "bin": {
         "magnus": "dist/cli.js",
       },
@@ -84,13 +55,13 @@
     },
     "packages/magnitude-remote": {
       "name": "magnitude-remote",
-      "version": "0.0.7",
+      "version": "0.0.9",
       "bin": {
         "magnus": "dist/cli.js",
       },
       "dependencies": {
         "commander": "^13.1.0",
-        "magnitude-core": "0.0.7",
+        "magnitude-core": "0.0.8",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -112,7 +83,7 @@
     },
     "packages/magnitude-test": {
       "name": "magnitude-test",
-      "version": "0.0.12",
+      "version": "0.0.14",
       "bin": {
         "magnitude": "dist/runner/cli.js",
       },
@@ -125,8 +96,8 @@
         "esbuild": "^0.25.1",
         "glob": "^11.0.1",
         "log-update": "^6.1.0",
-        "magnitude-core": "0.0.7",
-        "magnitude-remote": "0.0.7",
+        "magnitude-core": "0.0.8",
+        "magnitude-remote": "0.0.9",
         "playwright": "^1.51.1",
         "zod": "^3.24.2",
       },
@@ -397,8 +368,6 @@
 
     "balanced-match": ["balanced-match@1.0.2", "", {}, "sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw=="],
 
-    "bar": ["bar@workspace:packages/bar"],
-
     "better-path-resolve": ["better-path-resolve@1.0.0", "", { "dependencies": { "is-windows": "^1.0.0" } }, "sha512-pbnl5XzGBdrFU/wT4jqmJVPn2B6UHPBOhzMQkY/SPUPB6QtUXtmBHBIwCbXJol93mOpGMnQyP/+BB19q04xj7g=="],
 
     "body-parser": ["body-parser@2.2.0", "", { "dependencies": { "bytes": "^3.1.2", "content-type": "^1.0.5", "debug": "^4.4.0", "http-errors": "^2.0.0", "iconv-lite": "^0.6.3", "on-finished": "^2.4.1", "qs": "^6.14.0", "raw-body": "^3.0.0", "type-is": "^2.0.0" } }, "sha512-02qvAaxv8tp7fBa/mw1ga98OGm+eCbqzJOKoRt70sLmfEEi+jyBYVTDGfCL/k06/4EMk/z01gCe7HoCH/f2LTg=="],
@@ -524,8 +493,6 @@
     "find-up": ["find-up@4.1.0", "", { "dependencies": { "locate-path": "^5.0.0", "path-exists": "^4.0.0" } }, "sha512-PpOwAdQ/YlXQ2vj8a3h8IipDuYRi3wceVQQGYWxNINccq40Anw7BlsEXCMbt1Zt+OLA6Fq9suIpIWD0OsnISlw=="],
 
     "follow-redirects": ["follow-redirects@1.15.9", "", {}, "sha512-gew4GsXizNgdoRyqmyfMHyAmXsZDk6mHkSxZFCzW9gwlbtOW44CDtYavM+y+72qD/Vq2l550kMF52DT8fOLJqQ=="],
-
-    "foo": ["foo@workspace:packages/foo"],
 
     "foreground-child": ["foreground-child@3.3.1", "", { "dependencies": { "cross-spawn": "^7.0.6", "signal-exit": "^4.0.1" } }, "sha512-gIXjKqtFuWEgzFRJA9WCQeSJLZDjgJUOMCMzxtvFq/37KojM1BFGufqsCy0r4qSQmYLsZYMeyRqzIWOMup03sw=="],
 
