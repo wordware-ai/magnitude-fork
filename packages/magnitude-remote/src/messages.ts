@@ -35,6 +35,8 @@ export interface RequestStartRunMessage {
         needTunnel: boolean;
         // Required if observer/authorizer is configured
         apiKey: string | null;
+        // if source is dashboard and run is already created, use existing run ID
+        runId: string | null;
     }
 }
 
@@ -147,7 +149,8 @@ export interface RequestAuthorizationMessage {
         source: 'cli' | 'dashboard',
         testCaseId: string
         testCase: TestCaseDefinition
-        apiKey: string
+        apiKey: string,
+        runId: string
     }
 }
 

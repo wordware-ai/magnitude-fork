@@ -65,7 +65,8 @@ export class RemoteTestCaseAgent {
                         listen: true,
                         // If tunnel URL provided, request to establish tunnel sockets with server
                         needTunnel: this.config.useTunnel,//this.config.tunnelUrl !== null,
-                        apiKey: this.config.apiKey
+                        apiKey: this.config.apiKey,
+                        runId: null // only dashboard needs to generate / provide run ID
                     }
                 };
                 
