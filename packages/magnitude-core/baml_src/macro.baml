@@ -70,7 +70,7 @@ function CreatePartialRecipe (screenshot: image, step: TestStep, previousActions
         {{ _.role("system") }}
         Plan out web actions that should be executed in order to complete the step:
         <step>{{ step.description }}</step>
-        Specified targets should be very descriptive.
+        Target descriptions should be simple, grounded in specific visual details, and uniquely distinguished from any similar things in the screenshot.
         Only plan out actions that involve things you can see right now.
         Note that many actions combine click + something else, so you may not need to click separately.
         

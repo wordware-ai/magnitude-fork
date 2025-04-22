@@ -178,3 +178,32 @@ test CheckContextRemove1 {
         ]
     }
 }
+
+test TargetGrounding1 {
+    // This test is a screenshot of Magnitude dasboard. Goal is to go to test playground.
+    // Originally failed because target was described as "TC-0 Playground Test Case button"
+    // This aligns more with the card shown rather that the specific button that actually needs to be clicked
+    // which has text "Experiment Now (Free!)"
+    // We want the planner to ground the targets in very specific details when available, such as the text on a button.
+    // This test asserts that the generated target includes specific text from the button, at least "Experiment Now"
+    functions [CreatePartialRecipe]
+    args {
+        screenshot {
+            url "https://magnitude-test-screenshots.s3.us-east-1.amazonaws.com/target_grounding_1.png"
+        }
+        step {
+            description #"Go to test playground"#
+            checks [
+            ]
+            testData {
+                data [
+
+                ]
+                other ""
+            }
+        }
+        previousActions [
+        ]
+    }
+    @@assert( includes_button_text, {{ "Experiment Now (Free!)" in this.actions[0].target }} )
+}

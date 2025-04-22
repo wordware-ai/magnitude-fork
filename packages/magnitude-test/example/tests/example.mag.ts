@@ -9,6 +9,11 @@ const sampleTodos = [
     "Build more test cases with Magnitude"
 ];
 
+test('can add one todo')
+    .step('create a todo')
+        .data("Pay AWS bill")
+        .check('see todo')
+
 // test('can add and complete todos')
 //     .step('create 3 todos')
 //         .data(sampleTodos.join(", "))
