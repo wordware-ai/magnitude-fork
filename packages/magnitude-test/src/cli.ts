@@ -11,20 +11,14 @@ import { MagnitudeConfig } from '@/discovery/types';
 //import chalk from 'chalk';
 import { magnitudeBlue, brightMagnitudeBlue } from '@/renderer/colors';
 import { discoverTestFiles, findConfig, findProjectRoot, isProjectRoot, readConfig } from '@/discovery/util';
-import { BaseTestRunner, BaseTestRunnerConfig } from './baseRunner';
-import { RemoteTestRunner } from './remoteRunner';
-import { logger as remoteLogger } from 'magnitude-remote';
+import { BaseTestRunner, BaseTestRunnerConfig } from './runner/baseRunner';
 import { logger as coreLogger } from 'magnitude-core';
 import logger from '@/logger';
 
 interface CliOptions {
     workers?: number;
-    local: boolean;
     plain: boolean;
     debug: boolean;
-    tunnel: boolean;
-    remote: string;
-    key: string;
 }
 
 function getRelativePath(projectRoot: string, absolutePath: string): string {
@@ -124,10 +118,6 @@ program
     .option('-w, --workers <number>', 'number of parallel workers for test execution', '1')
     .option('-p, --plain', 'disable pretty output and print lines instead')
     .option('-d, --debug', 'enable debug logs')
-    .option('-l, --local', 'run agent locally (requires Playwright and LLM provider configuration)')
-    .option('-t, --tunnel', '(remote mode only) force enable HTTP tunneling regardless of whether target URL appears local/private')
-    .option('-r, --remote <url>', 'specify a custom remote runner')
-    .option('-k, --key <apiKey>', 'provide API key')
     // Changed action signature from (filters, options) to (filter, options)
     .action(async (filter, options: CliOptions) => {
         let logLevel: string;
@@ -139,7 +129,6 @@ program
         } else {
             logLevel = 'silent';
         }
-        remoteLogger.level = logLevel;
         coreLogger.level = logLevel;
         logger.level =logLevel;
 
@@ -179,49 +168,15 @@ program
         const registry = TestRegistry.getInstance();
         registry.setGlobalOptions(config);
 
-        const useRemote = !options.local;
-        const customRemoteUrl = options.remote;
-
         let runner: BaseTestRunner;
 
         const runnerConfig: BaseTestRunnerConfig = {
             workerCount: workerCount,
             //printLogs: options.plain,
             prettyDisplay: !(options.plain || options.debug),
-            //forceUseTunnel: options.tunnel
         };
 
-        if (useRemote) {
-            if (!customRemoteUrl) {
-                // Get API key
-                const apiKey = options.key || process.env.MAGNITUDE_API_KEY || config.apiKey || null;
-                
-                if (!apiKey) {
-                    console.error("Missing API key! Either set env var MAGNITUDE_API_KEY or assign apiKey in magnitude.config.ts");
-                    process.exit(1);
-                }
-
-                runner = new RemoteTestRunner(
-                    { ...runnerConfig, apiKey, forceUseTunnel: options.tunnel }
-                );
-            } else {
-                // If custom remote, try read API key if provided
-                const apiKey = options.key || process.env.MAGNITUDE_API_KEY || config.apiKey || null;
-                // Remote server may or may not actually require API key depending on configuration (if observer)
-                runner = new RemoteTestRunner(
-                    { ...runnerConfig, apiKey, remoteRunnerUrl: customRemoteUrl, forceUseTunnel: options.tunnel, }
-                );
-            }
-        } else {
-            runner = new LocalTestRunner(runnerConfig);
-        }
-
-        // Create test runner with worker count
-        //const runner = new LocalTestRunner(workerCount);
-
-        // if (workerCount > 1) {
-        //     console.log(`Running tests with ${workerCount} parallel workers`);
-        // }
+        runner = new LocalTestRunner(runnerConfig);
 
         for (const filePath of absoluteFilePaths) {
             await runner.loadTestFile(filePath, getRelativePath(projectRoot, filePath));
