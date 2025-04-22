@@ -67,14 +67,13 @@
   "dependencies": {
     "@paralleldrive/cuid2": "^2.2.2",
     "@types/log-update": "^3.1.0",
-    "axios": "^1.7.9",
-    "bunnel": "^0.1.4",
     "chalk": "^5.4.1",
     "esbuild": "^0.25.1",
     "glob": "^11.0.1",
     "log-update": "^6.1.0",
     "magnitude-core": "0.0.8",
     "playwright": "^1.51.0",
-    "zod": "^3.24.2"
+    "zod": "^3.24.2",
+    "pino": "^9.6.0"
   }
 }

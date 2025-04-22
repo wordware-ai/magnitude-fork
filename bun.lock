@@ -51,7 +51,7 @@
       "name": "magnitude-test",
       "version": "0.0.14",
       "bin": {
-        "magnitude": "dist/runner/cli.js",
+        "magnitude": "dist/cli.js",
       },
       "dependencies": {
         "@paralleldrive/cuid2": "^2.2.2",
