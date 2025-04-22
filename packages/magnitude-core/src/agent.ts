@@ -24,17 +24,27 @@ const DEFAULT_CONFIG: TestCaseAgentConfig = {
     plannerModelProvider: 'SonnetBedrock'
 }
 
+interface TestCaseAgentAnalytics {
+    macroCalls: number
+    // microCalls
+    // macroTokens
+    // microTokens
+}
+
 export class TestCaseAgent {
     private config: TestCaseAgentConfig;
     private listeners: TestAgentListener[];
     private macro: MacroAgent;
     private micro: MicroAgent;
+    private analytics: TestCaseAgentAnalytics;
     
     constructor (config: Partial<TestCaseAgentConfig> = {})  {
         this.config = { ...DEFAULT_CONFIG, ...config };
         this.listeners = config.listeners || [];
         this.macro = new MacroAgent({ provider: this.config.plannerModelProvider });
         this.micro = new MicroAgent();
+
+        this.analytics = { macroCalls: 0 };
     }
 
     async run(browser: Browser, testCase: TestCaseDefinition): Promise<TestCaseResult> {
@@ -116,8 +126,24 @@ export class TestCaseAgent {
             const stepActionIngredients: ActionIngredient[] = [];
 
             while (true) {
+                // Check action / time limit
+                // for now
+                if (this.analytics.macroCalls > 40) {
+                    // temporary to prevent weird loops where test cases call create partial forever with empty actions for example
+                    // this shouldn't really happen, something is up
+                    return {
+                        passed: false,
+                        failure: {
+                            // todo: add timeout variant
+                            variant: 'misalignment',
+                            message: 'Agent seems to be stuck and has exceed LLM call limit'
+                        }
+                    };
+                }
+
                 const screenshot = await harness.screenshot();
                 const { actions, finished } = await this.macro.createPartialRecipe(screenshot, step, stepActionIngredients);
+                this.analytics.macroCalls += 1;
 
                 logger.info({ actions, finished }, `Partial recipe created`);
                 //console.log('Partial recipe:', actions);
@@ -214,6 +240,7 @@ export class TestCaseAgent {
                 // Remove implicit context
                 // This could be done in a batch for all checks in this step
                 const checkNoContext = await this.macro.removeImplicitCheckContext(checkScreenshot, check, stepActionIngredients);
+                this.analytics.macroCalls += 1;
 
                 //console.log('Check without context:', checkNoContext);
                 logger.info(`Augmented check: ${checkNoContext}`);
@@ -248,6 +275,8 @@ export class TestCaseAgent {
                     // TODO: adjust plan for minor misalignments
                     // - should only actually fail if it's (1) a bug or (2) a test case misalignment that cannot be treated by recipe adjustment
                     const failure = await this.macro.classifyCheckFailure(checkScreenshot, check, stepActionIngredients);
+                    this.analytics.macroCalls += 1;
+
                     return {
                         passed: false,
                         failure: failure
