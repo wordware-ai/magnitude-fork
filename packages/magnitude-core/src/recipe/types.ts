@@ -27,7 +27,8 @@ export interface ScrollIngredient {
 
 export interface CheckIngredient {
     variant: 'check';
-    description: string;
+    //description: string;
+    checks: string[];
 }
 
 

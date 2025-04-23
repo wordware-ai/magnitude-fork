@@ -75,19 +75,11 @@ export class MicroAgent {
         }
     }
 
-    async evaluateCheck(screenshot: Screenshot, check: CheckIngredient): Promise<boolean> {
-        // TODO: Make more robust, add logp analysis for confidence
-        const downscaledScreenshot = await this.transformScreenshot(screenshot);
-
-        const start = Date.now();
-
+    private async evaluateSubcheck(screenshot: Screenshot, check: string): Promise<boolean> {
         const response = await this.moondream.query({
-            image: { imageUrl: downscaledScreenshot.image },
-            question: `Evaluate whether this holds true, responding with simply Yes or No: ${check.description}`
+            image: { imageUrl: screenshot.image },
+            question: `Evaluate whether this holds true, responding with simply Yes or No: ${check}`
         });
-        this.logger.trace(`evaluateCheck took ${Date.now()-start}ms`);
-
-        //console.log("Check response:", response);
 
         const answer = (response.answer as string).trim().toLowerCase();
 
@@ -96,9 +88,26 @@ export class MicroAgent {
         } else if (answer === 'no') {
             return false;
         } else {
-            console.warn(`Recieved invalid response for check: ${response}`);
+            console.warn(`Received invalid response for check: ${response}`);
             return false;
         }
+    }
+
+    async evaluateCheck(screenshot: Screenshot, check: CheckIngredient): Promise<boolean> {
+        // TODO: Make more robust, add logp analysis for confidence
+        const downscaledScreenshot = await this.transformScreenshot(screenshot);
+
+        const start = Date.now();
+
+        const jobs = [];
+        for (const subcheck of check.checks) {
+            jobs.push(this.evaluateSubcheck(downscaledScreenshot, subcheck));
+        }
+        const results = await Promise.all(jobs);
+
+        this.logger.trace(`evaluateCheck took ${Date.now()-start}ms`);
+
+        return results.every(passed => passed);
     }
 
     async convertAction(screenshot: Screenshot, ingredient: ActionIngredient): Promise<WebAction> {

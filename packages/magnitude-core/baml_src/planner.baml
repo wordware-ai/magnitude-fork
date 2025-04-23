@@ -52,7 +52,7 @@ class ScrollIngredient {
 
 class CheckIngredient {
     variant "check"
-    description string
+    checks string[]
 }
 
 type Ingredient = ActionIngredient | CheckIngredient
@@ -70,7 +70,10 @@ function CreatePartialRecipe (screenshot: image, step: TestStep, previousActions
         {{ _.role("system") }}
         Plan out web actions that should be executed in order to complete the step:
         <step>{{ step.description }}</step>
-        Target descriptions should be simple, grounded in specific visual details, and uniquely distinguished from any similar things in the screenshot.
+        Target descriptions are located by a small vision LLM. They should be:
+        (1) Based only on what can be seen in the screenshot right now.
+        (2) Positional information, shapes, and text - no high level abstractions.
+        (3) Simple but unique enough to be distinguished specifically from anything matching a similar description.
         Only plan out actions that involve things you can see right now.
         Note that many actions combine click + something else, so you may not need to click separately.
         
@@ -100,22 +103,35 @@ function CreatePartialRecipe (screenshot: image, step: TestStep, previousActions
     "# 
 }
 
-class CheckNoContext {
+// class CheckNoContext {
+//     reasoning string
+//     // Not used as output rn but as an indicator for the LLM, it will not convert and return original check
+//     should_pass bool
+//     check string
+// }
+
+class ConvertedChecks {
     reasoning string
     // Not used as output rn but as an indicator for the LLM, it will not convert and return original check
     should_pass bool
-    check string
+    checks string[]
 }
 
-function RemoveImplicitCheckContext (screenshot: image, check: string, previousActions: string[]) -> CheckNoContext {
-    client SonnetAnthropic
+function RemoveImplicitCheckContext (screenshot: image, check: string, previousActions: string[]) -> ConvertedChecks {
+    client GeminiPro
     prompt #"
         {{ _.role("system") }}
-        Your job is to convert a "check" which may implicitly depend on historical context to one that can be verified based on the current screenshot alone.
-        The converted check will be verified by a small visual LLM. This LLM is capable of understanding basic descriptions but not lengthy descriptions or high level concepts.
-        The new check should be simple, grounded in specific visual details without being complex, and depend only on what is visible in the current screenshot.
+        Your job is to break down a visual "assertion" that may depend on contextual history into simple, isolated, context-independent "checks".
+        The checks you generate will be verified by a small visual LLM. This LLM is capable of understanding basic descriptions but not lengthy descriptions or high level concepts.
 
-        If the check does NOT hold true based on the screenshot, instead set should_pass to false, and return the original check.
+        Each check should be:
+        (1) Simple
+        (2) Grounded in specific visual details
+        (3) Depend only on what is visible in the current screenshot
+
+        Only include enough checks such that their union is semantically equivalent to the assertion.
+
+        If the original assertion does NOT hold true based on the screenshot, instead set should_pass to false, and simply return the original assertion.
 
         {{ ctx.output_format }}
 
@@ -129,7 +145,7 @@ function RemoveImplicitCheckContext (screenshot: image, check: string, previousA
         {{ action }}
         {%endfor%}
         
-        The "check" to convert: 
+        The original "check" to convert: 
         {{ check }}
 
         Current screenshot:

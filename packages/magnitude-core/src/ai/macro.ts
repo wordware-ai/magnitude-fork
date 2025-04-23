@@ -83,7 +83,7 @@ export class MacroAgent {
     }
 
     // Potentially smaller model could execute this op
-    async removeImplicitCheckContext(screenshot: Screenshot, check: string, existingRecipe: ActionIngredient[]): Promise<string> {
+    async removeImplicitCheckContext(screenshot: Screenshot, check: string, existingRecipe: ActionIngredient[]): Promise<string[]> {
         const downscaledScreenshot = await this.transformScreenshot(screenshot);
 
         const stringifiedExistingRecipe = [];
@@ -97,8 +97,11 @@ export class MacroAgent {
             check,
             stringifiedExistingRecipe
         );
+        if (response.checks.length < 1) {
+            throw new Error(`Check conversion returned 0 checks`);
+        }
         this.logger.trace(`removeImplicitCheckContext took ${Date.now()-start}ms`);
-        return response.check;
+        return response.checks;
     }
 
     async classifyCheckFailure(screenshot: Screenshot, check: string, existingRecipe: ActionIngredient[]): Promise<BugDetectedFailure | MisalignmentFailure> {

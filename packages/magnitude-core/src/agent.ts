@@ -245,13 +245,13 @@ export class TestCaseAgent {
                 
                 // Remove implicit context
                 // This could be done in a batch for all checks in this step
-                const checkNoContext = await this.macro.removeImplicitCheckContext(checkScreenshot, check, stepActionIngredients);
+                const convertedChecks = await this.macro.removeImplicitCheckContext(checkScreenshot, check, stepActionIngredients);
                 this.analytics.macroCalls += 1;
 
                 //console.log('Check without context:', checkNoContext);
-                logger.info(`Augmented check: ${checkNoContext}`);
+                logger.info(`Augmented checks: ${convertedChecks}`);
 
-                const checkIngredient: CheckIngredient = { "variant": "check", description: checkNoContext };
+                const checkIngredient: CheckIngredient = { "variant": "check", checks: convertedChecks };
 
                 stepCheckIngredients.push(checkIngredient);
 
