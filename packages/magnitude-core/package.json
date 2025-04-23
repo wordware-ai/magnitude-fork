@@ -51,7 +51,7 @@
     "typescript": "~5.7.2"
   },
   "dependencies": {
-    "@boundaryml/baml": "^0.84.4",
+    "@boundaryml/baml": "^0.85.0",
     "commander": "^13.1.0",
     "moondream": "^0.1.0",
     "pino": "^9.6.0",
