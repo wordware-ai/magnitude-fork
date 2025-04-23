@@ -18,7 +18,7 @@ export class LocalTestRunner extends BaseTestRunner {
 
     protected async setup() {
         // TODO: add appropriate launch args
-        this.browser = await chromium.launch({ headless: false });
+        this.browser = await chromium.launch({ headless: false, args: ['--disable-gpu'] });
     }
 
     protected async teardown() {

@@ -15,6 +15,8 @@ import { BaseTestRunner, BaseTestRunnerConfig } from './runner/baseRunner';
 import { logger as coreLogger } from 'magnitude-core';
 import logger from '@/logger';
 import { tryDeriveEnvironmentPlannerClient } from './util';
+import * as dotenv from 'dotenv';
+import { execSync } from 'child_process';
 
 interface CliOptions {
     workers?: number;
@@ -101,13 +103,25 @@ async function initializeProject(): Promise<void> {
     - ${path.relative(cwd, configPath)}
     - ${path.relative(cwd, examplePath)}
   `);
-        console.log(`You can now run tests with: ${brightMagnitudeBlue('magnitude')}`);
-        console.log('Docs:', brightMagnitudeBlue('https://docs.magnitude.run'));
 
     } catch (error) {
         console.error('Error initializing Magnitude project:', error);
         process.exit(1);
     }
+
+    // Run Playwright installation for Chromium
+    console.log(magnitudeBlue('Installing Playwright Chromium...'));
+    try {
+        execSync('npx playwright install chromium', { stdio: 'inherit' });
+        console.log(`${brightMagnitudeBlue('✓')} Playwright Chromium installed successfully`);
+    } catch (error) {
+        console.error('Error installing Playwright Chromium:', error);
+        // Don't exit with error code since the initialization succeeded
+        console.log(magnitudeBlue('You may need to manually run: npx playwright install chromium'));
+    }
+
+    console.log(`You can now run tests with: ${brightMagnitudeBlue('npx magnitude')}`);
+    console.log('Docs:', brightMagnitudeBlue('https://docs.magnitude.run'));
 }
 
 const program = new Command();
@@ -121,6 +135,7 @@ program
     .option('-d, --debug', 'enable debug logs')
     // Changed action signature from (filters, options) to (filter, options)
     .action(async (filter, options: CliOptions) => {
+        dotenv.config();
         let logLevel: string;
         if (options.debug) {
             logLevel = 'trace';

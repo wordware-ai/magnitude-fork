@@ -1,6 +1,6 @@
 {
   "name": "magnitude-test",
-  "version": "0.0.15-beta.2",
+  "version": "0.0.15-beta.3",
   "description": "A TypeScript client for running automated UI tests through the Magnitude testing platform",
   "publishConfig": {
     "access": "public"
@@ -68,12 +68,13 @@
     "@paralleldrive/cuid2": "^2.2.2",
     "@types/log-update": "^3.1.0",
     "chalk": "^5.4.1",
+    "dotenv": "^16.5.0",
     "esbuild": "^0.25.1",
     "glob": "^11.0.1",
     "log-update": "^6.1.0",
-    "magnitude-core": "0.0.9-beta.2",
+    "magnitude-core": "0.0.9-beta.3",
+    "pino": "^9.6.0",
     "playwright": "^1.51.0",
-    "zod": "^3.24.2",
-    "pino": "^9.6.0"
+    "zod": "^3.24.2"
   }
 }
