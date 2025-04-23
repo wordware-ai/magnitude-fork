@@ -181,6 +181,7 @@ program
         }
 
         logger.info({ ...config.planner }, "Planner:");
+        console.log(magnitudeBlue(`Using planner: ${config.planner.provider}:${config.planner.options.model}`));
         
         // If executor not provided, default to moondream cloud with MOONDREAM_API_KEY
         if (!config.executor || !config.executor.options || (!config.executor.options.apiKey && !config.executor.options.baseUrl)) {
@@ -200,6 +201,7 @@ program
         }
 
         logger.info({ ...config.executor }, "Executor:");
+        console.log(magnitudeBlue(`Using executor: ${config.executor.provider}`));
 
         let runner: BaseTestRunner;
 
