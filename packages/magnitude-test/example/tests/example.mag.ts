@@ -9,10 +9,10 @@ const sampleTodos = [
     "Build more test cases with Magnitude"
 ];
 
-test('can add one todo')
-    .step('create a todo')
-        .data("Pay AWS bill")
-        .check('see todo')
+// test('can add one todo')
+//     .step('create a todo')
+//         .data("Pay AWS bill")
+//         .check('see todo')
 
 // test('can add and complete todos')
 //     .step('create 3 todos')
@@ -86,14 +86,14 @@ test('can add one todo')
 // test('scroll test', { url: 'https://en.wikipedia.org/wiki/Sloth' })
 //     .step('scroll to bottom')
 
-// test('company-create', { url: `https://qa-bench.com` })
-//     .step("Login to the app")
-//         .check("Can see dashboard")
-//         .data({ username: "test-user@magnitude.run" })
-//         .secureData({ password: "test" })
-//     .step("Create a new company")
-//         .data("Make up the first 2 values and use defaults for the rest")
-//         .check("Company added successfully");
+test('company-create', { url: `https://qa-bench.com` })
+    .step("Login to the app")
+        .check("Can see dashboard")
+        .data({ username: "test-user@magnitude.run" })
+        .secureData({ password: "test" })
+    .step("Create a new company")
+        .data("Make up the first 2 values and use defaults for the rest")
+        .check("Company added successfully");
 
 // Example URL override, defaults to configured baseUrl
 // test('can login with valid credentials')

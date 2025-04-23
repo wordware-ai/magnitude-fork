@@ -2,12 +2,13 @@ import { ClickWebAction, PixelCoordinate, Screenshot, ScrollWebAction, TypeWebAc
 import { b } from "@/ai/baml_client/async_client";
 import { Collector, Image } from "@boundaryml/baml";
 import sharp from 'sharp';
-import { downscaleScreenshot, extractCoordinates, relToPixelCoords } from './util';
+import { downscaleScreenshot } from './util';
 import { ActionIngredient, CheckIngredient, ClickIngredient, Ingredient, ScrollIngredient, TypeIngredient } from '@/recipe/types';
 import { CheckResult } from './types';
 import { BamlAsyncClient } from "./baml_client/async_client";
 import logger from "@/logger";
 import { Logger } from 'pino';
+import { vl as MoondreamClient } from 'moondream';
 
 
 interface MicroAgentConfig {
@@ -29,19 +30,17 @@ export class MicroAgent {
      * Currently only compatible model is Molmo variants because of their ability to point to precise coordinates.
      */
     private config: MicroAgentConfig;
-    private collector: Collector;
-    private baml: BamlAsyncClient;
+    //private collector: Collector;
+    //private baml: BamlAsyncClient;
     private logger: Logger;
+    private moondream: MoondreamClient;
 
     constructor(config: Partial<MicroAgentConfig> = {}) {
         this.config = {...DEFAULT_CONFIG, ...config};
-        this.collector = new Collector("micro");
-        this.baml = b.withOptions({ collector: this.collector });
+        //this.collector = new Collector("micro");
+        //this.baml = b.withOptions({ collector: this.collector });
         this.logger = logger.child({ name: 'magnus.executor' });
-    }
-
-    getCollector() {
-        return this.collector;
+        this.moondream = new MoondreamClient({ apiKey: process.env.MOONDREAM_API_KEY });
     }
 
     private async transformScreenshot (screenshot: Screenshot) {
@@ -54,28 +53,28 @@ export class MicroAgent {
     async locateTarget(screenshot: Screenshot, target: string): Promise<PixelCoordinate> {
         const downscaledScreenshot = await this.transformScreenshot(screenshot);
         const start = Date.now();
-        const response = await this.baml.LocateTarget(
-            Image.fromBase64('image/png', downscaledScreenshot.image),
-            target
-        );
+        // const response = await this.baml.LocateTarget(
+        //     Image.fromBase64('image/png', downscaledScreenshot.image),
+        //     target
+        // );
+        //const relCoords = await this.md.point({ object: })
+        const result = await this.moondream.point({
+            image: { imageUrl: downscaledScreenshot.image },
+            object: target
+        });
+        // Point API can return multiple, which we don't really want. We want one clear target.
+        if (result.points.length > 1) {
+            logger.warn({ points: result.points }, "Moondream returned multiple points for locateTarget");
+            throw new Error(`Moondream returned multiple points ${result.points.length}, target unclear`);
+        }
+        const relCoords = result.points[0];
         this.logger.trace(`locateTarget took ${Date.now()-start}ms`);
 
-        //console.log(response);
-
-        // todo: handle parsing failures, confidence measures, etc
-        const relCoords = extractCoordinates(response);
-
-        if (!relCoords) {
-            throw new Error(`Failed to extract coords: ${response}`);
-        }
-
         // Use ORIGINAL screenshot coordinate space (not downscaled)
-        const { x: screenX, y: screenY } = relToPixelCoords(relCoords.x, relCoords.y, screenshot.dimensions.width, screenshot.dimensions.height);
-
         return {
-            x: screenX,
-            y: screenY,
-        };
+            x: relCoords.x * screenshot.dimensions.width,
+            y: relCoords.y * screenshot.dimensions.height
+        }
     }
 
     async evaluateCheck(screenshot: Screenshot, check: CheckIngredient): Promise<boolean> {
@@ -83,23 +82,19 @@ export class MicroAgent {
         const downscaledScreenshot = await this.transformScreenshot(screenshot);
 
         const start = Date.now();
-        const response = await this.baml.EvaluateCheck(
-            Image.fromBase64('image/png', downscaledScreenshot.image),
-            check.description
-        );
+        // const response = await this.baml.EvaluateCheck(
+        //     Image.fromBase64('image/png', downscaledScreenshot.image),
+        //     check.description
+        // );
+        const response = await this.moondream.query({
+            image: { imageUrl: downscaledScreenshot.image },
+            question: `Evaluate whether this holds true, responding with simply Yes or No: ${check.description}`
+        });
         this.logger.trace(`evaluateCheck took ${Date.now()-start}ms`);
 
         //console.log("Check response:", response);
 
-        const answer = response.trim().toLowerCase();
-
-        // console.log("Call:", this.collector.last?.calls[0]);
-        // console.log("Response:", this.collector.last?.calls[0].httpResponse);
-        // //const logprobs = this.collector.last?.calls[0].httpResponse?.body.choices[0].logprobs;
-        // const logprobs = this.collector.last?.calls[0].httpResponse?.body.json().choices[0].logprobs;
-        // console.log("Logprobs:", logprobs);
-    
-        //return { passed: true, confidence: 1.0 };
+        const answer = (response.answer as string).trim().toLowerCase();
 
         if (answer === 'yes') {
             return true;

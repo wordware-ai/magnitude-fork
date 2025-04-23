@@ -65,7 +65,7 @@ class PartialRecipe {
 }
 
 function CreatePartialRecipe (screenshot: image, step: TestStep, previousActions: string[]) -> PartialRecipe {
-    client SonnetAnthropic
+    client GeminiPro
     prompt #"
         {{ _.role("system") }}
         Plan out web actions that should be executed in order to complete the step:

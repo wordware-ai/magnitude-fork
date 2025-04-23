@@ -59,6 +59,46 @@ test DoNotOverplan2 {
     @@assert( not_marked_finished, {{ this.finished == false }} )
 }
 
+test OptimalPlanning1 {
+    functions [CreatePartialRecipe]
+    args {
+        screenshot {
+            url "https://magnitude-test-screenshots.s3.us-east-1.amazonaws.com/do_not_underplan_1.png"
+        }
+        step {
+            description #"Create a new company"#
+            checks [
+                #"Company added successfully"#
+            ]
+            testData {
+                data [
+
+                ]
+                other #"Make up the first 2 values and use defaults for the rest"#
+            }
+        }
+        previousActions [
+        #"
+            {
+                "variant": "click",
+                "target": "Companies option in the left sidebar menu"
+            }
+        "#,
+        #"
+            {
+                "variant": "click",
+                "target": "Add Company button in the top right corner"
+            }
+        "#
+        ]
+        
+    }
+    // optimal is type name, type domain, click save, mark finished
+    @@assert( optimal_actions, {{ this.actions|length == 3 }} )
+    // @@assert( not_marked_finished, {{ this.finished == false }} )
+}
+
+
 
 test CheckContextRemove1 {
     // Manual for now - ideally we'd want to verify that executor can check the returned description successfully

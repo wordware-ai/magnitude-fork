@@ -21,6 +21,35 @@ client<llm> SonnetAnthropic {
     }
 }
 
+client<llm> GeminiPro {
+    provider "openai-generic"
+    options {
+        base_url "https://openrouter.ai/api/v1"
+        api_key env.OPENROUTER_API_KEY
+        model "google/gemini-2.5-pro-preview-03-25"
+        temperature 0.0
+    }
+}
+
+client<llm> GeminiFlash {
+    provider "openai-generic"
+    options {
+        base_url "https://openrouter.ai/api/v1"
+        api_key env.OPENROUTER_API_KEY
+        model "google/gemini-2.5-flash-preview"
+        temperature 0.0
+    }
+}
+
+client<llm> GPT {
+    provider openai
+    options {
+        model "gpt-4.1-2025-04-14"
+        api_key env.OPENAI_API_KEY
+        temperature 0.0
+    }
+}
+
 // client<llm> Macro {
 //     provider openai
 //     options {
