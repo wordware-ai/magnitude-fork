@@ -1,4 +1,5 @@
 import { TestCaseBuilder } from "./testCaseBuilder";
+import { type LLMClient } from 'magnitude-core';
 
 export interface TestOptions {
     url?: string;
@@ -6,8 +7,13 @@ export interface TestOptions {
 }
 
 export type MagnitudeConfig = {
-    apiKey?: string;
-    url?: string;
+    //apiKey?: string;
+    url: string; // base URL used as default, required
+    planner: LLMClient,
+    executor: {
+        moondreamUrl?: string; // defaults to https://api.moondream.ai/v1
+        moondreamApiKey?: string; // defaults to process.env.MOONDREAM_API_KEY
+    }
 }//TestOptions & { apiKey?: string };
 
 export interface TestGroup {

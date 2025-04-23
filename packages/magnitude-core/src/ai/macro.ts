@@ -1,5 +1,5 @@
 import { Screenshot } from "@/web/types";
-import { downscaleScreenshot } from "./util";
+import { convertToBamlClientOptions, downscaleScreenshot } from "./util";
 import { b } from "@/ai/baml_client";
 import { Image, Collector, ClientRegistry } from "@boundaryml/baml";
 import { ActionIngredient, Ingredient } from "@/recipe/types";
@@ -8,16 +8,16 @@ import { BamlAsyncClient } from "./baml_client/async_client";
 import logger from "@/logger";
 import { Logger } from 'pino';
 import { BugDetectedFailure, MisalignmentFailure } from "@/common";
+import { LLMClient } from "@/ai/types";
 
 
 interface MacroAgentConfig {
+    client: LLMClient;
     downscaling: number
-    provider: 'SonnetBedrock' | 'SonnetAnthropic'
 }
 
-const DEFAULT_CONFIG: MacroAgentConfig = {
-    downscaling: 0.75,
-    provider: 'SonnetBedrock'
+const DEFAULT_CONFIG = {
+    downscaling: 0.75
 }
 
 export class MacroAgent {
@@ -30,18 +30,24 @@ export class MacroAgent {
     private baml: BamlAsyncClient;
     private logger: Logger;
 
-    constructor(config: Partial<MacroAgentConfig> = {}) {
+    constructor(config: { client: LLMClient } & Partial<MacroAgentConfig>) {
         this.config = {...DEFAULT_CONFIG, ...config};
         this.collector = new Collector("macro");
         this.cr = new ClientRegistry();
-        if (process.env.MAGNITUDE_PLANNER_CLIENT) {
-            // Client override (useful for debugging/testing)
-            logger.info(`Using planner client from env: ${process.env.MAGNITUDE_PLANNER_CLIENT}`);
-            this.cr.setPrimary(process.env.MAGNITUDE_PLANNER_CLIENT);
-        } else {
-            logger.info(`Using planner client: ${this.config.provider}`);
-            this.cr.setPrimary(this.config.provider);
-        }
+        // if (process.env.MAGNITUDE_PLANNER_CLIENT) {
+        //     // Client override (useful for debugging/testing)
+        //     logger.info(`Using planner client from env: ${process.env.MAGNITUDE_PLANNER_CLIENT}`);
+        //     this.cr.setPrimary(process.env.MAGNITUDE_PLANNER_CLIENT);
+        // } else {
+        //     logger.info(`Using planner client: ${this.config.provider}`);
+        //     this.cr.setPrimary(this.config.provider);
+        // }
+        //this.cr.addLlmClient()
+        const client = this.config.client;
+        let options = convertToBamlClientOptions(this.config.client);
+        this.cr.addLlmClient('Macro', client.provider, options);
+        this.cr.setPrimary('Macro');
+
         this.baml = b.withOptions({ collector: this.collector, clientRegistry: this.cr });
         this.logger = logger.child({ name: 'magnus.planner' });
     }

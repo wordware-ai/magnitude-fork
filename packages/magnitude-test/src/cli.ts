@@ -174,6 +174,7 @@ program
             workerCount: workerCount,
             //printLogs: options.plain,
             prettyDisplay: !(options.plain || options.debug),
+            planner: config.planner
         };
 
         runner = new LocalTestRunner(runnerConfig);

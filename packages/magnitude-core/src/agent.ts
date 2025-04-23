@@ -10,18 +10,22 @@ import { TestAgentListener } from "./common/events";
 import logger from './logger';
 import { ActionIngredient } from "./recipe/types";
 import { traceAsync } from '@/ai/baml_client/tracing';
+import { LLMClient } from "@/ai/types";
 
 export interface TestCaseAgentConfig {
     listeners: TestAgentListener[]
-    plannerModelProvider: 'SonnetBedrock' | 'SonnetAnthropic'
+    planner: LLMClient,
+    //plannerModelProvider: 'SonnetBedrock' | 'SonnetAnthropic'
+    // moondreamUrl: string
+    // moondreamApiKey: string
     // Browser options
 
     // Behavior/LLM options
 }
 
-const DEFAULT_CONFIG: TestCaseAgentConfig = {
+const DEFAULT_CONFIG = {
     listeners: [],
-    plannerModelProvider: 'SonnetBedrock'
+    //plannerModelProvider: 'SonnetBedrock'
 }
 
 interface TestCaseAgentAnalytics {
@@ -38,11 +42,12 @@ export class TestCaseAgent {
     private micro: MicroAgent;
     private analytics: TestCaseAgentAnalytics;
     
-    constructor (config: Partial<TestCaseAgentConfig> = {})  {
+    constructor (config: { planner: LLMClient } & Partial<TestCaseAgentConfig>)  {
         this.config = { ...DEFAULT_CONFIG, ...config };
         this.listeners = config.listeners || [];
-        this.macro = new MacroAgent({ provider: this.config.plannerModelProvider });
-        this.micro = new MicroAgent();
+        this.macro = new MacroAgent({ client: this.config.planner });//new MacroAgent({ provider: this.config.plannerModelProvider });
+        // fix
+        this.micro = new MicroAgent({ moondreamApiKey: process.env.MOONDREAM_API_KEY! });
 
         this.analytics = { macroCalls: 0 };
     }

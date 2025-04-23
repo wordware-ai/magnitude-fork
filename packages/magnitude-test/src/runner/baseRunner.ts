@@ -7,7 +7,7 @@ import chalk from 'chalk';
 import { createId } from '@paralleldrive/cuid2';
 import { TestCaseBuilder } from '../discovery/testCaseBuilder';
 import { CategorizedTestCasesWithRenderIds, RenderIdTestCasePair } from './types';
-import { TestAgentListener, TestCaseAgent, TestCaseDefinition, TestCaseResult, TestCaseStateTracker } from 'magnitude-core';
+import { LLMClient, TestAgentListener, TestCaseAgent, TestCaseDefinition, TestCaseResult, TestCaseStateTracker } from 'magnitude-core';
 import { Browser, chromium } from 'playwright';
 import path from 'path';
 import { logger } from '@/logger';
@@ -17,9 +17,10 @@ export interface BaseTestRunnerConfig {
     workerCount: number;
     //printLogs: boolean;
     prettyDisplay: boolean;
+    planner: LLMClient;
 }
 
-export const BASE_TEST_RUNNER_DEFAULT_CONFIG: BaseTestRunnerConfig = {
+export const BASE_TEST_RUNNER_DEFAULT_CONFIG = {
     workerCount: 1,
     //printLogs: false,
     prettyDisplay: true
@@ -35,7 +36,7 @@ export abstract class BaseTestRunner {
     // Worker count for parallel execution
     //protected workerCount: number = 1;
 
-    constructor(config: Partial<BaseTestRunnerConfig>) {
+    constructor(config: { planner: LLMClient } & Partial<BaseTestRunnerConfig>) {
         this.config = { ...BASE_TEST_RUNNER_DEFAULT_CONFIG, ...config };
         this.registry = TestRegistry.getInstance();
         this.compiler = new TestCompiler();

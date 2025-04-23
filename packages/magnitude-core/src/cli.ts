@@ -30,7 +30,7 @@ program
         const context = await browser.newContext({ viewport: { width: 1280, height: 720 }});
         const page = await context.newPage();
         const harness = new WebHarness(page);
-        const micro = new MicroAgent({ downscaling: 0.75 });
+        const micro = new MicroAgent({ moondreamApiKey: process.env.MOONDREAM_API_KEY!, downscaling: 0.75 });
     
         try {
             await page.goto(options.url);
@@ -61,7 +61,7 @@ program
 
         console.log(data);
 
-        const micro = new MicroAgent({ downscaling: 0.75 });
+        const micro = new MicroAgent({ moondreamApiKey: process.env.MOONDREAM_API_KEY!, downscaling: 0.75 });
         
         const recipe = new Recipe();
 

@@ -10,12 +10,15 @@ interface MicroAgentConfig {
     // How much to downscale screenshots sent to LLM
     // A little bit of downscaling can improve accuracy in some cases.
     // More downscaling = less tokens and faster inference.
-    downscaling: number
+    downscaling: number;
+    moondreamApiKey: string;
+    moondreamUrl: string;
     //parsingRetries: 
     // confidence thresholds, etc. should go here as well
 }
 
 const DEFAULT_CONFIG = {
+    moondreamUrl: "https://api.moondream.ai/v1",
     downscaling: 0.75
 }
 
@@ -25,17 +28,13 @@ export class MicroAgent {
      * Uses Moondream for pixel precision pointing.
      */
     private config: MicroAgentConfig;
-    //private collector: Collector;
-    //private baml: BamlAsyncClient;
     private logger: Logger;
     private moondream: MoondreamClient;
 
-    constructor(config: Partial<MicroAgentConfig> = {}) {
+    constructor(config: { moondreamApiKey: string } & Partial<MicroAgentConfig>) {
         this.config = {...DEFAULT_CONFIG, ...config};
-        //this.collector = new Collector("micro");
-        //this.baml = b.withOptions({ collector: this.collector });
         this.logger = logger.child({ name: 'magnus.executor' });
-        this.moondream = new MoondreamClient({ apiKey: process.env.MOONDREAM_API_KEY });
+        this.moondream = new MoondreamClient({ apiKey: config.moondreamApiKey });
     }
 
     private async transformScreenshot (screenshot: Screenshot) {

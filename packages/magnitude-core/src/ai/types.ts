@@ -1,5 +1,60 @@
-export interface CheckResult {
-    passed: boolean,
-    confidence: number
+// export interface CheckResult {
+//     passed: boolean,
+//     confidence: number
+// }
+
+// Approximately mirrors https://docs.boundaryml.com/ref/llm-client-providers
+export type LLMClient = AnthropicClient | BedrockClient | GoogleVertexClient | OpenAIClient | OpenAIGenericClient;
+
+export interface AnthropicClient {
+    provider: 'anthropic',
+    options: {
+        model: string,
+        apiKey?: string,
+        temperature?: number
+    }   
+}
+
+// See https://docs.boundaryml.com/ref/llm-client-providers/aws-bedrock for authentication details (use AWS_ env vars)
+export interface BedrockClient {
+    provider: 'aws-bedrock',
+    options: {
+        model: string,
+        // passed to inference_configuration
+        temperature?: number
+    }   
+}
+
+// See https://docs.boundaryml.com/ref/llm-client-providers/google-vertex for how this is authenticated
+export interface GoogleVertexClient {
+    provider: 'vertex-ai',
+    options: {
+        model: string,
+        location: string,
+        baseUrl?: string,
+        projectId?: string,
+        credentials?: string | object,
+        // passed to generationConfig
+        temperature?: number,
+    }
+}
+
+export interface OpenAIClient {
+    provider: 'openai',
+    options: {
+        model: string,
+        apiKey?: string,
+        temperature?: number
+    }
+}
+
+export interface OpenAIGenericClient {
+    provider: 'openai-generic'
+    options: {
+        model: string,
+        baseUrl: string,
+        apiKey?: string,
+        temperature?: number,
+    }
 }
 

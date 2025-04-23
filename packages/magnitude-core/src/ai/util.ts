@@ -1,4 +1,5 @@
 import { Screenshot } from "@/web/types";
+import { type LLMClient } from '@/ai/types';
 import sharp from "sharp";
 
 export async function downscaleScreenshot(screenshot: Screenshot, factor: number): Promise<Screenshot> {
@@ -24,4 +25,68 @@ export async function downscaleScreenshot(screenshot: Screenshot, factor: number
             height: newHeight
         }
     };
+}
+
+function cleanNestedObject(obj: object): object {
+    // Remove null/undefined key values entirely
+    return Object.fromEntries(
+        Object.entries(obj)
+            // Filter out null/undefined values
+            .filter(([_, value]) => value !== null && value !== undefined)
+            // Process nested objects recursively
+            .map(([key, value]) => [
+                key,
+                typeof value === 'object' ? cleanNestedObject(value) : value
+            ])
+    );
+}
+
+export function convertToBamlClientOptions(client: LLMClient): Record<string, any> {
+    // extract options compatible with https://docs.boundaryml.com/ref/llm-client-providers/overview
+
+    // Default to temperature 0.0
+    const temp = client.options.temperature ?? 0.0;
+
+    let options: object;
+    if (client.provider === 'anthropic') {
+        options = {
+            api_key: client.options.apiKey,
+            model: client.options.model,
+            temperature: temp,
+        };
+    } else if (client.provider === 'aws-bedrock') {
+        options = {
+            model: client.options.model,
+            inference_configuration: {
+                temperature: temp,
+            }
+        };
+    } else if (client.provider === 'vertex-ai') {
+        options = {
+            location: client.options.location,
+            base_url: client.options.baseUrl,
+            project_id: client.options.projectId,
+            credentials: client.options.credentials,
+            model: client.options.model,
+            generationConfig: {
+                temperature: temp,
+            }
+        };
+    } else if (client.provider === 'openai') {
+        options = {
+            api_key: client.options.apiKey,
+            model: client.options.model,
+            temperature: temp,
+        };
+    } else if (client.provider === 'openai-generic') {
+        options = {
+            base_url: client.options.baseUrl,
+            api_key: client.options.apiKey,
+            model: client.options.model,
+            temperature: temp,
+        };
+    } else {
+        throw new Error(`Invalid provider: ${(client as any).provider}`)
+    }
+    return cleanNestedObject(options);
 }

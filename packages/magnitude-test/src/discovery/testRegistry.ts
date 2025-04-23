@@ -14,7 +14,7 @@ export class TestRegistry {
     private currentGroup?: TestGroup;
     private currentFilePath?: string;
 
-    private globalOptions: MagnitudeConfig = {};
+    private globalOptions!: MagnitudeConfig;
 
     private constructor() { }
 

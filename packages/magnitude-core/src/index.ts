@@ -3,6 +3,7 @@ import { setLogLevel } from '@/ai/baml_client/config';
 
 export { TestCaseAgent };
 export * from "@/types";
+export * from "@/ai/types";
 export * from "@/web/types";
 export * from "@/recipe/types";
 export * from '@/common';
