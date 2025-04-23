@@ -1,4 +1,4 @@
-import { TestCaseDefinition } from "magnitude-core";
+import { PlannerClient, TestCaseDefinition } from "magnitude-core";
 
 const IPV4_IN_IPV6_PREFIX = '::f{4}:';
 
@@ -134,4 +134,50 @@ export async function isServerUp(url: string): Promise<boolean> {
         // Network error usually means no server is responding
         return false;
     }
+}
+
+export function tryDeriveEnvironmentPlannerClient(): PlannerClient | null {
+    // Order by approximate model suitability as planner
+    // Best
+    if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+        return {
+            'provider': 'vertex-ai',
+            'options': {
+                location: 'us-central1',
+                model: 'gemini-2.5-pro-preview-03-25'
+            }
+        }
+    }
+    if (process.env.OPENROUTER_API_KEY) {
+        return {
+            'provider': 'openai-generic',
+            'options': {
+                baseUrl: "https://openrouter.ai/api/v1",
+                model: 'google/gemini-2.5-pro-preview-03-25',
+                apiKey: process.env.OPENROUTER_API_KEY
+            }
+        }
+    }
+    // Good
+    if (process.env.ANTHROPIC_API_KEY) {
+        return {
+            'provider': 'anthropic',
+            'options': {
+                model: 'claude-3-7-sonnet-latest',
+                apiKey: process.env.ANTHROPIC_API_KEY
+            }
+        }
+    }
+    // Ok
+    if (process.env.OPENAI_API_KEY) {
+        return {
+            'provider': 'openai',
+            'options': {
+                model: 'gpt-4.1-2025-04-14',
+                apiKey: process.env.OPENAI_API_KEY
+            }
+        }
+    }
+
+    return null;
 }

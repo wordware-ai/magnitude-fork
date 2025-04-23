@@ -10,11 +10,12 @@ import { TestAgentListener } from "./common/events";
 import logger from './logger';
 import { ActionIngredient } from "./recipe/types";
 import { traceAsync } from '@/ai/baml_client/tracing';
-import { LLMClient } from "@/ai/types";
+import { PlannerClient, ExecutorClient } from "@/ai/types";
 
 export interface TestCaseAgentConfig {
     listeners: TestAgentListener[]
-    planner: LLMClient,
+    planner: PlannerClient,
+    executor: ExecutorClient
     //plannerModelProvider: 'SonnetBedrock' | 'SonnetAnthropic'
     // moondreamUrl: string
     // moondreamApiKey: string
@@ -42,12 +43,12 @@ export class TestCaseAgent {
     private micro: MicroAgent;
     private analytics: TestCaseAgentAnalytics;
     
-    constructor (config: { planner: LLMClient } & Partial<TestCaseAgentConfig>)  {
+    constructor (config: { planner: PlannerClient, executor: ExecutorClient } & Partial<TestCaseAgentConfig>)  {
         this.config = { ...DEFAULT_CONFIG, ...config };
         this.listeners = config.listeners || [];
         this.macro = new MacroAgent({ client: this.config.planner });//new MacroAgent({ provider: this.config.plannerModelProvider });
         // fix
-        this.micro = new MicroAgent({ moondreamApiKey: process.env.MOONDREAM_API_KEY! });
+        this.micro = new MicroAgent({ client: this.config.executor });
 
         this.analytics = { macroCalls: 0 };
     }

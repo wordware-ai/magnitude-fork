@@ -1,5 +1,5 @@
 import { Screenshot } from "@/web/types";
-import { type LLMClient } from '@/ai/types';
+import { type PlannerClient } from '@/ai/types';
 import sharp from "sharp";
 
 export async function downscaleScreenshot(screenshot: Screenshot, factor: number): Promise<Screenshot> {
@@ -41,7 +41,7 @@ function cleanNestedObject(obj: object): object {
     );
 }
 
-export function convertToBamlClientOptions(client: LLMClient): Record<string, any> {
+export function convertToBamlClientOptions(client: PlannerClient): Record<string, any> {
     // extract options compatible with https://docs.boundaryml.com/ref/llm-client-providers/overview
 
     // Default to temperature 0.0

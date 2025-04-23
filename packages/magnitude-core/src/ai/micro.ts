@@ -4,6 +4,7 @@ import { ActionIngredient, CheckIngredient, ClickIngredient, Ingredient, ScrollI
 import logger from "@/logger";
 import { Logger } from 'pino';
 import { vl as MoondreamClient } from 'moondream';
+import { ExecutorClient } from './types';
 
 
 interface MicroAgentConfig {
@@ -11,8 +12,10 @@ interface MicroAgentConfig {
     // A little bit of downscaling can improve accuracy in some cases.
     // More downscaling = less tokens and faster inference.
     downscaling: number;
-    moondreamApiKey: string;
-    moondreamUrl: string;
+    // only supported executor client rn is moondream
+    client: ExecutorClient;
+    // moondreamApiKey: string;
+    // moondreamUrl: string;
     //parsingRetries: 
     // confidence thresholds, etc. should go here as well
 }
@@ -31,10 +34,10 @@ export class MicroAgent {
     private logger: Logger;
     private moondream: MoondreamClient;
 
-    constructor(config: { moondreamApiKey: string } & Partial<MicroAgentConfig>) {
+    constructor(config: { client: ExecutorClient } & Partial<MicroAgentConfig>) {
         this.config = {...DEFAULT_CONFIG, ...config};
         this.logger = logger.child({ name: 'magnus.executor' });
-        this.moondream = new MoondreamClient({ apiKey: config.moondreamApiKey });
+        this.moondream = new MoondreamClient({ apiKey: config.client.options.apiKey, endpoint: config.client.options.baseUrl });
     }
 
     private async transformScreenshot (screenshot: Screenshot) {

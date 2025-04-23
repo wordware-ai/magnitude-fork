@@ -7,7 +7,7 @@ import chalk from 'chalk';
 import { createId } from '@paralleldrive/cuid2';
 import { TestCaseBuilder } from '../discovery/testCaseBuilder';
 import { CategorizedTestCasesWithRenderIds, RenderIdTestCasePair } from './types';
-import { LLMClient, TestAgentListener, TestCaseAgent, TestCaseDefinition, TestCaseResult, TestCaseStateTracker } from 'magnitude-core';
+import { PlannerClient, ExecutorClient, TestAgentListener, TestCaseAgent, TestCaseDefinition, TestCaseResult, TestCaseStateTracker } from 'magnitude-core';
 import { Browser, chromium } from 'playwright';
 import path from 'path';
 import { logger } from '@/logger';
@@ -17,7 +17,8 @@ export interface BaseTestRunnerConfig {
     workerCount: number;
     //printLogs: boolean;
     prettyDisplay: boolean;
-    planner: LLMClient;
+    planner: PlannerClient;
+    executor: ExecutorClient;
 }
 
 export const BASE_TEST_RUNNER_DEFAULT_CONFIG = {
@@ -36,7 +37,7 @@ export abstract class BaseTestRunner {
     // Worker count for parallel execution
     //protected workerCount: number = 1;
 
-    constructor(config: { planner: LLMClient } & Partial<BaseTestRunnerConfig>) {
+    constructor(config: { planner: PlannerClient, executor: ExecutorClient } & Partial<BaseTestRunnerConfig>) {
         this.config = { ...BASE_TEST_RUNNER_DEFAULT_CONFIG, ...config };
         this.registry = TestRegistry.getInstance();
         this.compiler = new TestCompiler();
@@ -158,7 +159,7 @@ export abstract class BaseTestRunner {
             return true;
         } catch (error) {
             // UNEXPECTED ERROR
-            logger.error("Unexpected error!")
+            logger.error(`Unexpected error! ${error}`)
             //console.log("Caught error in runSingleTest")
             // Update test status to failed
             this.viewer.updateTestStatus(renderId, 'failed', {

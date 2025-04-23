@@ -8,11 +8,11 @@ import { BamlAsyncClient } from "./baml_client/async_client";
 import logger from "@/logger";
 import { Logger } from 'pino';
 import { BugDetectedFailure, MisalignmentFailure } from "@/common";
-import { LLMClient } from "@/ai/types";
+import { PlannerClient } from "@/ai/types";
 
 
 interface MacroAgentConfig {
-    client: LLMClient;
+    client: PlannerClient;
     downscaling: number
 }
 
@@ -30,7 +30,7 @@ export class MacroAgent {
     private baml: BamlAsyncClient;
     private logger: Logger;
 
-    constructor(config: { client: LLMClient } & Partial<MacroAgentConfig>) {
+    constructor(config: { client: PlannerClient } & Partial<MacroAgentConfig>) {
         this.config = {...DEFAULT_CONFIG, ...config};
         this.collector = new Collector("macro");
         this.cr = new ClientRegistry();

@@ -14,6 +14,7 @@ import { discoverTestFiles, findConfig, findProjectRoot, isProjectRoot, readConf
 import { BaseTestRunner, BaseTestRunnerConfig } from './runner/baseRunner';
 import { logger as coreLogger } from 'magnitude-core';
 import logger from '@/logger';
+import { tryDeriveEnvironmentPlannerClient } from './util';
 
 interface CliOptions {
     workers?: number;
@@ -168,13 +169,46 @@ program
         const registry = TestRegistry.getInstance();
         registry.setGlobalOptions(config);
 
+        // If planner not provided, make a choice based on available environment variables
+        if (!config.planner) {
+            const planner = tryDeriveEnvironmentPlannerClient();
+            if (!planner) {
+                // TODO: Should point to docs on configuration
+                console.error("No planner client configured. Set an appropriate environment variable or configure planner in magnitude.config.ts");
+                process.exit(1);
+            }
+            config.planner = planner;
+        }
+
+        logger.info({ ...config.planner }, "Planner:");
+        
+        // If executor not provided, default to moondream cloud with MOONDREAM_API_KEY
+        if (!config.executor || !config.executor.options || (!config.executor.options.apiKey && !config.executor.options.baseUrl)) {
+            const apiKey = process.env.MOONDREAM_API_KEY;
+            if (!apiKey) {
+                console.error("Missing MOONDREAM_API_KEY, get one at https://moondream.ai/c/cloud/api-keys");
+                process.exit(1);
+            }
+            
+            config.executor = {
+                provider: 'moondream',
+                options: {
+                    apiKey
+                    // don't pass base URL, use moondream client default (https://api.moondream.ai/v1)
+                }
+            }
+        }
+
+        logger.info({ ...config.executor }, "Executor:");
+
         let runner: BaseTestRunner;
 
         const runnerConfig: BaseTestRunnerConfig = {
             workerCount: workerCount,
             //printLogs: options.plain,
             prettyDisplay: !(options.plain || options.debug),
-            planner: config.planner
+            planner: config.planner,
+            executor: config.executor,
         };
 
         runner = new LocalTestRunner(runnerConfig);
