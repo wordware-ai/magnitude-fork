@@ -1,11 +1,6 @@
 import { ClickWebAction, PixelCoordinate, Screenshot, ScrollWebAction, TypeWebAction, WebAction } from '@/web/types';
-import { b } from "@/ai/baml_client/async_client";
-import { Collector, Image } from "@boundaryml/baml";
-import sharp from 'sharp';
 import { downscaleScreenshot } from './util';
 import { ActionIngredient, CheckIngredient, ClickIngredient, Ingredient, ScrollIngredient, TypeIngredient } from '@/recipe/types';
-import { CheckResult } from './types';
-import { BamlAsyncClient } from "./baml_client/async_client";
 import logger from "@/logger";
 import { Logger } from 'pino';
 import { vl as MoondreamClient } from 'moondream';
@@ -27,7 +22,7 @@ const DEFAULT_CONFIG = {
 export class MicroAgent {
     /**
      * Small, fast, vision agent to translate high level web actions to precise, executable actions.
-     * Currently only compatible model is Molmo variants because of their ability to point to precise coordinates.
+     * Uses Moondream for pixel precision pointing.
      */
     private config: MicroAgentConfig;
     //private collector: Collector;
@@ -53,21 +48,22 @@ export class MicroAgent {
     async locateTarget(screenshot: Screenshot, target: string): Promise<PixelCoordinate> {
         const downscaledScreenshot = await this.transformScreenshot(screenshot);
         const start = Date.now();
-        // const response = await this.baml.LocateTarget(
-        //     Image.fromBase64('image/png', downscaledScreenshot.image),
-        //     target
-        // );
-        //const relCoords = await this.md.point({ object: })
-        const result = await this.moondream.point({
+
+        const response = await this.moondream.point({
             image: { imageUrl: downscaledScreenshot.image },
             object: target
         });
         // Point API can return multiple, which we don't really want. We want one clear target.
-        if (result.points.length > 1) {
-            logger.warn({ points: result.points }, "Moondream returned multiple points for locateTarget");
-            throw new Error(`Moondream returned multiple points ${result.points.length}, target unclear`);
+        // todo: actually handle these errors appropriately in caller
+        if (response.points.length > 1) {
+            logger.warn({ points: response.points }, "Moondream returned multiple points for locateTarget");
+            throw new Error(`Moondream returned multiple points ${response.points.length}, target unclear`);
         }
-        const relCoords = result.points[0];
+        if (response.points.length === 0) {
+            logger.warn("Moondream returned no points");
+            throw new Error(`Moondream returned no points, target unclear`);
+        }
+        const relCoords = response.points[0];
         this.logger.trace(`locateTarget took ${Date.now()-start}ms`);
 
         // Use ORIGINAL screenshot coordinate space (not downscaled)
@@ -82,10 +78,7 @@ export class MicroAgent {
         const downscaledScreenshot = await this.transformScreenshot(screenshot);
 
         const start = Date.now();
-        // const response = await this.baml.EvaluateCheck(
-        //     Image.fromBase64('image/png', downscaledScreenshot.image),
-        //     check.description
-        // );
+
         const response = await this.moondream.query({
             image: { imageUrl: downscaledScreenshot.image },
             question: `Evaluate whether this holds true, responding with simply Yes or No: ${check.description}`
