@@ -15,6 +15,36 @@ export class ActionVisualizer {
         // Create or update the mouse pointer visual at the specified position
         await this.page.evaluate(
             ({ x, y, id }) => {
+                // --- Create Expanding/Fading Circle ---
+                const circle = document.createElement('div');
+                circle.style.position = 'absolute';
+                circle.style.left = `${x}px`;
+                circle.style.top = `${y}px`;
+                circle.style.borderRadius = '50%';
+                circle.style.backgroundColor = '#026aa1'; // Blue color
+                circle.style.width = '0px';
+                circle.style.height = '0px';
+                circle.style.transform = 'translate(-50%, -50%)'; // Center on (x, y)
+                circle.style.pointerEvents = 'none';
+                circle.style.zIndex = '9998'; // Below the pointer
+                circle.style.opacity = '0.7'; // Initial opacity
+                document.body.appendChild(circle);
+
+                // Animate the circle
+                const animation = circle.animate([
+                    { width: '0px', height: '0px', opacity: 0.7 }, // Start state
+                    { width: '50px', height: '50px', opacity: 0 }  // End state
+                ], {
+                    duration: 500, // 500ms duration
+                    easing: 'ease-out'
+                });
+
+                // Remove circle after animation
+                animation.onfinish = () => {
+                    circle.remove();
+                };
+
+                // --- Existing Pointer Logic ---
                 // Check if the visual indicator already exists
                 let pointerElement = document.getElementById(id);
                 
