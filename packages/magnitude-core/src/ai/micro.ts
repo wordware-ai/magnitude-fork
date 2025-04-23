@@ -78,14 +78,14 @@ export class MicroAgent {
     private async evaluateSubcheck(screenshot: Screenshot, check: string): Promise<boolean> {
         const response = await this.moondream.query({
             image: { imageUrl: screenshot.image },
-            question: `Evaluate whether this holds true, responding with simply Yes or No: ${check}`
+            question: `${check}\n\nTrue or False`
         });
 
         const answer = (response.answer as string).trim().toLowerCase();
 
-        if (answer === 'yes') {
+        if (answer === 'true') {
             return true;
-        } else if (answer === 'no') {
+        } else if (answer === 'false') {
             return false;
         } else {
             console.warn(`Received invalid response for check: ${response}`);
