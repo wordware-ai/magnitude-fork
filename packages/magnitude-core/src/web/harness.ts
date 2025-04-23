@@ -2,6 +2,7 @@ import { Page, Browser } from "playwright";
 import { ClickWebAction, ScrollWebAction, TypeWebAction, WebAction } from '@/web/types';
 import { PageStabilityAnalyzer } from "./stability";
 import { parseTypeContent } from "./util";
+import { ActionVisualizer } from "./visualizer";
 
 export class WebHarness {
     /**
@@ -10,11 +11,12 @@ export class WebHarness {
      */
     private page: Page;
     private stability: PageStabilityAnalyzer;
-    private visualElementId: string = 'action-visual-indicator';
+    private visualizer: ActionVisualizer;
 
     constructor(page: Page) {
         this.page = page;
         this.stability = new PageStabilityAnalyzer(this.page);
+        this.visualizer = new ActionVisualizer(this.page);
     }
 
     async screenshot(): Promise<{ image: string, dimensions: { width: number, height: number } }> {
@@ -42,9 +44,9 @@ export class WebHarness {
     }
 
     async click({ x, y }: ClickWebAction) {
-        await this.visualizeAction(x, y);
+        await this.visualizer.visualizeAction(x, y);
         this.page.mouse.click(x, y);
-        //await this.removeActionVisuals();
+        //await this.visualizer.removeActionVisuals();
     }
 
     async type({ x, y, content }: TypeWebAction) {
@@ -52,9 +54,9 @@ export class WebHarness {
         //this.page.mouse.click(x, y);
         const chunks = parseTypeContent(content);
 
-        await this.visualizeAction(x, y);
+        await this.visualizer.visualizeAction(x, y);
         await this.page.mouse.click(x, y);
-        //await this.removeActionVisuals();
+        //await this.visualizer.removeActionVisuals();
 
         // Total typing period to make typing more natural, in ms
         const totalTextDelay = 500;
@@ -84,7 +86,7 @@ export class WebHarness {
     }
     
     async scroll({ x, y, deltaX, deltaY }: ScrollWebAction) {
-        await this.visualizeAction(x, y);
+        await this.visualizer.visualizeAction(x, y);
         await this.page.mouse.move(x, y);
         await this.page.mouse.wheel(deltaX, deltaY);
     }
@@ -105,54 +107,4 @@ export class WebHarness {
     // async waitForStability(timeout?: number): Promise<void> {
     //     await this.stability.waitForStability(timeout);
     // }
-
-    // async visualizeAction() {
-
-    // }
-
-    // async removeActionVisuals() {
-
-    // }
-
-    async visualizeAction(x: number, y: number) {
-        // Create a red dot at the specified position
-        await this.page.evaluate(
-            ({ x, y, id }) => {
-                // Remove any existing indicator
-                const existingElement = document.getElementById(id);
-                if (existingElement) {
-                    existingElement.remove();
-                }
-
-                // Create the visual indicator (red dot)
-                const dot = document.createElement('div');
-                dot.id = id;
-                dot.style.position = 'absolute';
-                dot.style.left = `${x - 5}px`;
-                dot.style.top = `${y - 5}px`;
-                dot.style.width = '10px';
-                dot.style.height = '10px';
-                dot.style.borderRadius = '50%';
-                dot.style.backgroundColor = 'red';
-                dot.style.zIndex = '9999';
-                dot.style.pointerEvents = 'none'; // Don't interfere with actual clicks
-
-                document.body.appendChild(dot);
-            },
-            { x, y, id: this.visualElementId }
-        );
-
-        // Wait briefly so the dot is visible before the action
-        //await this.page.waitForTimeout(300);
-    }
-
-    async removeActionVisuals() {
-        // Remove the visual indicator
-        await this.page.evaluate((id) => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.remove();
-            }
-        }, this.visualElementId);
-    }
 }
