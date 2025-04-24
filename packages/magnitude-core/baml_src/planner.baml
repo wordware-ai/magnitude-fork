@@ -24,14 +24,18 @@ class ClickIngredient {
     variant "click" @description(#"
         Click something
     "#)
-    target string
+    target string @description(#"
+        Where exactly to click
+    "#)
 }
 
 class TypeIngredient {
     variant "type" @description(#"
         Click something and type into it
     "#)
-    target string
+    target string @description(#"
+        Where exactly to click before typing
+    "#)
     content string @description(#"
         Content to type, insert sequences <enter> or <tab> for those keypresses respectively.
     "#)
@@ -41,7 +45,9 @@ class ScrollIngredient {
     variant "scroll" @description(#"
         Hover mouse over target and scroll
     "#)
-    target string
+    target string @description(#"
+        Somewhere specific inside the container to scroll in
+    "#)
     deltaX int @description(#"
         Pixels to scroll horizontally
     "#)
