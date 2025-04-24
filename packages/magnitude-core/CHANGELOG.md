@@ -1,5 +1,11 @@
 # magnitude-core
 
+## 0.0.9
+
+### Patch Changes
+
+- overhaul for self host
+
 ## 0.0.8
 
 ### Patch Changes
