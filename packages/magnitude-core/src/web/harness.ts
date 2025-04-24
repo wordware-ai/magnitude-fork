@@ -17,6 +17,17 @@ export class WebHarness {
         this.page = page;
         this.stability = new PageStabilityAnalyzer(this.page);
         this.visualizer = new ActionVisualizer(this.page);
+
+        // Listen for page load events to redraw the visualizer
+        this.page.on('load', async () => {
+            // Use a try-catch as page navigation might interrupt this
+            try {
+                await this.visualizer.redrawLastPosition();
+            } catch (error) {
+                // Ignore errors that might occur during navigation races
+                // console.warn("Error redrawing visualizer on load:", error);
+            }
+        });
     }
 
     async screenshot(): Promise<{ image: string, dimensions: { width: number, height: number } }> {
@@ -38,12 +49,13 @@ export class WebHarness {
             }
         };
     }
-
-    async goto(url: string) {
-        await this.page.goto(url);
-    }
-
-    async click({ x, y }: ClickWebAction) {
+ 
+     async goto(url: string) {
+         // No need to redraw here anymore, the 'load' event listener handles it
+         await this.page.goto(url);
+     }
+ 
+     async click({ x, y }: ClickWebAction) {
         await this.visualizer.visualizeAction(x, y);
         this.page.mouse.click(x, y);
         //await this.visualizer.removeActionVisuals();
@@ -102,6 +114,7 @@ export class WebHarness {
             throw Error(`Unhandled web action variant: ${(action as any).variant}`);
         }
         await this.stability.waitForStability();
+        //await this.visualizer.redrawLastPosition();
     }
 
     // async waitForStability(timeout?: number): Promise<void> {

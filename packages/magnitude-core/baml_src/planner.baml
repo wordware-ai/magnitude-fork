@@ -70,6 +70,7 @@ function CreatePartialRecipe (screenshot: image, step: TestStep, previousActions
         {{ _.role("system") }}
         Plan out web actions that should be executed in order to complete the step:
         <step>{{ step.description }}</step>
+        Do not always take the step exactly literally - if ambiguity use common sense.
         Target descriptions are located by a small vision LLM. They should be:
         (1) Based only on what can be seen in the screenshot right now.
         (2) Positional information, shapes, and text - no high level abstractions.
