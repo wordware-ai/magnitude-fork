@@ -229,6 +229,7 @@ program
             planner: config.planner,
             executor: config.executor,
             browserContextOptions: browserContextOptions,
+            telemetry: config.telemetry ?? true
         };
 
         runner = new LocalTestRunner(runnerConfig);

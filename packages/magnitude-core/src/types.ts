@@ -52,3 +52,29 @@ export interface FailedTestCaseResult {
     passed: false
     failure: FailureDescriptor
 }
+
+
+export interface TestRunInfo {
+	// version: string, // telemetry payload version will prob be nice in the future
+	// userId: string, // anon cuid2 stored on local machines
+	startedAt: number, // timestamp
+	doneAt: number, // timestamp
+	cached: boolean, // whether used a cached recipe
+	testCase: {
+		numSteps: number, // total num steps
+		numChecks: number // total num checks
+	},
+	actionCount: number, // number of web actions taken
+	macroUsage: {
+		provider: string,
+		model: string,
+		inputTokens: number,
+		outputTokens: number,
+		numCalls: number
+	}
+	microUsage: {
+		provider: string,
+		numCalls: number
+	},
+	result: string//'passed' | 'bug' | 'misalignment'
+};

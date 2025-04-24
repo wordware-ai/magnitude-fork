@@ -3,7 +3,7 @@ import { MicroAgent } from "@/ai/micro";
 import { MacroAgent } from "@/ai/macro";
 import { Browser, BrowserContextOptions } from "playwright";
 import { WebHarness } from "@/web/harness";
-import { TestCaseDefinition, TestCaseResult } from "@/types";
+import { TestCaseDefinition, TestCaseResult, TestRunInfo } from "@/types";
 //import { NavigationError, ActionExecutionError, ActionConversionError, TestCaseError } from "@/errors";
 import { CheckIngredient } from "./ai/baml_client";
 import { TestAgentListener } from "./common/events";
@@ -17,33 +17,28 @@ export interface TestCaseAgentConfig {
     planner: PlannerClient,
     executor: ExecutorClient
     browserContextOptions: BrowserContextOptions
-    //plannerModelProvider: 'SonnetBedrock' | 'SonnetAnthropic'
-    // moondreamUrl: string
-    // moondreamApiKey: string
-    // Browser options
-
-    // Behavior/LLM options
 }
 
 const DEFAULT_CONFIG = {
     listeners: [],
     browserContextOptions: {}
-    //plannerModelProvider: 'SonnetBedrock'
 }
 
-interface TestCaseAgentAnalytics {
-    macroCalls: number
-    // microCalls
-    // macroTokens
-    // microTokens
-}
+// interface TestCaseAgentTelemetry {
+//     version: string,
+//     macroCalls: number
+//     // microCalls
+//     // macroTokens
+//     // microTokens
+// }
 
 export class TestCaseAgent {
     private config: TestCaseAgentConfig;
     private listeners: TestAgentListener[];
     private macro: MacroAgent;
     private micro: MicroAgent;
-    private analytics: TestCaseAgentAnalytics;
+    private info: Partial<TestRunInfo>;
+    //private telemetry: TestRunTelemetry;
     
     constructor (config: { planner: PlannerClient, executor: ExecutorClient } & Partial<TestCaseAgentConfig>)  {
         this.config = { ...DEFAULT_CONFIG, ...config };
@@ -52,7 +47,21 @@ export class TestCaseAgent {
         // fix
         this.micro = new MicroAgent({ client: this.config.executor });
 
-        this.analytics = { macroCalls: 0 };
+        //this.analytics = { macroCalls: 0 };
+        this.info = {
+            // version: "0.1",
+            // userId: "foo",
+            actionCount: 0
+        }
+    }
+
+    // Prob should just make this part of TestCaseResult
+    getInfo(): TestRunInfo {
+        return {
+            ...this.info,
+            macroUsage: this.macro.getInfo(),
+            microUsage: this.micro.getInfo(),
+        } as TestRunInfo;
     }
 
     async run(browser: Browser, testCase: TestCaseDefinition): Promise<TestCaseResult> {
@@ -61,6 +70,12 @@ export class TestCaseAgent {
          */
         // Should NOT throw unless truly unexpected error occurs
         //console.log("Agent is running test case:", testCase);
+        this.info.startedAt = Date.now();
+        this.info.testCase = {
+            numSteps: testCase.steps.length,
+            numChecks: testCase.steps.reduce((count, step) => count + step.checks.length, 0)
+        }
+        this.info.cached = false;
 
         // TODO: Set browser options and stuff
         logger.info("Creating browser context");
@@ -91,8 +106,11 @@ export class TestCaseAgent {
                 }
             }
         } finally {
+            this.info.doneAt = Date.now();
             await context.close();
         }
+
+        this.info.result = result.passed ? 'passed' : result.failure.variant;
 
         logger.info({ result }, "Test run complete");
         
@@ -143,22 +161,22 @@ export class TestCaseAgent {
             while (true) {
                 // Check action / time limit
                 // for now
-                if (this.analytics.macroCalls > 40) {
-                    // temporary to prevent weird loops where test cases call create partial forever with empty actions for example
-                    // this shouldn't really happen, something is up
-                    return {
-                        passed: false,
-                        failure: {
-                            // todo: add timeout variant
-                            variant: 'misalignment',
-                            message: 'Agent seems to be stuck and has exceed LLM call limit'
-                        }
-                    };
-                }
+                // if (this.analytics.macroCalls > 40) {
+                //     // temporary to prevent weird loops where test cases call create partial forever with empty actions for example
+                //     // this shouldn't really happen, something is up
+                //     return {
+                //         passed: false,
+                //         failure: {
+                //             // todo: add timeout variant
+                //             variant: 'misalignment',
+                //             message: 'Agent seems to be stuck and has exceed LLM call limit'
+                //         }
+                //     };
+                // }
 
                 const screenshot = await harness.screenshot();
                 const { actions, finished } = await this.macro.createPartialRecipe(screenshot, step, stepActionIngredients);
-                this.analytics.macroCalls += 1;
+                //this.analytics.macroCalls += 1;
 
                 logger.info({ actions, finished }, `Partial recipe created`);
                 //console.log('Partial recipe:', actions);
@@ -216,6 +234,7 @@ export class TestCaseAgent {
 
                     try {
                         await harness.executeAction(action);
+                        this.info.actionCount!++;
                         //this.config.onActionTaken(ingredient, action);
                         // Take new screenshot after action to provide in event
                     } catch (error) {
@@ -292,7 +311,7 @@ export class TestCaseAgent {
                     // TODO: adjust plan for minor misalignments
                     // - should only actually fail if it's (1) a bug or (2) a test case misalignment that cannot be treated by recipe adjustment
                     const failure = await this.macro.classifyCheckFailure(checkScreenshot, check, stepActionIngredients);
-                    this.analytics.macroCalls += 1;
+                    //this.analytics.macroCalls += 1;
 
                     return {
                         passed: false,

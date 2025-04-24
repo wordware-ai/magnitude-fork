@@ -1,13 +1,14 @@
 import { PlannerClient, ExecutorClient, TestAgentListener, TestCaseAgent, TestCaseDefinition, TestCaseResult } from 'magnitude-core';
 import { Browser, chromium } from 'playwright';
 import { BASE_TEST_RUNNER_DEFAULT_CONFIG, BaseTestRunner, BaseTestRunnerConfig } from './baseRunner';
+import logger from '@/logger';
 
 export interface LocalRunnerConfig extends BaseTestRunnerConfig {
 }
 
 const DEFAULT_CONFIG = {
     ...BASE_TEST_RUNNER_DEFAULT_CONFIG,
-} 
+}
 
 export class LocalTestRunner extends BaseTestRunner {
     private browser: Browser | null = null;
@@ -33,6 +34,27 @@ export class LocalTestRunner extends BaseTestRunner {
             browserContextOptions: this.config.browserContextOptions
         });
         const result = await agent.run(this.browser!, testCase);
+
+        if (this.config.telemetry) {
+            const runInfo = agent.getInfo();
+            const payload = {
+                version: "0.1",
+                userId: "bar",
+                ...runInfo
+            };
+            const jsonString = JSON.stringify(payload);
+            const encodedData = btoa(jsonString);
+            const telemetryUrl = "https://telemetry.magnitude.run/functions/v1/telemetry?data=" + encodedData;
+            try {
+                const resp = await fetch(telemetryUrl, { signal: AbortSignal.timeout(3000) });
+                if (!resp.ok) {
+                    logger.warn(`Failed to send telemetry (status ${resp.status})`);
+                }
+            } catch (error) {
+                logger.warn(`Failed to send telemetry (may have timed out): ${(error as Error).message}`);
+            }
+        }
+        
         return result;
     }
 }

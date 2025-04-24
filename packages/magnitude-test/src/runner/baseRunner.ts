@@ -20,13 +20,15 @@ export interface BaseTestRunnerConfig {
     planner: PlannerClient;
     executor: ExecutorClient;
     browserContextOptions: BrowserContextOptions;
+    telemetry: boolean;
 }
 
 export const BASE_TEST_RUNNER_DEFAULT_CONFIG = {
     workerCount: 1,
     //printLogs: false,
     prettyDisplay: true,
-    browserContextOptions: {}
+    browserContextOptions: {},
+    telemetry: true,
 };
 
 export abstract class BaseTestRunner {

@@ -25,17 +25,24 @@ const DEFAULT_CONFIG = {
     downscaling: 0.75
 }
 
+export interface MicroAgentInfo {
+    provider: string,
+    numCalls: number
+}
+
 export class MicroAgent {
     /**
      * Small, fast, vision agent to translate high level web actions to precise, executable actions.
      * Uses Moondream for pixel precision pointing.
      */
     private config: MicroAgentConfig;
+    private info: MicroAgentInfo;
     private logger: Logger;
     private moondream: MoondreamClient;
 
     constructor(config: { client: ExecutorClient } & Partial<MicroAgentConfig>) {
         this.config = {...DEFAULT_CONFIG, ...config};
+        this.info = { provider: 'moondream', numCalls: 0 };
         this.logger = logger.child({ name: 'magnus.executor' });
         this.moondream = new MoondreamClient({ apiKey: config.client.options.apiKey, endpoint: config.client.options.baseUrl });
     }
@@ -47,6 +54,10 @@ export class MicroAgent {
         return screenshot;
     }
 
+    getInfo(): MicroAgentInfo {
+        return this.info;
+    }
+
     async locateTarget(screenshot: Screenshot, target: string): Promise<PixelCoordinate> {
         const downscaledScreenshot = await this.transformScreenshot(screenshot);
         const start = Date.now();
@@ -55,6 +66,7 @@ export class MicroAgent {
             image: { imageUrl: downscaledScreenshot.image },
             object: target
         });
+        this.info.numCalls++;
         // Point API can return multiple, which we don't really want. We want one clear target.
         // todo: actually handle these errors appropriately in caller
         if (response.points.length > 1) {
@@ -80,6 +92,7 @@ export class MicroAgent {
             image: { imageUrl: screenshot.image },
             question: `${check}\n\nTrue or False`
         });
+        this.info.numCalls++;
 
         const answer = (response.answer as string).trim().toLowerCase();
 

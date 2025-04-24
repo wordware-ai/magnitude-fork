@@ -20,6 +20,14 @@ const DEFAULT_CONFIG = {
     downscaling: 0.75
 }
 
+export interface MacroAgentInfo {
+    provider: string,
+    model: string,
+    inputTokens: number,
+    outputTokens: number,
+    numCalls: number
+}
+
 export class MacroAgent {
     /**
      * Strong reasoning agent for high level strategy and planning.
@@ -52,8 +60,18 @@ export class MacroAgent {
         this.logger = logger.child({ name: 'magnus.planner' });
     }
 
-    getCollector() {
-        return this.collector;
+    // getCollector() {
+    //     return this.collector;
+    // }
+
+    getInfo(): MacroAgentInfo {
+        return {
+            provider: this.config.client.provider,
+            model: this.config.client.options.model,
+            inputTokens: this.collector.usage.inputTokens ?? 0,
+            outputTokens: this.collector.usage.outputTokens ?? 0,
+            numCalls: this.collector.logs.length
+        }
     }
 
     private async transformScreenshot(screenshot: Screenshot) {

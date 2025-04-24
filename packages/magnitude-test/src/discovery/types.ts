@@ -14,7 +14,8 @@ export type MagnitudeConfig = {
     executor?: ExecutorClient,
     browser?: {
         contextOptions?: BrowserContextOptions
-    }
+    },
+    telemetry?: boolean
     // executor?: {
     //     moondreamUrl?: string; // defaults to https://api.moondream.ai/v1
     //     moondreamApiKey?: string; // defaults to process.env.MOONDREAM_API_KEY
