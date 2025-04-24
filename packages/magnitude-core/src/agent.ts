@@ -62,7 +62,10 @@ export class TestCaseAgent {
 
         // TODO: Set browser options and stuff
         logger.info("Creating browser context");
-        const context = await browser.newContext({ viewport: { width: 1280, height: 720 }});
+        const dpr = process.env.DEVICE_PIXEL_RATIO ?
+            parseInt(process.env.DEVICE_PIXEL_RATIO) :
+            process.platform === 'darwin' ? 2 : 1;
+        const context = await browser.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: dpr });
         const page = await context.newPage();
         const harness = new WebHarness(page);
 
