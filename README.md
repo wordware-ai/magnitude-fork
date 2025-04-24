@@ -69,7 +69,7 @@ Magnitude will automatically read and use any of the following API keys if confi
 - `ANTHROPIC_API_KEY` (claude-3-7-sonnet-latest)
 - `OPENAI_API_KEY` (gpt-4.1-2025-04-14)
 
-If you have any of these in your environment, no additional setup is needed for the planner. To explicitly select a specific provider and model, see [configuration docs](https://docs.magnitude.run/reference/configuration).
+If you have any of these in your environment, no additional setup is needed for the planner. To explicitly select a specific provider and model, see [configuration docs](https://docs.magnitude.run/reference/llm-configuration). Currently we support Google Vertex AI, Anthropic, AWS Bedrock, OpenAI, and OpenAI-compatible providers.
 
 > We strongly recommend Gemini 2.5 pro or Sonnet 3.5/3.7 for the planner model. We design the planner agent with the strongest models in mind, so other models may not work as expected.
 
@@ -113,9 +113,8 @@ Steps, checks, and data are all natural language. Think of it like you're descri
 
 For more information on how to build test cases see <a href="https://docs.magnitude.run/core-concepts/building-test-cases" target="_blank">our docs.</a>
 
-
 ## Integrating with CI/CD
-You can run Magnitude tests in CI anywhere that you could run Playwright tests, just include LLM client credentials. For instructions on running tests cases on build/deploy steps for specific cloud platforms, see our [deployment docs](https://docs.magnitude.run/deployment/overview).
+You can run Magnitude tests in CI anywhere that you could run Playwright tests, just include LLM client credentials. For instructions on running tests cases on GitHub actions, see [here](https://docs.magnitude.run/deployment/overview).
 
 ## FAQ
 

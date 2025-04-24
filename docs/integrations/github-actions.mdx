@@ -7,13 +7,7 @@ You can kick off Magnitude tests from GitHub actions by:
 1. Ensuring that your development server is accessible in the test runner
 2. Ensuring `magnitude-test` gets installed on the test runner
 3. Running the appropriate `npx magnitude` CLI command
-
-
-<Info>Your Magnitude test workers do NOT need to install Playwright or any browser, since we host those remotely for you.</Info>
-<Warning>`magnitude-test` requires node >= 22 to run as it depends on the native WebSocket implementation.</Warning>
-
-
-Keep in mind that currently only Magnitude tests in your codebase (`*.mag.ts` files) can be kicked off this way, not tests that were created via the dashboard.
+4. Including the appropriate LLM client credentials (MOONDREAM_API_KEY + whatever you need for your planner LLM of choice).
 
 Here's an example `.githhub/workflows/magnitude.yaml`, from our our [example repo](https://github.com/magnitudedev/magnitude-demo-repo/blob/main/.github/workflows/magnitude.yaml):
 ```yaml
@@ -27,6 +21,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       MOONDREAM_API_KEY: ${{ secrets.MOONDREAM_API_KEY }}
     steps:
       - uses: actions/checkout@v4
@@ -39,9 +34,9 @@ jobs:
           
       - name: Install dependencies
         run: npm ci
-        
-      - name: Install WebSocket package
-        run: npm install ws
+      
+      - name: Install playwright
+        run: npx playwright install chromium
         
       - name: Start development server
         run: npm run dev &
