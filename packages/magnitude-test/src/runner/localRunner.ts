@@ -29,7 +29,8 @@ export class LocalTestRunner extends BaseTestRunner {
         const agent = new TestCaseAgent({
             listeners: [listener],
             planner: this.config.planner,
-            executor: this.config.executor
+            executor: this.config.executor,
+            browserContextOptions: this.config.browserContextOptions
         });
         const result = await agent.run(this.browser!, testCase);
         return result;

@@ -1,7 +1,7 @@
 import { WebAction } from "@/web/types";
 import { MicroAgent } from "@/ai/micro";
 import { MacroAgent } from "@/ai/macro";
-import { Browser } from "playwright";
+import { Browser, BrowserContextOptions } from "playwright";
 import { WebHarness } from "@/web/harness";
 import { TestCaseDefinition, TestCaseResult } from "@/types";
 //import { NavigationError, ActionExecutionError, ActionConversionError, TestCaseError } from "@/errors";
@@ -16,6 +16,7 @@ export interface TestCaseAgentConfig {
     listeners: TestAgentListener[]
     planner: PlannerClient,
     executor: ExecutorClient
+    browserContextOptions: BrowserContextOptions
     //plannerModelProvider: 'SonnetBedrock' | 'SonnetAnthropic'
     // moondreamUrl: string
     // moondreamApiKey: string
@@ -26,6 +27,7 @@ export interface TestCaseAgentConfig {
 
 const DEFAULT_CONFIG = {
     listeners: [],
+    browserContextOptions: {}
     //plannerModelProvider: 'SonnetBedrock'
 }
 
@@ -65,7 +67,11 @@ export class TestCaseAgent {
         const dpr = process.env.DEVICE_PIXEL_RATIO ?
             parseInt(process.env.DEVICE_PIXEL_RATIO) :
             process.platform === 'darwin' ? 2 : 1;
-        const context = await browser.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: dpr });
+        const context = await browser.newContext({
+            viewport: { width: 1280, height: 720 },
+            deviceScaleFactor: dpr,
+            ...this.config.browserContextOptions
+        });
         const page = await context.newPage();
         const harness = new WebHarness(page);
 

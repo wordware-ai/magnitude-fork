@@ -1,3 +1,4 @@
+import { BrowserContextOptions } from "playwright";
 import { TestCaseBuilder } from "./testCaseBuilder";
 import type { PlannerClient, ExecutorClient } from 'magnitude-core';
 
@@ -10,7 +11,10 @@ export type MagnitudeConfig = {
     //apiKey?: string;
     url: string; // base URL used as default, required
     planner?: PlannerClient,
-    executor?: ExecutorClient
+    executor?: ExecutorClient,
+    browser?: {
+        contextOptions?: BrowserContextOptions
+    }
     // executor?: {
     //     moondreamUrl?: string; // defaults to https://api.moondream.ai/v1
     //     moondreamApiKey?: string; // defaults to process.env.MOONDREAM_API_KEY

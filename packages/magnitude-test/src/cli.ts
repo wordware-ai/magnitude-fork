@@ -220,12 +220,15 @@ program
 
         let runner: BaseTestRunner;
 
+        const browserContextOptions = config.browser?.contextOptions ?? {};
+
         const runnerConfig: BaseTestRunnerConfig = {
             workerCount: workerCount,
             //printLogs: options.plain,
             prettyDisplay: !(options.plain || options.debug),
             planner: config.planner,
             executor: config.executor,
+            browserContextOptions: browserContextOptions,
         };
 
         runner = new LocalTestRunner(runnerConfig);
