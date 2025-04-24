@@ -3,12 +3,38 @@ title: LLM Configuration
 description: "Instructions for configuring LLMs with different providers"
 ---
 
+Magnitude requires configuring two language models:
+1. **"Planner"** model (any good multi-modal LLM)
+2. **"Executor"** model (currently only Moondream is supported)
+
+
+For the **planner** model, we currently support Google Vertex AI, Anthropic, AWS Bedrock, OpenAI, and OpenAI-compatible providers.
+
+<Info>While many providers are supported, we would strongly suggest using Gemini 2.5 pro (via Vertex AI or OpenAI-compatible) or Claude Sonnet 3.7 (via Anthropic or Bedrock) for the planner.</Info>
+
+<Info>Magnitude uses [BAML](https://docs.boundaryml.com/ref/llm-client-providers/overview)'s providers under the hood, so their docs may be a useful secondary reference for credential configuration.</Info>
+
+To configure your planner model, pass one of the client interfaces described below to your `magnitude.config.ts`, like:
+```typescript
+import { type MagnitudeConfig } from 'magnitude-test';
+
+export default {
+    url: "http://localhost:5173",
+    planner: {
+        provider: 'anthropic', // your provider of choice
+        options: {
+            // any required + optional configuration for that provider
+            model: 'claude-3-7-sonnet-latest',
+            apiKey: process.env.ANTHROPIC_API_KEY
+        }
+    }
+} satisfies MagnitudeConfig;
+```
+
+## Anthropic
 
 ```typescript
-export type PlannerClient = AnthropicClient | BedrockClient | GoogleVertexClient | OpenAIClient | OpenAIGenericClient;
-export type ExecutorClient = MoondreamClient;
-
-export interface AnthropicClient {
+interface AnthropicClient {
     provider: 'anthropic',
     options: {
         model: string,
@@ -16,31 +42,10 @@ export interface AnthropicClient {
         temperature?: number
     }   
 }
+```
 
-// See https://docs.boundaryml.com/ref/llm-client-providers/aws-bedrock for authentication details (use AWS_ env vars)
-export interface BedrockClient {
-    provider: 'aws-bedrock',
-    options: {
-        model: string,
-        // passed to inference_configuration
-        temperature?: number
-    }   
-}
-
-// See https://docs.boundaryml.com/ref/llm-client-providers/google-vertex for how this is authenticated
-export interface GoogleVertexClient {
-    provider: 'vertex-ai',
-    options: {
-        model: string,
-        location: string,
-        baseUrl?: string,
-        projectId?: string,
-        credentials?: string | object,
-        // passed to generationConfig
-        temperature?: number,
-    }
-}
-
+## OpenAI
+```typescript
 export interface OpenAIClient {
     provider: 'openai',
     options: {
@@ -49,7 +54,11 @@ export interface OpenAIClient {
         temperature?: number
     }
 }
+```
 
+## OpenAI-compatible (OpenRouter, Ollama, etc.)
+
+```typescript
 export interface OpenAIGenericClient {
     provider: 'openai-generic'
     options: {
@@ -59,12 +68,83 @@ export interface OpenAIGenericClient {
         temperature?: number,
     }
 }
+```
 
-export interface MoondreamClient {
-    provider: 'moondream',
+## Google Vertex AI
+
+```typescript
+interface GoogleVertexClient {
+    provider: 'vertex-ai',
     options: {
+        model: string,
+        location: string,
         baseUrl?: string,
-        apiKey?: string
+        projectId?: string,
+        credentials?: string | object,
+        temperature?: number,
     }
 }
+```
+
+### Authentication
+
+The `vertex-ai` provider by default will try to authenticate using the following strategies:
+
+- if `GOOGLE_APPLICATION_CREDENTIALS` is set, it will use the specified service account
+- if you have run `gcloud auth application-default login`, it will use those credentials
+- if running in GCP, it will query the metadata server to use the attached service account
+- if `gcloud` is available on the `PATH`, it will use `gcloud auth print-access-token`
+
+If you're using Google Cloud [application default
+credentials](https://cloud.google.com/docs/authentication/application-default-credentials), you
+can expect authentication to work out of the box.
+
+Setting [`options.credentials`](#credentials) will take precedence and force `vertex-ai` to load
+service account credentials from that file path.
+
+<Info>Source: [BAML Google Vertex Provider Docs](https://docs.boundaryml.com/ref/llm-client-providers/google-vertex#authentication)</Info>
+
+
+## AWS Bedrock
+
+```typescript
+interface BedrockClient {
+    provider: 'aws-bedrock',
+    options: {
+        model: string,
+        // passed to inference_configuration
+        temperature?: number
+    }   
+}
+```
+
+Authenticate with bedrock using environment variables:
+```sh
+export AWS_ACCESS_KEY_ID="your_key"
+export AWS_SECRET_ACCESS_KEY="your_secret"
+export AWS_REGION="us-east-1"
+```
+
+
+## Configuring Moondream
+
+Moondream cloud is the easiest way to get set up, and offers 5,000 free requests per day. Get an API key [here](https://moondream.ai/c/cloud/api-keys).
+
+Moondream is open source and can also be self-hosted instead of using their cloud option. See [here](https://moondream.ai/c/moondream-server) for instructions.
+
+If self-hosting, configure the `baseUrl` to point to your server:
+
+```typescript
+import { type MagnitudeConfig } from 'magnitude-test';
+
+export default {
+    url: "http://localhost:5173",
+    executor: {
+        provider: 'moondream', // only moondream currently supported
+        options: {
+            baseUrl: 'your-self-hosted-moondream-endpoint',
+            apiKey: process.env.MOONDREAM_API_KEY // not necessary if self-hosted
+        }
+    }
+} satisfies MagnitudeConfig;
 ```

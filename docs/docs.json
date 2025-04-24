@@ -73,7 +73,6 @@
                 "group": "Reference",
                 "pages": [
                     "reference/llm-configuration",
-                    "reference/configuration",
                     "reference/test-cases",
                     "reference/test-steps",
                     "reference/test-groups",

@@ -11,23 +11,19 @@ npx magnitude
 ### Arguments
 
 ```
-Usage: magnitude [options] [command] [...filters]
+Usage: magnitude [options] [command] [filter]
 
 Run Magnitude test cases
 
 Arguments:
-  ...filters              glob patterns for test files
+  filter                  glob pattern for test files (quote if contains spaces or wildcards)
 
 Options:
-  -w, --workers <number>  number of parallel workers for test execution
-                          (default: "1")
-  -p, --plain             disable pretty output and use logs
-  -l, --local             run agent locally (requires Playwright and LLM
-                          provider configuration)
-  -t, --tunnel            (remote mode only) force enable HTTP tunneling
-                          regardless of whether target URL appears
-                          local/private
-  -r, --remote <url>      specify a custom remote runner
-  -k, --key <apiKey>      provide API key
+  -w, --workers <number>  number of parallel workers for test execution (default: "1")
+  -p, --plain             disable pretty output and print lines instead
+  -d, --debug             enable debug logs
   -h, --help              display help for command
+
+Commands:
+  init                    Initialize Magnitude test directory structure
 ```
