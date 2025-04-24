@@ -246,29 +246,31 @@ export class TestCaseAgent {
                 }
             }
 
-            const stepCheckIngredients = [];
+            //const stepCheckIngredients = [];
 
             const checkScreenshot = await harness.screenshot();
             for (const check of step.checks) {
+                // This could be done in a batch for all checks in this step
                 logger.info(`Checking: ${check}`);
                 
-                // Remove implicit context
-                // This could be done in a batch for all checks in this step
-                const convertedChecks = await this.macro.removeImplicitCheckContext(checkScreenshot, check, stepActionIngredients);
-                this.analytics.macroCalls += 1;
+                // For now evaluating checks directly instead of converting to checks that can be evaluated with micro,
+                // because moondream is not good at dealing with checks that aren't completely dead simple
+                const result = await this.macro.evaluateCheck(checkScreenshot, check, stepActionIngredients);
 
-                //console.log('Check without context:', checkNoContext);
-                logger.info(`Augmented checks: ${convertedChecks}`);
+                // const convertedChecks = await this.macro.removeImplicitCheckContext(checkScreenshot, check, stepActionIngredients);
+                // this.analytics.macroCalls += 1;
 
-                const checkIngredient: CheckIngredient = { "variant": "check", checks: convertedChecks };
+                // logger.info(`Augmented checks: ${convertedChecks}`);
 
-                stepCheckIngredients.push(checkIngredient);
+                // const checkIngredient: CheckIngredient = { "variant": "check", checks: convertedChecks };
 
-                // TODO: Utilize check confidence
-                const result = await this.micro.evaluateCheck(
-                    checkScreenshot,
-                    checkIngredient
-                );
+                // stepCheckIngredients.push(checkIngredient);
+
+                // const result = await this.micro.evaluateCheck(
+                //     checkScreenshot,
+                //     checkIngredient
+                // );
+
                 if (result) {
                     // Passed
                     for (const listener of this.listeners) if (listener.onCheckCompleted) listener.onCheckCompleted();
@@ -296,20 +298,12 @@ export class TestCaseAgent {
                         passed: false,
                         failure: failure
                     }
-                    // return {
-                    //     passed: false,
-                    //     failure: {
-                    //         'variant': 'misalignment',
-                    //         'message': `Failed check: ${check}`
-                    //     }
-                    // };
-                    //return { passed: false, failure: { description: `Failed check: ${check}` } };//, recipe: recipe };
                 }
             }
 
             // If checks pass, update cached recipe
             for (const ing of stepActionIngredients) recipe.push(ing);
-            for (const check of stepCheckIngredients) recipe.push(check);
+            //for (const check of stepCheckIngredients) recipe.push(check);
         }
 
         logger.info({ recipe }, `Final recipe`);

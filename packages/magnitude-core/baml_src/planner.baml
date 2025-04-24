@@ -152,3 +152,34 @@ function RemoveImplicitCheckContext (screenshot: image, check: string, previousA
         {{screenshot}}
     "# 
 }
+
+class EvaluatedCheck {
+    reasoning string
+    passes bool
+}
+
+// Moondream struggles to handle converted check, this is a bypass to use big model to evaluate check directly
+function EvaluateCheck (screenshot: image, check: string, previousActions: string[]) -> EvaluatedCheck {
+    client GeminiPro
+    prompt #"
+        {{ _.role("system") }}
+        Given the actions of an LLM agent executing a test case, evaluate whether the provided check "passes" i.e. holds true or not.
+        {{ ctx.output_format }}
+
+        {{ _.role("user")}}
+
+        The history of previous actions:
+        {%if previousActions %}
+        (there are none)
+        {%endif%}
+        {%for action in previousActions%}
+        {{ action }}
+        {%endfor%}
+        
+        Check to evaluate:
+        <check>{{ check }}</check>
+
+        Current screenshot:
+        {{screenshot}}
+    "# 
+}

@@ -104,6 +104,24 @@ export class MacroAgent {
         return response.checks;
     }
 
+    async evaluateCheck(screenshot: Screenshot, check: string, existingRecipe: ActionIngredient[]): Promise<boolean> {
+        const downscaledScreenshot = await this.transformScreenshot(screenshot);
+
+        const stringifiedExistingRecipe = [];
+        for (const action of existingRecipe) {
+            stringifiedExistingRecipe.push(JSON.stringify(action, null, 4))
+        }
+
+        const start = Date.now();
+        const response = await this.baml.EvaluateCheck(
+            Image.fromBase64('image/png', downscaledScreenshot.image),
+            check,
+            stringifiedExistingRecipe
+        );
+        this.logger.trace(`evaluateCheck took ${Date.now()-start}ms`);
+        return response.passes;
+    }
+
     async classifyCheckFailure(screenshot: Screenshot, check: string, existingRecipe: ActionIngredient[]): Promise<BugDetectedFailure | MisalignmentFailure> {
         const downscaledScreenshot = await this.transformScreenshot(screenshot);
 
