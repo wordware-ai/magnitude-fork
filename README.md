@@ -4,7 +4,7 @@
   </p>
 
   <h3 align="center">
-    Magnitude: Open source AI agents for web testing
+    Magnitude: The open source, AI-native testing framework for web apps
   </h3>
 
   <p>
@@ -16,7 +16,7 @@
 
 End-to-end testing framework powered by visual AI agents that see your interface and adapt to any changes in it.
 
-Available as a [hosted service](#running-your-first-test) or you can [self-host](#self-hosting)!
+100% open source.
 
 ## How it works
 - ✍️ Build test cases easily with natural language
@@ -38,10 +38,10 @@ test('can add and complete todos', { url: 'https://magnitodo.com' })
         .check('says 0 items left')
 ```
 
-## Running your first test
+## Setup
 
-> 🚀 Check out our free [test playground](https://app.magnitude.run/signup?seedpg=true) to try Magnitude with **zero setup**
 
+### Install Magnitude
 **1. Install our test runner** in the node project you want to test (or see our [demo repo](https://github.com/magnitudedev/magnitude-demo-repo) if you don't have a project to try it on)
 ```sh
 npm install --save-dev magnitude-test
@@ -55,23 +55,48 @@ This will create a basic tests directory `tests/magnitude` with:
 - `magnitude.config.ts`: Magnitude test configuration file
 - `example.mag.ts`: An example test file
 
-**3. Configure the Magnitude client**
+### Configure LLMs
 
-For hosted, you just need a Magnitude API key. To use your own LLM providers and browser infra, see [self-hosting](#self-hosting).
+Magnitude requires setting up two LLM clients:
+1. 🧠 A strong general multi-modal LLM (the **"planner"**)
+2. 👁️ A fast vision LLM with pixel-precision (the **"executor"**)
 
-You can get a free API key by signing up at <a href="https://app.magnitude.run/signup" target="_blank">app.magnitude.run/signup</a> in Settings -> API Keys. Then set the `MAGNITUDE_API_KEY` environment variable:
-```sh
-export MAGNITUDE_API_KEY=<your-api-key-here>
-```
+#### Planner Configuration
 
-**4. Run your Magnitude tests with:**
+For the **planner**, you can use models like Gemini 2.5 pro, Claude Sonnet 3.7, GPT 4.1, or any other model that accepts image input.
+
+Magnitude will automatically read and use any of the following API keys if configured:
+- `GOOGLE_APPLICATION_CREDENTIALS` (gemini-2.5-pro-preview-03-25)
+- `OPENROUTER_API_KEY` (google/gemini-2.5-pro-preview-03-25)
+- `ANTHROPIC_API_KEY` (claude-3-7-sonnet-latest)
+- `OPENAI_API_KEY` (gpt-4.1-2025-04-14)
+
+If you have any of these in your environment, no additional setup is needed for the planner. To explicitly select a specific provider and model, see [configuration docs](https://docs.magnitude.run/reference/configuration).
+
+> We strongly recommend Gemini 2.5 pro or Sonnet 3.5/3.7 for the planner model. We design the planner agent with the strongest models in mind, so other models may not work as expected.
+
+#### Executor Configuration (Moondream)
+
+Currently for the **executor** model, we only support [Moondream](https://moondream.ai/), which is a fast vision model that Magnitude uses for precise UI interactions.
+
+To configure Moondream, sign up and create an API with Moondream [here](https://moondream.ai/c/cloud/api-keys), then add to your environment as `MOONDREAM_API_KEY`. This will use the cloud version, but Moondream is fully open source and self-hostable as well.
+
+🚀 Once you've got your LLMs set up, you're ready to run tests!
+
+
+## Running tests
+
+**Run your Magnitude tests with:**
 ```sh
 npx magnitude
 ```
 
-This will run all Magnitude test files discovered with the `*.mag.ts` pattern. Click the URL that pops up to view the test in the Magnitude dashboard! For more information see docs on [running tests](https://docs.magnitude.run/core-concepts/running-tests) or [CLI reference](https://docs.magnitude.run/reference/cli).
+This will run all Magnitude test files discovered with the `*.mag.ts` pattern. If the agent finds a problem with your app, it will tell you what happened and describe the bug!
 
-**5. Add your own test cases!**
+> To run many tests in parallel, add `-w <workers>`
+
+
+## Building test cases
 
 Now that you've got Magnitude set up, you can create real test cases for your app. Here's an example for a general idea:
 ```ts
@@ -79,8 +104,7 @@ import { test } from 'magnitude-test';
 
 test('can log in and create company')
     .step('Log in to the app')
-        .data({ username: 'test-user@magnitude.run' }) // arbitrary key/values
-        .secureData({ password: 'test' }) // sensitive data
+        .data({ username: 'test-user@magnitude.run', password: 'test' }) // any key/values
         .check('Can see dashboard') // natural language assertion
     .step('Create a new company')
         .data('Make up the first 2 values and use defaults for the rest')
@@ -91,21 +115,9 @@ Steps, checks, and data are all natural language. Think of it like you're descri
 
 For more information on how to build test cases see <a href="https://docs.magnitude.run/core-concepts/building-test-cases" target="_blank">our docs.</a>
 
-## Self-hosting
 
-We are commited to being open source and allowing developers to run Magnitude with their own browser infrastructure and LLM providers. Check out our [docs](https://docs.magnitude.run/advanced/self-hosting) for comprehensive self-hosting instructions.
-
-## Self-hosted vs. Hosted
-
-| Feature | Self-hosted | Hosted |
-| --- | --- | --- |
-| 🧪 Test framework (run AI tests anywhere!) | ✅ | ✅ |
-| 🤖 Core agents (fully open source!) | ✅ | ✅ |
-| 🌐 Managed browser infra (no Playwright needed!) | ❌ | ✅ |
-| 🧠 Managed LLM infra (only need Magnitude API key!) | ❌ | ✅ |
-| 🎮 Test playground (design and debug tests visually!) | ❌ | ✅ |
-| 📊 Test Console (manage test cases + view past runs!) | ❌ | ✅ |
-| 💸 Free tier + per-run <a href="https://magnitude.run/pricing" target="_blank">pricing</a> (simple + affordable!)  | ❌ | ✅ |
+## Integrating with CI/CD
+You can run Magnitude tests in CI anywhere that you could run Playwright tests, just include LLM client credentials. For instructions on running tests cases on build/deploy steps for specific cloud platforms, see our [deployment docs](https://docs.magnitude.run/deployment/overview).
 
 ## FAQ
 
