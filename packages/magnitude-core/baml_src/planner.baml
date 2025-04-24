@@ -76,6 +76,7 @@ function CreatePartialRecipe (screenshot: image, step: TestStep, previousActions
         (3) Simple but unique enough to be distinguished specifically from anything matching a similar description.
         Only plan out actions that involve things you can see right now.
         Note that many actions combine click + something else, so you may not need to click separately.
+        For scroll, describe ONE specific element IN the appropriate container rather than trying to describe the container itself.
         
         {{ ctx.output_format }}
 

@@ -71,7 +71,7 @@ export class MicroAgent {
         // todo: actually handle these errors appropriately in caller
         if (response.points.length > 1) {
             logger.warn({ points: response.points }, "Moondream returned multiple points for locateTarget");
-            throw new Error(`Moondream returned multiple points ${response.points.length}, target unclear`);
+            throw new Error(`Moondream returned multiple points (${response.points.length}), target '${target}' unclear`);
         }
         if (response.points.length === 0) {
             logger.warn("Moondream returned no points");

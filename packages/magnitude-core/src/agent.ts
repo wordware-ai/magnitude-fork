@@ -224,7 +224,7 @@ export class TestCaseAgent {
                             passed: false,
                             failure: {
                                 'variant': 'misalignment',
-                                'message': `Could not align ${ingredient.variant} action: ${error}`
+                                'message': `Could not align ${ingredient.variant} action: ${(error as Error).message}`
                             }
                         };
                         //throw new ActionConversionError(ingredient, error as Error);

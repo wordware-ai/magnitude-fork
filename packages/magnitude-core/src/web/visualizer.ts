@@ -18,8 +18,11 @@ export class ActionVisualizer {
                 // --- Create Expanding/Fading Circle ---
                 const circle = document.createElement('div');
                 circle.style.position = 'absolute';
-                circle.style.left = `${x}px`;
-                circle.style.top = `${y}px`;
+                // Adjust coordinates for scroll position
+                const docX = x + window.scrollX;
+                const docY = y + window.scrollY;
+                circle.style.left = `${docX}px`;
+                circle.style.top = `${docY}px`;
                 circle.style.borderRadius = '50%';
                 circle.style.backgroundColor = '#026aa1'; // Blue color
                 circle.style.width = '0px';
@@ -91,11 +94,11 @@ export class ActionVisualizer {
                 }
                 
                 
-                // Update position - adjust coordinates so the tip of the pointer is at (x,y)
-                // Set the top-left corner to (x, y) and then translate by (-1px, -4px)
-                // to align the pointer tip (approx. at 1.27, 4.17 within the SVG) with (x, y).
-                pointerElement.style.left = `${x}px`;
-                pointerElement.style.top = `${y}px`;
+                // Update position - adjust coordinates for scroll position so the tip of the pointer is at (x,y) relative to the document
+                // Set the top-left corner to (docX, docY) and then translate by (-1px, -3px)
+                // to align the pointer tip (approx. at 1.27, 4.17 within the SVG) with (docX, docY).
+                pointerElement.style.left = `${docX}px`;
+                pointerElement.style.top = `${docY}px`;
                 pointerElement.style.transform = 'translate(-1px, -3px)';
             },
             { x, y, id: this.visualElementId }
