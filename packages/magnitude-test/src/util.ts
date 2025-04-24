@@ -1,4 +1,10 @@
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 import { PlannerClient, TestCaseDefinition } from "magnitude-core";
+import { init } from '@paralleldrive/cuid2';
+
+const createId = init({ length: 12 });
 
 const IPV4_IN_IPV6_PREFIX = '::f{4}:';
 
@@ -180,4 +186,28 @@ export function tryDeriveEnvironmentPlannerClient(): PlannerClient | null {
     }
 
     return null;
+}
+
+export function getMachineId(): string {
+    // Define storage location
+    const dir = path.join(os.homedir(), '.magnitude');
+    const filePath = path.join(dir, 'user.json');
+
+    try {
+        // Read existing ID if available
+        if (fs.existsSync(filePath)) {
+            const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            if (data.id) return data.id;
+        }
+
+        // Generate new ID if needed
+        //console.log(`generating new ID in ${filePath}`)
+        fs.mkdirSync(dir, { recursive: true });
+        const id = createId();
+        fs.writeFileSync(filePath, JSON.stringify({ id }));
+        return id;
+    } catch {
+        // Fallback to temporary ID if storage fails
+        return createId();
+    }
 }

@@ -2,6 +2,7 @@ import { PlannerClient, ExecutorClient, TestAgentListener, TestCaseAgent, TestCa
 import { Browser, chromium } from 'playwright';
 import { BASE_TEST_RUNNER_DEFAULT_CONFIG, BaseTestRunner, BaseTestRunnerConfig } from './baseRunner';
 import logger from '@/logger';
+import { getMachineId } from '@/util';
 
 export interface LocalRunnerConfig extends BaseTestRunnerConfig {
 }
@@ -36,10 +37,11 @@ export class LocalTestRunner extends BaseTestRunner {
         const result = await agent.run(this.browser!, testCase);
 
         if (this.config.telemetry) {
+            logger.trace(`Sending telemetry payload`);
             const runInfo = agent.getInfo();
             const payload = {
                 version: "0.1",
-                userId: "bar",
+                userId: getMachineId(),
                 ...runInfo
             };
             const jsonString = JSON.stringify(payload);
@@ -54,7 +56,7 @@ export class LocalTestRunner extends BaseTestRunner {
                 logger.warn(`Failed to send telemetry (may have timed out): ${(error as Error).message}`);
             }
         }
-        
+
         return result;
     }
 }
