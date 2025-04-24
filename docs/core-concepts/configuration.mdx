@@ -64,3 +64,17 @@ export default {
 } satisfies MagnitudeConfig;
 ```
 
+## Telemetry Opt-Out
+
+By default Magnitude collects basic anonymized telemetry when you run a test, such as the duration of the test and number of tokens used.
+
+To opt out of telemetry:
+
+```typescript
+import { type MagnitudeConfig } from 'magnitude-test';
+
+export default {
+    url: "http://localhost:5173",
+    telemetry: false
+} satisfies MagnitudeConfig;
+```
