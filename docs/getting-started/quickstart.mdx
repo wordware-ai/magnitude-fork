@@ -51,7 +51,7 @@ test('can add and complete todos', { url: 'https://magnitodo.com' })
         .data("Take out trash, Buy groceries, Pay Anthropic bill")
         .check('should see all 3 todos')
     .step('mark each todo complete')
-        .check('says no items left')
+        .check('says 0 items left')
 ```
 
 You can also group tests with `test.group`, and configure options for the whole group:
@@ -64,7 +64,7 @@ test.group('todo list', { url: 'https://magnitodo.com' }, () => {
             .data('Take out trash, Buy groceries, Pay Anthropic bill')
             .check('should see all 3 todos')
         .step('mark each todo complete')
-            .check('says no items left')
+            .check('says 0 items left')
     
      test('can clear completed')
         .step('create a todo')

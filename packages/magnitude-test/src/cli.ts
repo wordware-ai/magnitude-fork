@@ -61,7 +61,7 @@ test('can add and complete todos', { url: 'https://magnitodo.com' })
         .data(sampleTodos.join(", "))
         .check('should see all 3 todos')
     .step('mark each todo complete')
-        .check('says no items left')
+        .check('says 0 items left')
 `;
 
 async function initializeProject(): Promise<void> {

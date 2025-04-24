@@ -35,7 +35,7 @@ test('can add and complete todos', { url: 'https://magnitodo.com' })
         .data('Take out the trash, Buy groceries, Build more test cases with Magnitude')
         .check('should see all 3 todos')
     .step('mark each todo complete')
-        .check('says no items left')
+        .check('says 0 items left')
 ```
 
 ## Running your first test
