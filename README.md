@@ -79,7 +79,7 @@ If you have any of these in your environment, no additional setup is needed for 
 
 Currently for the **executor** model, we only support [Moondream](https://moondream.ai/), which is a fast vision model that Magnitude uses for precise UI interactions.
 
-To configure Moondream, sign up and create an API with Moondream [here](https://moondream.ai/c/cloud/api-keys), then add to your environment as `MOONDREAM_API_KEY`. This will use the cloud version, but Moondream is fully open source and self-hostable as well.
+To configure Moondream, sign up and create an API with Moondream [here](https://moondream.ai/c/cloud/api-keys), then add to your environment as `MOONDREAM_API_KEY`. This will use the cloud version, which includes 5,000 free requests per day (roughly a few hundred test cases in Magnitude). Moondream is fully open source and self-hostable as well.
 
 🚀 Once you've got your LLMs set up, you're ready to run tests!
 
