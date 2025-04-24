@@ -1,0 +1,66 @@
+---
+title: Configuration
+description: "Customize LLMs, browser settings, and more"
+---
+
+When you run `npx magnitude init`, a `magnitude.config.ts` will be generated for you. By default it looks something like:
+
+```typescript
+import { type MagnitudeConfig } from 'magnitude-test';
+
+export default {
+    url: "http://localhost:5173"
+} satisfies MagnitudeConfig;
+```
+
+`url` is the default URL that all test cases will use if not specified.
+
+However, there's a lot more you can customize to get Magnitude working exactly as you want.
+
+## Customizing Planner LLM
+
+You can pass a `provider` and `options` to `planner` in order to configure the planner LLM, for example:
+
+```typescript
+import { type MagnitudeConfig } from 'magnitude-test';
+
+export default {
+    url: "http://localhost:5173",
+    planner: {
+        provider: 'openai-generic',
+        options: {
+            baseUrl: "https://openrouter.ai/api/v1",
+            apiKey: process.env.OPENROUTER_API_KEY,
+            model: "google/gemini-2.5-pro-preview-03-25"
+        }
+    }
+} satisfies MagnitudeConfig;
+```
+
+The planner LLM should be a strong general purpose multi-modal model. We recommend Gemini 2.5 Pro or Claude Sonnet 3.7.
+
+For instructions on configuring LLMs with various providers, see [LLM Configuration](/reference/llm-configuration).
+
+## Browser Options
+
+You can customize options to pass to each [Playwright browser context](https://playwright.dev/docs/api/class-browser#browser-new-context) that gets created while running Magnitude tests.
+
+Common options you may want to customize might be `viewport` or even `recordVideo` to capture videos of tests. For example:
+
+```typescript
+import { type MagnitudeConfig } from 'magnitude-test';
+
+export default {
+    url: "http://localhost:5173",
+    browser: {
+        contextOptions: {
+            viewport: { width: 800, height: 600 },
+            recordVideo: {
+                dir: './videos/',
+                size: { width: 800, height: 600 }
+            }
+        }
+    }
+} satisfies MagnitudeConfig;
+```
+

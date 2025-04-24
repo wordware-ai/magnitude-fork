@@ -16,8 +16,6 @@
 
 End-to-end testing framework powered by visual AI agents that see your interface and adapt to any changes in it.
 
-100% open source.
-
 ## How it works
 - ✍️ Build test cases easily with natural language
 - 🧠 Strong reasoning agent to plan and adjust tests

@@ -55,7 +55,8 @@
                 "group": "Core Concepts",
                 "pages": [
                     "core-concepts/building-test-cases",
-                    "core-concepts/running-tests"
+                    "core-concepts/running-tests",
+                    "core-concepts/configuration"
                 ]
             },
             {
@@ -69,14 +70,9 @@
                 ]
             },
             {
-                "group": "Advanced",
-                "pages": [
-                    "advanced/self-hosting"
-                ]
-            },
-            {
                 "group": "Reference",
                 "pages": [
+                    "reference/llm-configuration",
                     "reference/configuration",
                     "reference/test-cases",
                     "reference/test-steps",

@@ -19,7 +19,7 @@ test('can add and remove todos')
 
 ### Configure Test Cases
 
-Each test can additionally be configured with a different starting URL (defaults to configured `baseUrl`):
+Each test can additionally be configured with a different starting URL (defaults to the [configured project](/core-concepts/configuration) `url` in `magnitude.config.ts`):
 
 ```typescript
 test('can add and remove todos', { url: "https://mytodoapp.com" })
@@ -70,18 +70,6 @@ test('example')
 ```
 
 <Info>The key/value pairs are completely up to you, but it should be clear enough what they should be used for.</Info>
-
-But yikes! That password doesn't look secure. For sensitive information, use `secureData` instead.
-
-```typescript
-test('example')
-    .step('Log in')
-        .data({ email: "foo@bar.com" })
-        .secureData({ password: process.env.MY_SUPER_SECRET_PASSWORD })
-        .check('Dashboard is visible')
-```
-
-This will ensure that the secure data fields are encrypted end-to-end on Magnitude's servers.
 
 You can also provide completely freeform data by passing in a string instead of a key/value object:
 ```typescript
