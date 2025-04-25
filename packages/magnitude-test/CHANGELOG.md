@@ -1,5 +1,13 @@
 # magnitude-test
 
+## 0.0.16
+
+### Patch Changes
+
+- support google ai studio provider
+- Updated dependencies
+  - magnitude-core@0.0.10
+
 ## 0.0.15
 
 ### Patch Changes

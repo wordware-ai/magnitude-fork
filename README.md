@@ -56,24 +56,17 @@ This will create a basic tests directory `tests/magnitude` with:
 ### Configure LLMs
 
 Magnitude requires setting up two LLM clients:
-1. 🧠 A strong general multi-modal LLM (the **"planner"**)
-2. 👁️ A fast vision LLM with pixel-precision (the **"executor"**)
+1. A strong general multi-modal LLM (the **"planner"**)
+2. A fast vision LLM with pixel-precision (the **"executor"**)
 
-#### Planner Configuration
+For the **planner**, you can use any multi-modal LLM, but we recommend Gemini 2.5 pro. You can use Gemini via Google AI Studio or Vertex AI. If you don't have either set up, you can create an API key in [Google AI Studio](https://aistudio.google.com) (requires billing) and export to `GOOGLE_API_KEY`.
 
-For the **planner**, you can use models like Gemini 2.5 pro, Claude Sonnet 3.7, GPT 4.1, or any other model that accepts image input.
 
-Magnitude will automatically read and use any of the following API keys if configured:
-- `GOOGLE_APPLICATION_CREDENTIALS` (gemini-2.5-pro-preview-03-25)
-- `OPENROUTER_API_KEY` (google/gemini-2.5-pro-preview-03-25)
-- `ANTHROPIC_API_KEY` (claude-3-7-sonnet-latest)
-- `OPENAI_API_KEY` (gpt-4.1-2025-04-14)
+If no `GOOGLE_API_KEY` is found, Magnitude will fallback to other common providers (`ANTHROPIC_API_KEY` / `OPENAI_API_KEY`).
 
-If you have any of these in your environment, no additional setup is needed for the planner. To explicitly select a specific provider and model, see [configuration docs](https://docs.magnitude.run/reference/llm-configuration). Currently we support Google Vertex AI, Anthropic, AWS Bedrock, OpenAI, and OpenAI-compatible providers.
+To explicitly select a specific provider and model, see [configuration docs](https://docs.magnitude.run/reference/llm-configuration). Currently we support Google AI Studio, Google Vertex AI, Anthropic, AWS Bedrock, OpenAI, and OpenAI-compatible providers.
 
-> We strongly recommend Gemini 2.5 pro or Sonnet 3.5/3.7 for the planner model. We design the planner agent with the strongest models in mind, so other models may not work as expected.
-
-#### Executor Configuration (Moondream)
+#### Configure Moondream
 
 Currently for the **executor** model, we only support [Moondream](https://moondream.ai/), which is a fast vision model that Magnitude uses for precise UI interactions.
 

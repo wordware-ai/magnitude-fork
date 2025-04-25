@@ -31,41 +31,24 @@ export default {
 } satisfies MagnitudeConfig;
 ```
 
-## Anthropic
+If no planner is configured, Magnitude will pick a provider and model based on available environment variables in this order:
+- `GOOGLE_API_KEY`: `gemini-2.5-pro-preview-03-25`,
+- `GOOGLE_APPLICATION_CREDENTIALS`: `gemini-2.5-pro-preview-03-25`,
+- `OPENROUTER_API_KEY`: `google/gemini-2.5-pro-preview-03-25`,
+- `ANTHROPIC_API_KEY`: `claude-3-7-sonnet-latest`,
+- `OPENAI_API_KEY`: `gpt-4.1-2025-04-14`
 
+# Providers
+
+## Google AI Studio
 ```typescript
-interface AnthropicClient {
-    provider: 'anthropic',
+interface GoogleAIClient {
+    provider: 'google-ai',
     options: {
         model: string,
-        apiKey?: string,
-        temperature?: number
-    }   
-}
-```
-
-## OpenAI
-```typescript
-export interface OpenAIClient {
-    provider: 'openai',
-    options: {
-        model: string,
-        apiKey?: string,
-        temperature?: number
-    }
-}
-```
-
-## OpenAI-compatible (OpenRouter, Ollama, etc.)
-
-```typescript
-export interface OpenAIGenericClient {
-    provider: 'openai-generic'
-    options: {
-        model: string,
-        baseUrl: string,
-        apiKey?: string,
+        apiKey?: string // defaults to GOOGLE_API_KEY
         temperature?: number,
+        baseUrl?: string // defaults to https://generativelanguage.googleapis.com/v1beta
     }
 }
 ```
@@ -104,6 +87,45 @@ service account credentials from that file path.
 
 <Info>Source: [BAML Google Vertex Provider Docs](https://docs.boundaryml.com/ref/llm-client-providers/google-vertex#authentication)</Info>
 
+
+## Anthropic
+
+```typescript
+interface AnthropicClient {
+    provider: 'anthropic',
+    options: {
+        model: string,
+        apiKey?: string,
+        temperature?: number
+    }   
+}
+```
+
+## OpenAI
+```typescript
+export interface OpenAIClient {
+    provider: 'openai',
+    options: {
+        model: string,
+        apiKey?: string,
+        temperature?: number
+    }
+}
+```
+
+## OpenAI-compatible (OpenRouter, Ollama, etc.)
+
+```typescript
+export interface OpenAIGenericClient {
+    provider: 'openai-generic'
+    options: {
+        model: string,
+        baseUrl: string,
+        apiKey?: string,
+        temperature?: number,
+    }
+}
+```
 
 ## AWS Bedrock
 

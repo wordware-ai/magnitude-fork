@@ -1,5 +1,11 @@
 # magnitude-core
 
+## 0.0.10
+
+### Patch Changes
+
+- support google ai studio provider
+
 ## 0.0.9
 
 ### Patch Changes
