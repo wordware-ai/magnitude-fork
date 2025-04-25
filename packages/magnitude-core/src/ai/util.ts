@@ -61,6 +61,15 @@ export function convertToBamlClientOptions(client: PlannerClient): Record<string
                 temperature: temp,
             }
         };
+    } else if (client.provider === 'google-ai') {
+        options = {
+            base_url: client.options.baseUrl,
+            model: client.options.model,
+            api_key: client.options.apiKey,
+            generationConfig: {
+                temperature: temp,
+            }
+        };
     } else if (client.provider === 'vertex-ai') {
         options = {
             location: client.options.location,

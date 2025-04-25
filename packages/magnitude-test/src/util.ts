@@ -144,8 +144,20 @@ export async function isServerUp(url: string): Promise<boolean> {
 
 export function tryDeriveEnvironmentPlannerClient(): PlannerClient | null {
     // Order by approximate model suitability as planner
-    // Best
+
+    // Best: Gemini 2.5 pro
+    if (process.env.GOOGLE_API_KEY) {
+        // Google AI Studio
+        return {
+            'provider': 'google-ai',
+            'options': {
+                model: 'gemini-2.5-pro-preview-03-25',
+                apiKey: process.env.GOOGLE_API_KEY
+            }
+        }
+    }
     if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+        // Google Vertex AI
         return {
             'provider': 'vertex-ai',
             'options': {
