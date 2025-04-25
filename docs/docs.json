@@ -127,7 +127,7 @@
         ]
     },
     "search": {
-        "prompt": "Search Magnitude docs...."
+        "prompt": "Search Magnitude docs..."
     },
     "seo": {
         "indexing": "all"
