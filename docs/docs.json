@@ -11,16 +11,10 @@
         "dark": "#075985"
     },
     "navbar": {
-        "links": [
-            {
-                "label": "Login",
-                "href": "https://app.magnitude.run/login"
-            }
-        ],
         "primary": {
             "type": "button",
-            "label": "Sign Up",
-            "href": "https://app.magnitude.run/signup"
+            "label": "View GitHub",
+            "href": "https://github.com/magnitudedev/magnitude"
         }
     },
     "navigation": {
