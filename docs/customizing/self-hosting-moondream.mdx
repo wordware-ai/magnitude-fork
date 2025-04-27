@@ -1,16 +1,51 @@
-# Self-hosting Moondream
+---
+title: Self-hosting Moondream
+description: "Use a locally running or self-deployed Moondream server"
+---
 
-Probably the easiest way to deploy Moondream is by hosting it on Modal.
+If you want to run Moondream yourself, you can either:
+1. Run **locally** on the same machine where you're running Magnitude tests (great for development on high end machines)
+2. **Self-host** models with GPUs on a cloud platform like [Modal](https://modal.com)
 
-## Set up Modal
+## Running Moondream locally
+
+To run Moondream on your local machine, first go to https://moondream.ai/c/moondream-server and download the appropriate server (currently Moondream only provides macOS/Linux executables).
+
+Follow the instructions on that page to run the executable.
+
+Then you can configure `magnitude.config.ts` with the local base URL:
+```ts
+import { type MagnitudeConfig } from 'magnitude-test';
+
+export default {
+    url: "http://localhost:5173",
+    executor: {
+        provider: 'moondream',
+        options: {
+            baseUrl: 'http://localhost:2020/v1'
+        }
+    }
+} satisfies MagnitudeConfig;
+```
+
+That's it! Now you can run tests with local Moondream.
+
+<Warning>Local inference is very slow on CPU, newer macOS machines or a GPU is recommended for this, otherwise you may want to [deploy on modal](#self-hosting-moondream-on-modal) instead</Warning>
+
+## Self-hosting Moondream on Modal
+
+Probably the easiest way to deploy Moondream is by hosting it on Modal, so we provide a [deployment script](https://github.com/magnitudedev/magnitude/blob/main/infra/moondream.py) to do this.
+
+### Set up Modal
 1. Create an account at [modal.com](https://modal.com)
 2. Run `pip install modal` to install the modal Python package
 3. Run `modal setup` to authenticate (if this doesn’t work, try `python -m modal setup`)
+
 > More info: https://modal.com/docs/guide
 
-Modal gives $30 in free credits per month.
+<Tip> Modal gives $30 in free credits per month.</Tip>
 
-## Deploy Moondream
+### Deploy Moondream
 
 Clone Magnitude and run the `moondream.py` deploy script to automatically download the Moondream server and model weights to a Modal volume and deploy the endpoint:
 ```sh
@@ -39,9 +74,9 @@ export default {
 
 Keep in mind there may be some cold start times since Modal automatically scales down containers when not in use.
 
-> This Modal server will be publically accessible. We are working on a better way to make it configurable with a custom API key.
+<Warning> This Modal server will be publically accessible. We are working on a better way to make it configurable with a custom API key. </Warning>
 
-## Customizing Deployment
+### Customizing Deployment
 
 You may want to customize the modal deployment depending on your needs.
 
@@ -56,7 +91,7 @@ Common options you may want to change:
 
 Here's a breakdown of how quickly different GPUs available on Modal are able to handle typical requests that Magnitude makes to Moondream:
 
-| GPU         | Approximate inference speed per Moondream action | Modal cost per hour |
+| GPU         | Approximate inference time per action | Modal cost per hour |
 | ----------- | ------------------------------------------------ | ------------------- |
 | H100        | ~200ms                                           | $3.95               |
 | A100 (40GB) | ~300ms                                           | $2.10               |
