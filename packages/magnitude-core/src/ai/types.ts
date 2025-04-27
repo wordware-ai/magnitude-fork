@@ -4,7 +4,7 @@
 // }
 
 // Approximately mirrors https://docs.boundaryml.com/ref/llm-client-providers
-export type PlannerClient = AnthropicClient | BedrockClient | GoogleVertexClient | OpenAIClient | OpenAIGenericClient;
+export type PlannerClient = AnthropicClient | BedrockClient | GoogleAIClient | GoogleVertexClient | OpenAIClient | OpenAIGenericClient;
 export type ExecutorClient = MoondreamClient;
 
 export interface AnthropicClient {
@@ -24,6 +24,18 @@ export interface BedrockClient {
         // passed to inference_configuration
         temperature?: number
     }   
+}
+
+// Google AI studio
+// https://docs.boundaryml.com/ref/llm-client-providers/google-ai-gemini
+export interface GoogleAIClient {
+    provider: 'google-ai',
+    options: {
+        model: string,
+        apiKey?: string // defaults to GOOGLE_API_KEY
+        temperature?: number,
+        baseUrl?: string // defaults to https://generativelanguage.googleapis.com/v1beta
+    }
 }
 
 // See https://docs.boundaryml.com/ref/llm-client-providers/google-vertex for how this is authenticated
