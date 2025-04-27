@@ -11,7 +11,6 @@ import { PlannerClient, ExecutorClient, TestAgentListener, TestCaseAgent, TestCa
 import { Browser, BrowserContextOptions, chromium } from 'playwright';
 import path from 'path';
 import { logger } from '@/logger';
-import { isServerUp } from '@/util';
 
 export interface BaseTestRunnerConfig {
     workerCount: number;
@@ -248,25 +247,6 @@ export abstract class BaseTestRunner {
         
         // Collect all tests into a flat array for parallelization
         const tests = this.collectTestsForExecution();
-
-        // Check all servers are up
-        let urls = new Set<string>();
-        for (const test of tests) {
-            const url = test.testCase.getUrl();
-            urls = urls.add(url);
-        }
-        const urlList = [...urls];
-        const isEachUrlUp = await Promise.all(urlList.map(url => isServerUp(url)));
-        let anyUrlDown = false;
-        for (let i = 0; i < urlList.length; i++) {
-            if (!isEachUrlUp[i]) {
-                anyUrlDown = true;
-                console.error(`No server running on URL: ${urlList[i]}`);
-            }
-        }
-        if (anyUrlDown) {
-            throw new Error("At least one test case URL has no server running, aborting tests");
-        }
         
         // Create a queue of pending tests
         const pendingTests = [...tests];

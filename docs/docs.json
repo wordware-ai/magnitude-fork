@@ -49,8 +49,14 @@
                 "group": "Core Concepts",
                 "pages": [
                     "core-concepts/building-test-cases",
-                    "core-concepts/running-tests",
-                    "core-concepts/configuration"
+                    "core-concepts/running-tests"
+                ]
+            },
+            {
+                "group": "Customizing",
+                "pages": [
+                    "customizing/configuration",
+                    "customizing/self-hosting-moondream"
                 ]
             },
             {
@@ -58,9 +64,7 @@
                 "pages": [
                     "integrations/playwright",
                     "integrations/github-actions",
-                    "integrations/cline-mcp",
-                    "integrations/cursor-mcp",
-                    "integrations/windsurf-mcp"
+                    "integrations/mcp"
                 ]
             },
             {

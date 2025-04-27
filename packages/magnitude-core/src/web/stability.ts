@@ -50,7 +50,7 @@ export class PageStabilityAnalyzer {
         this.options = {
             differenceThreshold: options.differenceThreshold ?? 0.01,
             requiredStableChecks: options.requiredStableChecks ?? 3,
-            checkInterval: options.checkInterval ?? 200, // 200ms
+            checkInterval: options.checkInterval ?? 100, // 200ms
             minimumWaitPageLoadTime: options.minimumWaitPageLoadTime ?? DEFAULT_MINIMUM_WAIT_PAGE_LOAD_TIME,
             waitForNetworkIdleTime: options.waitForNetworkIdleTime ?? DEFAULT_WAIT_FOR_NETWORK_IDLE_TIME,
             maximumWaitPageLoadTime: options.maximumWaitPageLoadTime ?? DEFAULT_MAXIMUM_WAIT_PAGE_LOAD_TIME
