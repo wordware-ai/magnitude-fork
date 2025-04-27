@@ -42,15 +42,6 @@ export class MacroAgent {
         this.config = {...DEFAULT_CONFIG, ...config};
         this.collector = new Collector("macro");
         this.cr = new ClientRegistry();
-        // if (process.env.MAGNITUDE_PLANNER_CLIENT) {
-        //     // Client override (useful for debugging/testing)
-        //     logger.info(`Using planner client from env: ${process.env.MAGNITUDE_PLANNER_CLIENT}`);
-        //     this.cr.setPrimary(process.env.MAGNITUDE_PLANNER_CLIENT);
-        // } else {
-        //     logger.info(`Using planner client: ${this.config.provider}`);
-        //     this.cr.setPrimary(this.config.provider);
-        // }
-        //this.cr.addLlmClient()
         const client = this.config.client;
         let options = convertToBamlClientOptions(this.config.client);
         this.cr.addLlmClient('Macro', client.provider, options);
@@ -60,14 +51,11 @@ export class MacroAgent {
         this.logger = logger.child({ name: 'magnus.planner' });
     }
 
-    // getCollector() {
-    //     return this.collector;
-    // }
-
     getInfo(): MacroAgentInfo {
         return {
             provider: this.config.client.provider,
-            model: this.config.client.options.model,
+            model: 'model' in this.config.client.options ?
+                this.config.client.options.model : 'unknown',
             inputTokens: this.collector.usage.inputTokens ?? 0,
             outputTokens: this.collector.usage.outputTokens ?? 0,
             numCalls: this.collector.logs.length
@@ -100,7 +88,6 @@ export class MacroAgent {
         return response;
     }
 
-    // Potentially smaller model could execute this op
     async removeImplicitCheckContext(screenshot: Screenshot, check: string, existingRecipe: ActionIngredient[]): Promise<string[]> {
         const downscaledScreenshot = await this.transformScreenshot(screenshot);
 

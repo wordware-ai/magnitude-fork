@@ -4,7 +4,7 @@
 // }
 
 // Approximately mirrors https://docs.boundaryml.com/ref/llm-client-providers
-export type PlannerClient = AnthropicClient | BedrockClient | GoogleAIClient | GoogleVertexClient | OpenAIClient | OpenAIGenericClient;
+export type PlannerClient = AnthropicClient | BedrockClient | GoogleAIClient | GoogleVertexClient | OpenAIClient | OpenAIGenericClient | AzureOpenAIClient;
 export type ExecutorClient = MoondreamClient;
 
 export interface AnthropicClient {
@@ -58,6 +58,17 @@ export interface OpenAIClient {
         model: string,
         apiKey?: string,
         temperature?: number
+    }
+}
+
+// https://docs.boundaryml.com/ref/llm-client-providers/open-ai-from-azure
+export interface AzureOpenAIClient {
+    provider: 'azure-openai',
+    options: {
+        resourceName: string,
+        deploymentId: string,
+        apiVersion: string,
+        apiKey: string
     }
 }
 

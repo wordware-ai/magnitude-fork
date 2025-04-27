@@ -147,6 +147,20 @@ export AWS_SECRET_ACCESS_KEY="your_secret"
 export AWS_REGION="us-east-1"
 ```
 
+## Azure OpenAI
+
+```typescript
+interface AzureOpenAIClient {
+    provider: 'azure-openai',
+    options: {
+        resourceName: string,
+        deploymentId: string,
+        apiVersion: string,
+        apiKey: string
+    }
+}
+```
+<Info>More info on authenticating with Azure: https://docs.boundaryml.com/ref/llm-client-providers/open-ai-from-azure</Info>
 
 ## Configuring Moondream
 

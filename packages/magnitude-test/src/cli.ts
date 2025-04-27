@@ -14,7 +14,7 @@ import { discoverTestFiles, findConfig, findProjectRoot, isProjectRoot, readConf
 import { BaseTestRunner, BaseTestRunnerConfig } from './runner/baseRunner';
 import { logger as coreLogger } from 'magnitude-core';
 import logger from '@/logger';
-import { tryDeriveEnvironmentPlannerClient } from './util';
+import { describeModel, tryDeriveEnvironmentPlannerClient } from './util';
 import * as dotenv from 'dotenv';
 import { execSync } from 'child_process';
 
@@ -52,7 +52,7 @@ const exampleTestTemplate = `import { test } from 'magnitude-test';
 
 const sampleTodos = [
     "Take out the trash",
-    "Buy groceries",
+    "Pay AWS bill",
     "Build more test cases with Magnitude"
 ];
 
@@ -196,7 +196,7 @@ program
         }
 
         logger.info({ ...config.planner }, "Planner:");
-        console.log(magnitudeBlue(`Using planner: ${config.planner.provider}:${config.planner.options.model}`));
+        console.log(magnitudeBlue(`Using planner: ${describeModel(config.planner)}`));
         
         // If executor not provided, default to moondream cloud with MOONDREAM_API_KEY
         if (!config.executor || !config.executor.options || (!config.executor.options.apiKey && !config.executor.options.baseUrl)) {

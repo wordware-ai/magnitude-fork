@@ -209,3 +209,11 @@ export function getMachineId(): string {
         return createId();
     }
 }
+
+export function describeModel(client: PlannerClient) {
+    if ('model' in client.options) {
+        return `${client.provider}:${client.options.model}`;
+    } else {
+        return `${client.provider}`;
+    }
+}
