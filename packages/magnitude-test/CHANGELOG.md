@@ -1,5 +1,13 @@
 # magnitude-test
 
+## 0.0.17
+
+### Patch Changes
+
+- azure, fix bugs
+- Updated dependencies
+  - magnitude-core@0.0.11
+
 ## 0.0.16
 
 ### Patch Changes
