@@ -141,16 +141,17 @@ export function tryDeriveEnvironmentPlannerClient(): PlannerClient | null {
             }
         }
     }
-    if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-        // Google Vertex AI
-        return {
-            'provider': 'vertex-ai',
-            'options': {
-                location: 'us-central1',
-                model: 'gemini-2.5-pro-preview-03-25'
-            }
-        }
-    }
+    // Patching out until vertex AI authorization issues are resolved
+    // if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    //     // Google Vertex AI
+    //     return {
+    //         'provider': 'vertex-ai',
+    //         'options': {
+    //             location: 'us-central1',
+    //             model: 'gemini-2.5-pro-preview-03-25'
+    //         }
+    //     }
+    // }
     if (process.env.OPENROUTER_API_KEY) {
         return {
             'provider': 'openai-generic',
