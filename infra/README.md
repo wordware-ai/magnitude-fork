@@ -47,7 +47,19 @@ You may want to customize the modal deployment depending on your needs.
 You can modify the `moondream.py` deployment script to fit your needs.
 
 Common options you may want to change:
-- `gpu`: GPU configuration. See Modal's [pricing page](https://modal.com/pricing) for details on different available GPUs and their cost.
+- `gpu`: GPU configuration. See Modal's [pricing page](https://modal.com/pricing) for details on different available GPUs and their cost. Also see [comparison](#gpu-comparison) below.
 - `scaledown_window`: Time in seconds a container will wait to shut down after receiving no requests. If higher, will let you run tests after longer without needing the container to cold-start again.
 - `min_containers`: By setting this option you force Modal to keep some number of containers open to handle requests. This means Modal will also bill you for those containers all the time, but eliminates cold-starts.
 
+### GPU Comparison
+
+Here's a breakdown of how quickly different GPUs available on Modal are able to handle typical requests that Magnitude makes to Moondream:
+
+| GPU         | Approximate inference speed per Moondream action | Modal cost per hour |
+| ----------- | ------------------------------------------------ | ------------------- |
+| H100        | ~200ms                                           | $3.95               |
+| A100 (40GB) | ~300ms                                           | $2.10               |
+| A10G        | ~500ms                                           | $1.10               |
+| T4          | ~800ms                                           | $0.59               |
+
+Since Magnitude needs to wait a bit for the page to stabilize anyway, probably something like the A10G is a good price/performance balance, but any of these work well!
