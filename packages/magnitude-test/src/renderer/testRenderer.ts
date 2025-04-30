@@ -169,15 +169,15 @@ export class TestCaseRenderer {
 
             // Handle critical problem if it exists
             // TODO: flesh out failure descriptor (via failure breakdown prompt) and show better here
-            if (this.state.result && !this.state.result.passed) {
-                lines.push(chalk.redBright(`\nProblem:`));
-                lines.push(` ${this.state.result.failure}`);
-                //lines.push(` ${this.state.result.failure.description}`);
-                // const severity = problem.getSeverity();
-                // lines.push(` ${this.getSeverityDescriptor(severity)}: ${problem.getTitle()} `);
-                // lines.push(` ${magnitudeBlue('Expected')}: ${problem.getExpectedResult()}`);
-                // lines.push(` ${magnitudeBlue('Actual')}: ${problem.getActualResult()}`);
-            }
+            // if (this.state.result && !this.state.result.passed) {
+            //     lines.push(chalk.redBright(`\nProblem:`));
+            //     lines.push(` ${this.state.result.failure}`);
+            //     //lines.push(` ${this.state.result.failure.description}`);
+            //     // const severity = problem.getSeverity();
+            //     // lines.push(` ${this.getSeverityDescriptor(severity)}: ${problem.getTitle()} `);
+            //     // lines.push(` ${magnitudeBlue('Expected')}: ${problem.getExpectedResult()}`);
+            //     // lines.push(` ${magnitudeBlue('Actual')}: ${problem.getActualResult()}`);
+            // }
 
             // Handle warnings
             // if (warnings.length > 0) {
