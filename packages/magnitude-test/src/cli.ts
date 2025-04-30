@@ -221,6 +221,7 @@ program
         let runner: BaseTestRunner;
 
         const browserContextOptions = config.browser?.contextOptions ?? {};
+        const browserLaunchOptions = config.browser?.launchOptions ?? {};
 
         const runnerConfig: BaseTestRunnerConfig = {
             workerCount: workerCount,
@@ -229,6 +230,7 @@ program
             planner: config.planner,
             executor: config.executor,
             browserContextOptions: browserContextOptions,
+            browserLaunchOptions: browserLaunchOptions,
             telemetry: config.telemetry ?? true
         };
 

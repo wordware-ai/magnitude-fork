@@ -1,5 +1,11 @@
 # magnitude-test
 
+## 0.0.18
+
+### Patch Changes
+
+- configurable browser launch options
+
 ## 0.0.17
 
 ### Patch Changes

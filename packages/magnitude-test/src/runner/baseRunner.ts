@@ -8,7 +8,7 @@ import { createId } from '@paralleldrive/cuid2';
 import { TestCaseBuilder } from '../discovery/testCaseBuilder';
 import { CategorizedTestCasesWithRenderIds, RenderIdTestCasePair } from './types';
 import { PlannerClient, ExecutorClient, TestAgentListener, TestCaseAgent, TestCaseDefinition, TestCaseResult, TestCaseStateTracker } from 'magnitude-core';
-import { Browser, BrowserContextOptions, chromium } from 'playwright';
+import { Browser, BrowserContextOptions, chromium, LaunchOptions } from 'playwright';
 import path from 'path';
 import { logger } from '@/logger';
 
@@ -19,6 +19,7 @@ export interface BaseTestRunnerConfig {
     planner: PlannerClient;
     executor: ExecutorClient;
     browserContextOptions: BrowserContextOptions;
+    browserLaunchOptions: LaunchOptions;
     telemetry: boolean;
 }
 
@@ -27,6 +28,7 @@ export const BASE_TEST_RUNNER_DEFAULT_CONFIG = {
     //printLogs: false,
     prettyDisplay: true,
     browserContextOptions: {},
+    browserLaunchOptions: {},
     telemetry: true,
 };
 
