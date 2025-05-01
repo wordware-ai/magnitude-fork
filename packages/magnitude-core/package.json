@@ -32,7 +32,7 @@
     "typescript"
   ],
   "scripts": {
-    "build": "tsc && pkgroll",
+    "build": "baml-cli generate && tsc && pkgroll",
     "check": "tsc --noEmit",
     "cli": "bun ./src/cli.ts"
   },
