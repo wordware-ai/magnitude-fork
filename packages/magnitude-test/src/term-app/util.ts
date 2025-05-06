@@ -1,4 +1,6 @@
+import { CategorizedTestCases } from '@/discovery/types';
 import termkit from 'terminal-kit';
+import { AllTestStates, TestState } from './types';
 
 /**
  * Generates a unique identifier for a test case.
@@ -114,4 +116,46 @@ export function wrapText(text: string, maxWidth: number): string[] {
     }
 
     return lines;
+}
+
+
+/**
+ * Creates the initial state object for all tests, marking them as pending.
+ * @param tests - The categorized test cases discovered.
+ * @returns An AllTestStates object with all tests set to 'pending'.
+ */
+export function initializeTestStates(tests: CategorizedTestCases): AllTestStates {
+    // can we avoid having to do this?
+    const blankTestState: TestState = {
+        status: 'pending',
+        stepsAndChecks: [],
+        macroUsage: {
+            provider: '',
+            model: '',
+            inputTokens: 0,
+            outputTokens: 0,
+            numCalls: 0,
+        },
+        microUsage: {
+            provider: '',
+            numCalls: 0
+        }
+    }
+
+    const initialStates: AllTestStates = {};
+    for (const filepath of Object.keys(tests)) {
+        const { ungrouped, groups } = tests[filepath];
+        ungrouped.forEach(test => {
+            const testId = getUniqueTestId(filepath, null, test.title);
+            //initialStates[testId] = { status: 'pending' };
+            initialStates[testId] = blankTestState;
+        });
+        Object.entries(groups).forEach(([groupName, groupTests]) => {
+            groupTests.forEach(test => {
+                const testId = getUniqueTestId(filepath, groupName, test.title);
+                initialStates[testId] = blankTestState;
+            });
+        });
+    }
+    return initialStates;
 }

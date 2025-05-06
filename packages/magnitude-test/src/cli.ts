@@ -20,7 +20,7 @@ import { execSync } from 'child_process';
 // Removed App import
 // Removed render import
 import { TestRunner } from './runner/testRunner'; // Import the new executor
-import { initializeTestStates } from './app/util';
+import { initializeTestStates } from './term-app/util';
 import { initializeUI, updateUI, cleanupUI } from '@/term-app'; // Import term-app functions
 import chalk from 'chalk';
 
