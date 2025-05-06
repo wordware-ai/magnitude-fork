@@ -1,27 +1,37 @@
 ---
 title: 'Playwright'
-description: 'Use Magnitude alongside Playwright tests'
-icon: pen-tool
+description: 'How to combine low-level browser operations with AI steps'
+icon: 'pen-tool'
 ---
 
-Using Magnitude alongside existing E2E tests is simple.
+Magnitude runs tests using Playwright. While `ai.step()` and `ai.check()` cover most test automation needs with natural language, direct access to Playwright's `page` and `context` objects is available within test functions (`async ({ ai, page, context }) => { ... }`).
 
-You can add Magnitude test files matching the pattern `*.mag.ts` either in your existing test folders, or in a new one.
+Use `page` and `context` strategically when these specific capabilities are needed, or as a fallback if the AI struggles with a complex interaction. Refer to the [Playwright Access reference](../reference/playwright-access) for basic API details.
 
-The Magnitude CLI will automatically discover these Magnitude tests.
+<Note>
+Magnitude aims to expand the capabilities of the `ai` agent over time to cover more scenarios natively. However, direct access to Playwright's API ensures you always have the tools needed for any testing requirement in the meantime.
+</Note>
 
-For example, if you've got both playwright and Magnitude tests, you could set up scripts to run either suite, or both:
+## Example
 
-```json
-{
-    "scripts": [
-        "test:playwright": "npx playwright test",
-        "test:magnitude": "npx magnitude",
-        "test:all": "npx playwright test && npx magnitude"
-    ]
-}
+```typescript
+import { test } from 'magnitude-test';
+
+const mockProfileData = { userId: 'user123', notificationsEnabled: true };
+
+test('can see correct user settings', async ({ ai, page, context }) => {
+  // Inject some authorization cookies directly with browser context
+  await context.addCookies([{ name: 'session_id', value: 'fake-session-token', domain: 'localhost', path: '/' }]);
+  
+  // Mock the settings API
+  await page.route('**/api/user/settings', async route => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(mockProfileData) });
+  });
+
+  await ai.step("Navigate to the user settings page");
+  await ai.check("Shows user ID 'user123'");
+  await ai.check("Notifications are enabled");
+});
 ```
 
-If mixing Playwright and Magnitude tests, we recommend covering your core flows and flows that are prone to change frequently with Magnitude, and testing smaller or more stable flows that don't break as often with Playwright.
-
-<Info>You can also go all-in and replace your whole E2E test suite with Magnitude, we don't mind :)</Info>
+By combining Magnitude's AI-driven steps with direct Playwright access for these specific scenarios, you can create comprehensive and robust tests.

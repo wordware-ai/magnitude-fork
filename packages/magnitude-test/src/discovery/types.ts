@@ -1,10 +1,9 @@
-import { BrowserContextOptions, LaunchOptions } from "playwright";
-import { TestCaseBuilder } from "./testCaseBuilder";
-import type { PlannerClient, ExecutorClient } from 'magnitude-core';
+import { BrowserContext, BrowserContextOptions, LaunchOptions, Page } from "playwright";
+import type { PlannerClient, ExecutorClient, TestCaseAgent, Magnus } from 'magnitude-core';
 
 export interface TestOptions {
     url?: string;
-    name?: string;
+    //name?: string;
 }
 
 export type MagnitudeConfig = {
@@ -17,11 +16,26 @@ export type MagnitudeConfig = {
         launchOptions?: LaunchOptions
     },
     telemetry?: boolean
-    // executor?: {
-    //     moondreamUrl?: string; // defaults to https://api.moondream.ai/v1
-    //     moondreamApiKey?: string; // defaults to process.env.MOONDREAM_API_KEY
-    // }
-}//TestOptions & { apiKey?: string };
+}
+
+export interface TestFunctionContext {
+    ai: Magnus;
+    get page(): Page;
+    get context(): BrowserContext;
+    //page: Page;
+    //context: Context;
+}
+
+export type TestFunction = (context: TestFunctionContext) => Promise<void>;
+export type TestGroupFunction = () => void;
+
+export interface TestRunnable {
+    fn: TestFunction
+    title: string
+    url: string
+}
+
+export type CategorizedTestRunnable = TestRunnable & { file: string, group: string | null };
 
 export interface TestGroup {
     name: string;
@@ -29,21 +43,20 @@ export interface TestGroup {
 }
 
 export interface TestGroupDeclaration {
-    (id: string, options: TestOptions, testFn: () => void): void;
-    (id: string, testFn: () => void): void;
+    (id: string, options: TestOptions, groupFn: TestGroupFunction): void;
+    (id: string, groupFn: TestGroupFunction): void;
 }
 
 export interface TestDeclaration {
-    (id: string, options?: TestOptions): TestCaseBuilder;
-    // (id: string, options: TestOptions, testFn: () => Promise<void>): void;
-    // (id: string, testFn: () => Promise<void>): void;
-
-    // group(groupName: string, groupOptions: TestOptions, groupFn: () => void): void;
+    (title: string, options: TestOptions, testFn: TestFunction): void;
+    (title: string, testFn: TestFunction): void;
+    //(id: string, options?: TestOptions): TestCaseBuilder;
+    //(title: string, options?: TestOptions): void;
 
     group: TestGroupDeclaration;
-
-    // Configure global test options
-    //config: (options: TestGlobalConfig) => void;
 }
 
-export type CategorizedTestCases = Record<string, { ungrouped: TestCaseBuilder[], groups: Record<string, TestCaseBuilder[]>}>;
+// Map from filepath to grouped and ungrouped test cases
+export type CategorizedTestCases = Record<string, { ungrouped: TestRunnable[], groups: Record<string, TestRunnable[]>}>;
+//export type CategorizedTestCases = Record<string, { ungrouped: TestCaseBuilder[], groups: Record<string, TestCaseBuilder[]>}>;
+

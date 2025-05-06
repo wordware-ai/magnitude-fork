@@ -5,18 +5,24 @@ import fs from 'fs';
 import { glob } from 'glob';
 //import { Magnitude, TestCase } from '..';
 import TestRegistry from '@/discovery/testRegistry';
-import { LocalTestRunner } from '@/runner';
+//import { LocalTestRunner } from '@/runner';
 import { TestCompiler } from '@/compiler';
 import { MagnitudeConfig } from '@/discovery/types';
 //import chalk from 'chalk';
-import { magnitudeBlue, brightMagnitudeBlue } from '@/renderer/colors';
 import { discoverTestFiles, findConfig, findProjectRoot, isProjectRoot, readConfig } from '@/discovery/util';
-import { BaseTestRunner, BaseTestRunnerConfig } from './runner/baseRunner';
+//import { BaseTestRunner, BaseTestRunnerConfig } from './runner/baseRunner';
 import { logger as coreLogger } from 'magnitude-core';
 import logger from '@/logger';
 import { describeModel, tryDeriveEnvironmentPlannerClient } from './util';
 import * as dotenv from 'dotenv';
 import { execSync } from 'child_process';
+// Removed React import
+// Removed App import
+// Removed render import
+import { TestRunner } from './runner/testRunner'; // Import the new executor
+import { initializeTestStates } from './app/util';
+import { initializeUI, updateUI, cleanupUI } from '@/term-app'; // Import term-app functions
+import chalk from 'chalk';
 
 interface CliOptions {
     workers?: number;
@@ -40,6 +46,9 @@ function getRelativePath(projectRoot: string, absolutePath: string): string {
 
 const configTemplate = `import { type MagnitudeConfig } from 'magnitude-test';
 
+// Learn more about configuring Magnitude:
+// https://docs.magnitude.run/customizing/configuration
+
 export default {
     url: "http://localhost:5173"
 } satisfies MagnitudeConfig;
@@ -56,12 +65,12 @@ const sampleTodos = [
     "Build more test cases with Magnitude"
 ];
 
-test('can add and complete todos', { url: 'https://magnitodo.com' })
-    .step('create 3 todos')
-        .data(sampleTodos.join(", "))
-        .check('should see all 3 todos')
-    .step('mark each todo complete')
-        .check('says 0 items left')
+test('can add and complete todos', { url: 'https://magnitodo.com' }, async ({ ai }) => {
+    await ai.step('create 3 todos', { data: sampleTodos.join(', ') });
+    await ai.check('should see all 3 todos');
+    await ai.step('mark each todo complete');
+    await ai.check('says 0 items left');
+});
 `;
 
 async function initializeProject(): Promise<void> {
@@ -76,7 +85,7 @@ async function initializeProject(): Promise<void> {
         process.exit(1);
     }
 
-    console.log(magnitudeBlue(`Initializing Magnitude tests in ${cwd}`));
+    console.log(chalk.blueBright(`Initializing Magnitude tests in ${cwd}`));
 
     // Create directory structure
     const testsDir = path.join(cwd, 'tests', 'magnitude');
@@ -99,7 +108,7 @@ async function initializeProject(): Promise<void> {
         const examplePath = path.join(testsDir, 'example.mag.ts');
         await fs.promises.writeFile(examplePath, exampleTestTemplate);
 
-        console.log(`${brightMagnitudeBlue('✓')} Created Magnitude test directory structure:
+        console.log(`${chalk.blueBright('✓')} Created Magnitude test directory structure:
     - ${path.relative(cwd, configPath)}
     - ${path.relative(cwd, examplePath)}
   `);
@@ -110,18 +119,18 @@ async function initializeProject(): Promise<void> {
     }
 
     // Run Playwright installation for Chromium
-    console.log(magnitudeBlue('Installing Playwright Chromium...'));
+    console.log(chalk.blueBright('Installing Playwright Chromium...'));
     try {
         execSync('npx playwright install chromium', { stdio: 'inherit' });
-        console.log(`${brightMagnitudeBlue('✓')} Playwright Chromium installed successfully`);
+        console.log(`${chalk.blueBright('✓')} Playwright Chromium installed successfully`);
     } catch (error) {
         console.error('Error installing Playwright Chromium:', error);
         // Don't exit with error code since the initialization succeeded
-        console.log(magnitudeBlue('You may need to manually run: npx playwright install chromium'));
+        console.log(chalk.blueBright('You may need to manually run: npx playwright install chromium'));
     }
 
-    console.log(`You can now run tests with: ${brightMagnitudeBlue('npx magnitude')}`);
-    console.log('Docs:', brightMagnitudeBlue('https://docs.magnitude.run'));
+    console.log(`You can now run tests with: ${chalk.blueBright('npx magnitude')}`);
+    console.log('Docs:', chalk.blueBright('https://docs.magnitude.run'));
 }
 
 const program = new Command();
@@ -137,13 +146,16 @@ program
     .action(async (filter, options: CliOptions) => {
         dotenv.config();
         let logLevel: string;
-        if (options.debug) {
+
+        if (process.env.MAGNITUDE_LOG_LEVEL) {
+            logLevel = process.env.MAGNITUDE_LOG_LEVEL;
+        } else if (options.debug) {
             logLevel = 'trace';
         } else if (options.plain) {
             // TODO: have distinct / nicer clean logs for plain output instead of just changing log level
             logLevel = 'info';
         } else {
-            logLevel = 'silent';
+            logLevel = 'warn';
         }
         coreLogger.level = logLevel;
         logger.level =logLevel;
@@ -153,18 +165,14 @@ program
             '!**/dist/**'
         ];
 
-        // Add direct argument (filter)
-        if (filter) { // Check if the single filter argument was provided
-            patterns.push(filter); // Add the single pattern
+        if (filter) {
+            patterns.push(filter);
         } else {
             // Default pattern if no filter is provided
             patterns.push('**/*.{mag,magnitude}.{js,jsx,ts,tsx}');
         }
 
-        // Parse worker count
         const workerCount = options.workers ? parseInt(options.workers as unknown as string, 10) : 1;
-
-        // Validate worker count
         if (isNaN(workerCount) || workerCount < 1) {
             console.error('Invalid worker count. Using default of 1.');
         }
@@ -196,7 +204,7 @@ program
         }
 
         logger.info({ ...config.planner }, "Planner:");
-        console.log(magnitudeBlue(`Using planner: ${describeModel(config.planner)}`));
+        //console.log(magnitudeBlue(`Using planner: ${describeModel(config.planner)}`));
         
         // If executor not provided, default to moondream cloud with MOONDREAM_API_KEY
         if (!config.executor || !config.executor.options || (!config.executor.options.apiKey && !config.executor.options.baseUrl)) {
@@ -216,46 +224,65 @@ program
         }
 
         logger.info({ ...config.executor }, "Executor:");
-        console.log(magnitudeBlue(`Using executor: ${config.executor.provider}`));
+        //console.log(magnitudeBlue(`Using executor: ${config.executor.provider}`));
 
-        let runner: BaseTestRunner;
 
-        const browserContextOptions = config.browser?.contextOptions ?? {};
-        const browserLaunchOptions = config.browser?.launchOptions ?? {};
 
-        const runnerConfig: BaseTestRunnerConfig = {
-            workerCount: workerCount,
-            //printLogs: options.plain,
-            prettyDisplay: !(options.plain || options.debug),
-            planner: config.planner,
-            executor: config.executor,
-            browserContextOptions: browserContextOptions,
-            browserLaunchOptions: browserLaunchOptions,
-            telemetry: config.telemetry ?? true
-        };
 
-        runner = new LocalTestRunner(runnerConfig);
+        // === Compile test files ===
 
         for (const filePath of absoluteFilePaths) {
-            await runner.loadTestFile(filePath, getRelativePath(projectRoot, filePath));
+            await registry.loadTestFile(filePath, getRelativePath(projectRoot, filePath));
         }
 
-        try {
-            const success = await runner.runTests();
 
-            if (!success) {
-                console.error('Tests failed');
-                process.exit(1);
-            } else {
-                //console.log('All tests passed');
-                process.exit(0);
-            }
+        // === Run Tests ===
 
-        } catch (error) {
-            // e.g. URL check fails
-            console.error((error as Error).message);
-            process.exit(1)
-        }
+        // console.log("Tests:", registry.getRegisteredTestCases());
+        // console.log("Tests:", registry.getFlattenedTestCases());
+
+
+        // for (const [filename, tests] of Object.entries(registry.getRegisteredTestCases())) {
+        //     console.log("file:", filename);
+        //     console.log("tests:", tests);
+        const categorizedTests = registry.getRegisteredTestCases();
+
+        // --- Initialize State using utility ---
+        const testStates = initializeTestStates(categorizedTests);
+
+        // --- Initialize Terminal UI ---
+        // Pass the initial tests and states
+        initializeUI(describeModel(config.planner), categorizedTests, testStates);
+
+
+        // --- Instantiate Executor ---
+        // Pass the updateUI and cleanupUI functions from term-app
+
+        const executor = new TestRunner(
+            {
+                workerCount: workerCount,
+                // prettyDisplay might not be relevant for term-app, or handled differently.
+                // Keeping it for now, but TestRunner might need adjustment.
+                prettyDisplay: !(options.plain || options.debug),
+                planner: config.planner,
+                executor: config.executor,
+                browserContextOptions: config.browser?.contextOptions ?? {},
+                browserLaunchOptions: config.browser?.launchOptions ?? {},
+                telemetry: config.telemetry ?? true
+            },
+            categorizedTests,
+            testStates, // Pass the shared state object
+            updateUI,   // Pass the update function from term-app
+            cleanupUI,  // Pass the cleanup function from term-app
+            //config as Required<MagnitudeConfig> // This seems commented out
+        );
+
+        // --- Start Execution ---
+        // Start the execution process - executor handles its own lifecycle including exit
+        executor.runTests();
+
+        // No need for waitUntilExit() or try/catch/finally here anymore,
+        // as the executor manages the process lifecycle and cleanup.
     });
 
 program

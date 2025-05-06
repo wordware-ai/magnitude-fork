@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as os from 'os';
 import { PlannerClient, TestCaseDefinition } from "magnitude-core";
 import { init } from '@paralleldrive/cuid2';
+import logger from './logger';
 
 const createId = init({ length: 12 });
 
@@ -112,18 +113,17 @@ export function isLoopbackUrl(url: string): boolean {
     return isLoopbackHost(url);
 }
 
-export function sanitizeTestCase(testCase: TestCaseDefinition) {
-    // Sanitize test case definition inplace
-
-    // Add protocol if missing to URL
-    if (!testCase.url.includes('://')) {
-        if (isLoopbackUrl(testCase.url)) {
+export function addProtocolIfMissing(url: string): string {
+    if (!url.includes('://')) {
+        if (isLoopbackUrl(url)) {
             // If local, assume HTTP
-            testCase.url = `http://${testCase.url}`;
+            return `http://${url}`;
         } else {
             // Otherwise assume HTTPS
-            testCase.url = `https://${testCase.url}`;
+            return `https://${url}`;
         }
+    } else {
+        return url;
     }
 }
 
@@ -215,5 +215,49 @@ export function describeModel(client: PlannerClient) {
         return `${client.provider}:${client.options.model}`;
     } else {
         return `${client.provider}`;
+    }
+}
+
+export interface TelemetryPayload {
+	version: string, // telemetry payload version will prob be nice in the future
+	userId: string, // anon cuid2 stored on local machines
+	startedAt: number, // timestamp
+	doneAt: number, // timestamp
+	cached: boolean, // whether used a cached recipe
+	testCase: {
+		numSteps: number, // total num steps
+		numChecks: number // total num checks
+	},
+	actionCount: number, // number of web actions taken
+	macroUsage: {
+		provider: string,
+		model: string,
+		inputTokens: number,
+		outputTokens: number,
+		numCalls: number
+	}
+	microUsage: {
+		provider: string,
+		numCalls: number
+	},
+	result: string//'passed' | 'bug' | 'misalignment'
+};
+
+export async function sendTelemetry(payload: Omit<TelemetryPayload, 'version' | 'userId'>) {
+    const fullPayload: TelemetryPayload = {
+        version: '0.1',
+        userId: getMachineId(),
+        ...payload
+    }
+    const jsonString = JSON.stringify(fullPayload);
+    const encodedData = btoa(jsonString);
+    const telemetryUrl = "https://telemetry.magnitude.run/functions/v1/telemetry?data=" + encodedData;
+    try {
+        const resp = await fetch(telemetryUrl, { signal: AbortSignal.timeout(3000) });
+        if (!resp.ok) {
+            logger.warn(`Failed to send telemetry (status ${resp.status})`);
+        }
+    } catch (error) {
+        logger.warn(`Failed to send telemetry (may have timed out): ${(error as Error).message}`);
     }
 }

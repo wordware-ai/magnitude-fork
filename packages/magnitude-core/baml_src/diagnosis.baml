@@ -4,6 +4,7 @@
 // }
 
 class BugFailureClassification {
+    reasoning string
     classification "bug"
     title string
     expectedResult string
@@ -12,6 +13,7 @@ class BugFailureClassification {
 }
 
 class MisalignmentClassification {
+    reasoning string
     classification "misalignment"
 
     fault "test" | "agent" @description(#"
@@ -65,7 +67,7 @@ function ClassifyCheckFailure (screenshot: image, check: string, previousActions
         {{ _.role("user") }}
 
         The history of previous actions:
-        {%if previousActions %}
+        {%if not previousActions %}
         (there are none)
         {%endif%}
         {%for action in previousActions%}
