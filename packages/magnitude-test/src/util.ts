@@ -261,3 +261,15 @@ export async function sendTelemetry(payload: Omit<TelemetryPayload, 'version' | 
         logger.warn(`Failed to send telemetry (may have timed out): ${(error as Error).message}`);
     }
 }
+
+// model name substrings with well known input/output cost that we can show
+export const knownCostMap: Record<string, number[]> = {
+    'gemini-2.5-pro': [1.25, 10.0],
+    'gemini-2.5-flash': [0.15, 0.60],
+    'claude-3.5-sonnet': [3.00, 15.00],
+    'claude-3.7-sonnet': [3.00, 15.00],
+    'gpt-4.1': [2.00, 8.00],
+    'gpt-4.1-mini': [0.40, 1.60],
+    'gpt-4.1-nano': [0.10, 0.40],
+    'gpt-4o': [3.75, 15.00],
+}

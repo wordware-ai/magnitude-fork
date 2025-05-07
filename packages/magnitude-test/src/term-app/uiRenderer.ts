@@ -20,6 +20,7 @@ import {
     setRedrawScheduled, setLastOutputLineCount, setIsFirstDraw
 } from './uiState';
 import { spinnerChars } from './constants';
+import { knownCostMap } from '@/util';
 
 /**
  * Generate the title bar portion of the UI
@@ -308,7 +309,17 @@ export function generateSummaryString(boxHeight: number): string[] {
         if (statusCounts.pending > 0) statusLine += `${ANSI_GRAY}◌ ${statusCounts.pending} pending${ANSI_RESET}  `;
         if (statusCounts.cancelled > 0) statusLine += `${ANSI_GRAY}⊘ ${statusCounts.cancelled} cancelled${ANSI_RESET}  `;
 
-        const tokenText = `${ANSI_GRAY}tokens: ${totalInputTokens} in, ${totalOutputTokens} out${ANSI_RESET}`;
+        let costDescription = '';
+        for (const [model, costs] of Object.entries(knownCostMap)) {
+            if (currentModel.includes(model)) {
+                const inputCost = costs[0];
+                const outputCost = costs[1];
+                costDescription = ` (\$${((totalInputTokens*inputCost + totalOutputTokens*outputCost) / 1000000).toFixed(2)})`;
+            }
+        }
+        
+        let tokenText = `${ANSI_GRAY}tokens: ${totalInputTokens} in, ${totalOutputTokens} out${costDescription}${ANSI_RESET}`;
+        
         const spaceNeeded = str(statusLine) + str(tokenText);
         const spacer = ' '.repeat(Math.max(0, effectiveSummaryContentWidth - spaceNeeded)); // Use effective width
         const combinedLine = statusLine + spacer + tokenText;
