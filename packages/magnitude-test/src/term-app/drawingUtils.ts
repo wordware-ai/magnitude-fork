@@ -128,7 +128,7 @@ export function getActionSymbol(variant: "load" | "click" | "hover" | "type" | "
     // Returns plain char
     switch (variant) {
         case "load": return "↻"; case "click": return "⊙"; case "hover": return "◉";
-        case "type": return "⏎"; case "scroll": return "↕"; case "wait": return "◴";
+        case "type": return "⏎"; case "scroll": return "⇅"; case "wait": return "◴";
         case "back": return "←"; default: return "?";
     }
 }
