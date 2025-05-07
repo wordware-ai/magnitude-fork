@@ -379,7 +379,7 @@ export function calculateTestListHeight(tests: CategorizedTestCases, testStates:
                         height += wrapText(item.description, contentWidth - 4).length;
                         
                         // Action lines for steps
-                        if (item.variant === 'step' && item.actions.length > 0) {
+                        if (renderSettings.showActions && item.variant === 'step' && item.actions.length > 0) {
                             item.actions.forEach(action => {
                                 height += wrapText(describeAction(action), contentWidth - 6).length;
                             });
@@ -419,7 +419,7 @@ export function calculateTestListHeight(tests: CategorizedTestCases, testStates:
                             height += wrapText(item.description, contentWidth - 4).length;
                             
                             // Action lines for steps
-                            if (item.variant === 'step' && item.actions.length > 0) {
+                            if (renderSettings.showActions && item.variant === 'step' && item.actions.length > 0) {
                                 item.actions.forEach(action => {
                                     height += wrapText(describeAction(action), contentWidth - 6).length;
                                 });
