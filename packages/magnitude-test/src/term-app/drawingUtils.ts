@@ -1,6 +1,6 @@
 import { TestState } from './types';
 import { ActionDescriptor, FailureDescriptor } from 'magnitude-core';
-import { ANSI_RESET, ANSI_BRIGHT_GREEN, ANSI_BRIGHT_BLUE, ANSI_GRAY, ANSI_RED, BOX_CHARS_ROUNDED } from './constants';
+import { ANSI_RESET, ANSI_GREEN, ANSI_BRIGHT_BLUE, ANSI_GRAY, ANSI_RED, BOX_CHARS_ROUNDED } from './constants';
 
 /**
  * Calculate the visible length of a string, accounting for ANSI escape codes.
@@ -188,7 +188,7 @@ export function styleAnsi(status: TestState['status'], text: string, type: 'test
         case 'test':
             switch (status) {
                 case 'running': colorCode = ANSI_BRIGHT_BLUE; break;
-                case 'passed': colorCode = ANSI_BRIGHT_GREEN; break;
+                case 'passed': colorCode = ANSI_GREEN; break;
                 case 'failed': colorCode = ANSI_RED; break;
                 case 'cancelled': colorCode = ANSI_GRAY; break;
             }
