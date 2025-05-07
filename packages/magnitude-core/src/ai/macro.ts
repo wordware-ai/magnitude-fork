@@ -44,7 +44,7 @@ export class MacroAgent {
         this.cr = new ClientRegistry();
         const client = this.config.client;
         let options = convertToBamlClientOptions(this.config.client);
-        this.cr.addLlmClient('Macro', client.provider, options);
+        this.cr.addLlmClient('Macro', client.provider, options, 'DefaultRetryPolicy');
         this.cr.setPrimary('Macro');
 
         this.baml = b.withOptions({ collector: this.collector, clientRegistry: this.cr });

@@ -22,6 +22,17 @@ client<llm> SonnetAnthropic {
 }
 
 client<llm> GeminiPro {
+    provider "google-ai"
+    options {
+        api_key env.GOOGLE_API_KEY
+        model "gemini-2.5-pro-preview-05-06"
+        generationConfig {
+            temperature 0.0
+        }
+    }
+}
+
+client<llm> GeminiProOpenRouter {
     provider "openai-generic"
     options {
         base_url "https://openrouter.ai/api/v1"
@@ -88,7 +99,18 @@ retry_policy Exponential {
     strategy {
         type exponential_backoff
         delay_ms 500
-        mutliplier 2.0
+        multiplier 2.0
+        max_delay_ms 10000
+    }
+}
+
+// Default used by macro.ts
+retry_policy DefaultRetryPolicy {
+    max_retries 5
+    strategy {
+        type exponential_backoff
+        delay_ms 500
+        multiplier 2.0
         max_delay_ms 10000
     }
 }
