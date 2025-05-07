@@ -252,7 +252,10 @@ program
 
         // --- Initialize Terminal UI ---
         // Pass the initial tests and states
-        initializeUI(describeModel(config.planner), categorizedTests, testStates);
+        const renderSettings = {
+            showActions: config.display?.showActions ?? true
+        };
+        initializeUI(describeModel(config.planner), categorizedTests, testStates, renderSettings);
 
 
         // --- Instantiate Executor ---

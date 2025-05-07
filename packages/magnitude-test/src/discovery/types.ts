@@ -15,7 +15,10 @@ export type MagnitudeConfig = {
         contextOptions?: BrowserContextOptions,
         launchOptions?: LaunchOptions
     },
-    telemetry?: boolean
+    telemetry?: boolean,
+    display?: {
+        showActions?: boolean;
+    }
 }
 
 export interface TestFunctionContext {
@@ -59,4 +62,3 @@ export interface TestDeclaration {
 // Map from filepath to grouped and ungrouped test cases
 export type CategorizedTestCases = Record<string, { ungrouped: TestRunnable[], groups: Record<string, TestRunnable[]>}>;
 //export type CategorizedTestCases = Record<string, { ungrouped: TestCaseBuilder[], groups: Record<string, TestCaseBuilder[]>}>;
-

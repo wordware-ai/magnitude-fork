@@ -14,9 +14,9 @@ import {
     getStepStatusIndicatorChar, getCheckStatusIndicatorChar 
 } from './drawingUtils';
 import {
-    currentWidth, redrawScheduled, currentTestStates, currentTests, 
-    currentModel, elapsedTimes, isFinished, spinnerFrame, 
-    lastOutputLineCount, isFirstDraw, isResizing,
+    currentWidth, redrawScheduled, currentTestStates, currentTests,
+    currentModel, elapsedTimes, isFinished, spinnerFrame,
+    lastOutputLineCount, isFirstDraw, isResizing, renderSettings, // Added renderSettings
     setRedrawScheduled, setLastOutputLineCount, setIsFirstDraw
 } from './uiState';
 import { spinnerChars } from './constants';
@@ -155,8 +155,8 @@ export function generateTestString(test: TestRunnable, state: TestState, filepat
                 output.push(' '.repeat(itemIndent) + linePrefix + line); // Desc is plain
             });
 
-            // Draw actions only for steps
-            if (item.variant === 'step' && item.actions.length > 0) {
+            // Draw actions only for steps if showActions is true
+            if (renderSettings.showActions && item.variant === 'step' && item.actions.length > 0) {
                 item.actions.forEach(action => {
                     const actionSymbol = `${ANSI_GRAY}${getActionSymbol(action.variant)}${ANSI_RESET}`;
                     const actionDesc = describeAction(action); // Plain desc

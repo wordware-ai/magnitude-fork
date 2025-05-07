@@ -3,8 +3,14 @@ import { AllTestStates } from './types';
 import { MAX_APP_WIDTH, spinnerChars } from './constants';
 
 // --- UI State ---
+
+export interface RenderSettings {
+    showActions: boolean;
+}
+
 export let currentWidth = Math.min(process.stdout.columns || MAX_APP_WIDTH, MAX_APP_WIDTH);
 export let redrawScheduled = false;
+export let renderSettings: RenderSettings = { showActions: true };
 export let timerInterval: NodeJS.Timeout | null = null;
 export let currentTestStates: AllTestStates = {};
 export let currentTests: CategorizedTestCases = {};
@@ -23,6 +29,7 @@ export let isResizing = false; // Flag to track resize state
 export function resetState() {
     currentWidth = Math.min(process.stdout.columns || MAX_APP_WIDTH, MAX_APP_WIDTH);
     redrawScheduled = false;
+    renderSettings = { showActions: true }; // Reset render settings
     timerInterval = null;
     currentTestStates = {};
     currentTests = {};
@@ -132,4 +139,11 @@ export function updateElapsedTime(testId: string, time: number) {
  */
 export function setIsFinished(value: boolean) {
     isFinished = value;
+}
+
+/**
+ * Sets the renderSettings
+ */
+export function setRenderSettings(settings: RenderSettings) {
+    renderSettings = settings;
 }

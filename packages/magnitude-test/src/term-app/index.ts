@@ -8,12 +8,12 @@ import { FailureDescriptor } from 'magnitude-core';
 // Import from our new modules
 import { MAX_APP_WIDTH, spinnerChars } from './constants';
 import {
-  currentWidth, timerInterval, currentTestStates, currentTests,
-  currentModel, elapsedTimes, isFinished, spinnerFrame, resizeTimeout,
-  isResizing, redrawScheduled, resetState, setRedrawScheduled,
-  setIsResizing, setResizeTimeout, setCurrentWidth, setCurrentModel,
-  setCurrentTests, setCurrentTestStates, setTimerInterval, setSpinnerFrame,
-  setElapsedTimes, setIsFinished, updateElapsedTime
+    currentWidth, timerInterval, currentTestStates, currentTests,
+    currentModel, elapsedTimes, isFinished, spinnerFrame, resizeTimeout,
+    isResizing, redrawScheduled, resetState, setRedrawScheduled,
+    setIsResizing, setResizeTimeout, setCurrentWidth, setCurrentModel,
+    setCurrentTests, setCurrentTestStates, setTimerInterval, setSpinnerFrame,
+    setElapsedTimes, setIsFinished, updateElapsedTime, RenderSettings, setRenderSettings
 } from './uiState';
 import { redraw, scheduleRedraw } from './uiRenderer';
 
@@ -60,12 +60,16 @@ function handleExitKeyPress() {
  * @param model The model name to display
  * @param initialTests The initial test cases
  * @param initialStates The initial test states
+ * @param initialRenderSettings Optional initial render settings
  */
-export function initializeUI(model: string, initialTests: CategorizedTestCases, initialStates: AllTestStates) {
+export function initializeUI(model: string, initialTests: CategorizedTestCases, initialStates: AllTestStates, initialRenderSettings?: RenderSettings) {
     // Reset state to clear any previous UI state
     resetState();
-    
+
     // Set initial values
+    if (initialRenderSettings) {
+        setRenderSettings(initialRenderSettings);
+    }
     setCurrentModel(model);
     setCurrentTests(initialTests);
     setCurrentTestStates(initialStates);
