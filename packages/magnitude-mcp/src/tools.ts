@@ -89,28 +89,45 @@ Example test case:
 \`\`\`ts
 import { test } from 'magnitude-test';
 
-test('can log in')
-    .step('Log in')
-        .data({ email: "foo@bar.com", password: "foo" })
-        .check('Dashboard is visible')
+test('can log in', { url: 'https://example.com/login' }, async ({ ai }) => {
+  await ai.step('Enter login credentials', {
+    data: { email: "foo@bar.com", password: "foo" }
+  });
+  await ai.check('Dashboard is visible');
+});
 \`\`\`
 
-Notice that it appears more like a DSL than plain typescript.
+Tests are now defined using an \`async\` function.
 
-Every test case begins with test('<what it is testing>').
-Then attach steps with .step('<description of what to do in the browser>')
-Each step can have:
-.check('<visual assertion>')
-.data('<freeform description of data>') or
-.data({ arbitraryKey: arbitraryValue }) or
-.secureData({ arbitraryKey: arbitraryValue }) (for sensitive fields)
+Every test case begins with \`test('<what it is testing>', async ({ ai, page, context }) => { ... })\`.
+- An optional second argument to \`test\` can provide configuration, such as \`{ url: 'your-target-url' }\`.
+- The \`async\` function receives an object typically containing \`ai\` (for Magnitude steps/checks). It can also include Playwright's \`page\` and \`context\` objects if needed for advanced scenarios.
 
-check/data/secureData must ALWAYS follow a step, they cannot be attached to the test directly.
+Inside the async function:
+- Define natural language steps using \`await ai.step('<description of what to do in the browser>')\`.
+    - Data for the step, if any, is passed as a second argument in an options object:
+        - \`await ai.step('description', { data: '<freeform description of data>' })\`
+        - \`await ai.step('description', { data: { arbitraryKey: 'arbitraryValue' } })\`
+- Define natural language checks using \`await ai.check('<visual assertion>')\`.
 
-Tests can have multiple steps, but you should separate distinct flows into their own tests.
+\`ai.check\`s typically verify the outcome of a preceding \`ai.step\`.
+If needed, you can intermingle Playwright calls using the \`page\` and \`context\` objects for tasks like network mocking or direct browser interaction.
 
 ## Style
-You should indent steps one level and check/data/secureData two levels. Always follow this style.
+Use standard TypeScript/JavaScript indentation within the \`async\` test function.
+\`await ai.step(...)\` and \`await ai.check(...)\` calls are typically at the same indentation level.
+Example:
+\`\`\`ts
+test('example style', async ({ ai }) => {
+  await ai.step('Do something', {
+    data: { info: 'details' }
+  });
+  await ai.check('Verify something');
+
+  await ai.step('Do another thing');
+  await ai.check('Verify another thing');
+});
+\`\`\`
 
 ## Test Management
 Put the test cases in a **new** .mag.ts file if building a fresh page/feature, or edit the relevant **existing** .mag.ts file if expanding on an existing page/feature.
@@ -120,27 +137,32 @@ Put related tests in a test.group like this:
 import { test } from 'magnitude-test';
 
 test.group('authentication tests', () => {
-    test('can log in')
-        .step('Log in')
-            .data({ email: "foo@bar.com", password: "foo" })
-            .check('Dashboard is visible')
+    test('can log in', async ({ ai }) => {
+        await ai.step('Log in', {
+            data: { email: "foo@bar.com", password: "foo" }
+        });
+        await ai.check('Dashboard is visible');
+    });
     
-    test('can sign up')
-        .step('Sign up for a new account')
-            .data({ email: "foo@bar.com", password: "foo" })
-            .check('Profile page is visible')
-})
+    test('can sign up', async ({ ai }) => {
+        await ai.step('Sign up for a new account', {
+            data: { email: "another@example.com", password: "securePassword123" }
+        });
+        await ai.check('Profile page is visible');
+    });
+});
 \`\`\`
 
 Unless otherwise specified by the user, only cover the main flows of the page or feature.
 Tests should be minimalistic.
 
 ## Designing tests
-- Keep tests short (a few steps)
-- Group related tests with test.group
-- Checks should be simple and direct
-- Do not add more checks than necessary, only enough to generally verify functionality
-- Every test MUST have at least one step. Each check MUST ALWAYS belong to a step.
+- Keep tests short (a few \`ai.step\`s and \`ai.check\`s).
+- Group related tests with test.group.
+- \`ai.check\`s should be simple and direct.
+- Do not add more \`ai.check\`s than necessary, only enough to generally verify functionality.
+- Every test MUST have at least one \`ai.step\`.
+- Each \`ai.check\` should logically verify the application state after preceding actions (e.g., an \`ai.step\` or intermingled custom Playwright code).
 
 Now comply with the user's instructions using these building principles.
 `;
