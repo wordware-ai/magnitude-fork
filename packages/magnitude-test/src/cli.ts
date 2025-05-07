@@ -178,6 +178,11 @@ program
         }
 
         const absoluteFilePaths = await discoverTestFiles(patterns);
+
+        if (absoluteFilePaths.length === 0) {
+            console.error(`No test files found matching patterns: ${patterns.join(', ')}`);
+            process.exit(1);
+        }
         // only matters to show file names nicely
         const projectRoot = await findProjectRoot() ?? process.cwd();
 

@@ -59,12 +59,6 @@ export async function discoverTestFiles(patterns: string[], cwd: string = proces
             absolute: true    // Return paths relative to cwd
         });
 
-        if (files.length === 0) {
-            console.log(`No test files found matching patterns: ${patterns.join(', ')}`);
-        } else {
-            //console.log(`Found ${files.length} test file(s)`);
-        }
-
         return files.map(file => path.resolve(cwd, file));
     } catch (error) {
         console.error('Error discovering test files:', error);
