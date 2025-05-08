@@ -1,5 +1,11 @@
 # magnitude-core
 
+## 0.1.1
+
+### Patch Changes
+
+- better deno compat, show costs, retries
+
 ## 0.1.0
 
 ### Minor Changes
