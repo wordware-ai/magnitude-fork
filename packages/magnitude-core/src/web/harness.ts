@@ -147,6 +147,10 @@ export class WebHarness {
         //await this.visualizer.redrawLastPosition();
     }
 
+    async waitForStability(timeout?: number): Promise<void> {
+        await this.stability.waitForStability(timeout);
+    }
+
     // async waitForStability(timeout?: number): Promise<void> {
     //     await this.stability.waitForStability(timeout);
     // }

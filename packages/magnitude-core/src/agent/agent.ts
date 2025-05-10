@@ -98,6 +98,8 @@ export class TestCaseAgent {
         this.checkAborted();
         await this.harness.goto(startingUrl);
 
+        await this.harness.waitForStability();
+
         //console.log('tabs:', await this.harness.retrieveTabState());
         //const screenshot = await this.screenshot();
         // Synthetic load action
