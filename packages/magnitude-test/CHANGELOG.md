@@ -1,5 +1,13 @@
 # magnitude-test
 
+## 0.1.2
+
+### Patch Changes
+
+- tab switching, rate limit handling, fixes
+- Updated dependencies
+  - magnitude-core@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes
