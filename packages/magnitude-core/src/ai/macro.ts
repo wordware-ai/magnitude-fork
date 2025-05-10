@@ -9,6 +9,7 @@ import logger from "@/logger";
 import { Logger } from 'pino';
 import { BugDetectedFailure, MisalignmentFailure } from "@/common";
 import { PlannerClient } from "@/ai/types";
+import { TabState } from "@/web/tabs";
 
 
 interface MacroAgentConfig {
@@ -69,7 +70,7 @@ export class MacroAgent {
         return screenshot;
     }
 
-    async createPartialRecipe(screenshot: Screenshot, testStep: TestStepDefinition, existingRecipe: ActionIntent[]): Promise<{ actions: ActionIntent[], finished: boolean }> {
+    async createPartialRecipe(screenshot: Screenshot, testStep: TestStepDefinition, existingRecipe: ActionIntent[], tabState: TabState): Promise<{ actions: ActionIntent[], finished: boolean }> {
         const downscaledScreenshot = await this.transformScreenshot(screenshot);
 
         const stringifiedExistingRecipe = [];
@@ -80,9 +81,12 @@ export class MacroAgent {
         //console.log("existing:", stringifiedExistingRecipe);
         const start = Date.now();
         const response = await this.baml.CreatePartialRecipe(
-            Image.fromBase64('image/png', downscaledScreenshot.image),
+            {
+                screenshot: Image.fromBase64('image/png', downscaledScreenshot.image),
+                actionHistory: stringifiedExistingRecipe,
+                tabState: tabState
+            },
             testStep,
-            stringifiedExistingRecipe
         );
         this.logger.trace(`createPartialRecipe took ${Date.now()-start}ms`);
         return response;
@@ -109,7 +113,7 @@ export class MacroAgent {
         return response.checks;
     }
 
-    async evaluateCheck(screenshot: Screenshot, check: string, existingRecipe: ActionIntent[]): Promise<boolean> {
+    async evaluateCheck(screenshot: Screenshot, check: string, existingRecipe: ActionIntent[], tabState: TabState): Promise<boolean> {
         const downscaledScreenshot = await this.transformScreenshot(screenshot);
 
         const stringifiedExistingRecipe = [];
@@ -119,15 +123,18 @@ export class MacroAgent {
 
         const start = Date.now();
         const response = await this.baml.EvaluateCheck(
-            Image.fromBase64('image/png', downscaledScreenshot.image),
-            check,
-            stringifiedExistingRecipe
+            {
+                screenshot: Image.fromBase64('image/png', downscaledScreenshot.image),
+                actionHistory: stringifiedExistingRecipe,
+                tabState: tabState
+            },
+            check
         );
         this.logger.trace(`evaluateCheck took ${Date.now()-start}ms`);
         return response.passes;
     }
 
-    async classifyCheckFailure(screenshot: Screenshot, check: string, existingRecipe: ActionIntent[]): Promise<BugDetectedFailure | MisalignmentFailure> {
+    async classifyCheckFailure(screenshot: Screenshot, check: string, existingRecipe: ActionIntent[], tabState: TabState): Promise<BugDetectedFailure | MisalignmentFailure> {
         const downscaledScreenshot = await this.transformScreenshot(screenshot);
 
         const stringifiedExistingRecipe = [];
@@ -137,9 +144,12 @@ export class MacroAgent {
 
         const start = Date.now();
         const response = await this.baml.ClassifyCheckFailure(
-            Image.fromBase64('image/png', downscaledScreenshot.image),
-            check,
-            stringifiedExistingRecipe
+            {
+                screenshot: Image.fromBase64('image/png', downscaledScreenshot.image),
+                actionHistory: stringifiedExistingRecipe,
+                tabState: tabState
+            },
+            check
         );
         this.logger.trace(`classifyCheckFailure took ${Date.now()-start}ms`);
         //return response.check;

@@ -20,7 +20,7 @@ class TestCase {
     steps TestStep[]
 }
 
-class ClickIngredient {
+class ClickIntent {
     variant "click" @description(#"
         Click something
     "#)
@@ -29,7 +29,7 @@ class ClickIngredient {
     "#)
 }
 
-class TypeIngredient {
+class TypeIntent {
     variant "type" @description(#"
         Click something and type into it
     "#)
@@ -41,7 +41,7 @@ class TypeIngredient {
     "#)
 }
 
-class ScrollIngredient {
+class ScrollIntent {
     variant "scroll" @description(#"
         Hover mouse over target and scroll
     "#)
@@ -56,21 +56,71 @@ class ScrollIngredient {
     "#)
 }
 
-class CheckIngredient {
+class SwitchTabIntent {
+    variant "tab" @description(#"
+        Switch tabs
+    "#)
+    index int @description(#"
+        Index of tab to switch to
+    "#)
+}
+
+class CheckIntent {
     variant "check"
     checks string[]
 }
 
-type Ingredient = ActionIngredient | CheckIngredient
-type ActionIngredient = ClickIngredient | TypeIngredient | ScrollIngredient
+type Intent = ActionIntent | CheckIntent
+type ActionIntent = ClickIntent | TypeIntent | ScrollIntent | SwitchTabIntent
 
 class PartialRecipe {
     reasoning string @description(#"Consider what you can see right now and what actions you can plan without guessing"#)
-    actions ActionIngredient[]
+    actions ActionIntent[]
     finished bool
 }
 
-function CreatePartialRecipe (screenshot: image, step: TestStep, previousActions: string[]) -> PartialRecipe {
+class OpenTab {
+    title string
+    url string
+}
+
+class TabState {
+    activeTab int
+    tabs OpenTab[]
+}
+
+class BrowserExecutionContext {
+    screenshot image
+    actionHistory string[]
+    tabState TabState
+}
+
+// screenshot: image, actionHistory: string[], tabState: TabState
+template_string DescribeBrowserExecutionContext (context: BrowserExecutionContext) #"
+    <browser_state>
+        <action_history>
+        {%for action in context.actionHistory%}
+        {{ action }}
+        {%endfor%}
+        </action_history>
+
+        <open_tabs>
+        {%for tab in context.tabState.tabs%}
+            {%if context.tabState.activeTab == loop.index0%}
+            {{ loop.index0 }} [ACTIVE]: {{ tab.title }} ({{tab.url}})
+            {%else%}
+            {{ loop.index0 }}: {{ tab.title }} ({{tab.url}})
+            {%endif%}
+        {%endfor%}
+        </open_tabs>
+
+        <current_screenshot>
+        {{ context.screenshot }}
+        </current_screenshot>
+    </browser_state>
+"#
+
+function CreatePartialRecipe (context: BrowserExecutionContext, step: TestStep) -> PartialRecipe {
     client GeminiPro
     prompt #"
         {{ _.role("system") }}
@@ -88,12 +138,6 @@ function CreatePartialRecipe (screenshot: image, step: TestStep, previousActions
         {{ ctx.output_format }}
 
         {{ _.role("user") }}
-        {%if previousActions %}
-        Keep in mind that you've already taken these actions:
-        {%for action in previousActions%}
-        {{ action }}
-        {%endfor%}
-        {%endif%}
 
         {%if step.testData.data or step.testData.other %}
         Additionally, bake this test data into the actions you plan out (only where appropriate):
@@ -107,7 +151,7 @@ function CreatePartialRecipe (screenshot: image, step: TestStep, previousActions
         {%endif%}
         {%endif%}
 
-        {{ screenshot }}
+        {{ DescribeBrowserExecutionContext(context) }}
     "# 
 }
 
@@ -167,7 +211,7 @@ class EvaluatedCheck {
 }
 
 // Moondream struggles to handle converted check, this is a bypass to use big model to evaluate check directly
-function EvaluateCheck (screenshot: image, check: string, previousActions: string[]) -> EvaluatedCheck {
+function EvaluateCheck (context: BrowserExecutionContext, check: string) -> EvaluatedCheck {
     client GeminiPro
     prompt #"
         {{ _.role("system") }}
@@ -175,19 +219,9 @@ function EvaluateCheck (screenshot: image, check: string, previousActions: strin
         {{ ctx.output_format }}
 
         {{ _.role("user")}}
-
-        The history of previous actions:
-        {%if not previousActions %}
-        (there are none)
-        {%endif%}
-        {%for action in previousActions%}
-        {{ action }}
-        {%endfor%}
-        
         Check to evaluate:
         <check>{{ check }}</check>
 
-        Current screenshot:
-        {{screenshot}}
+        {{ DescribeBrowserExecutionContext(context) }}
     "# 
 }

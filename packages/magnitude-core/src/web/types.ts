@@ -11,7 +11,7 @@ export interface Screenshot {
 //     variant: ActionVariant
 // }
 
-export type WebAction = NavigateWebAction | ClickWebAction | TypeWebAction | ScrollWebAction;
+export type WebAction = NavigateWebAction | ClickWebAction | TypeWebAction | ScrollWebAction | SwitchTabWebAction;
 
 // Currently only emitted synthetically
 export interface NavigateWebAction {
@@ -38,6 +38,11 @@ export interface ScrollWebAction {
     y: number,
     deltaX: number,
     deltaY: number
+}
+
+export type SwitchTabWebAction = {
+    variant: 'tab',
+    index: number
 }
 
 // export type ActionVariant = 'click' | 'type';

@@ -1,37 +1,57 @@
-import { Page, Browser } from "playwright";
-import { ClickWebAction, ScrollWebAction, TypeWebAction, WebAction } from '@/web/types';
+import { Page, Browser, BrowserContext } from "playwright";
+import { ClickWebAction, ScrollWebAction, SwitchTabWebAction, TypeWebAction, WebAction } from '@/web/types';
 import { PageStabilityAnalyzer } from "./stability";
 import { parseTypeContent } from "./util";
 import { ActionVisualizer } from "./visualizer";
+import logger from "@/logger";
+import { TabManager, TabState } from "./tabs";
 
 export class WebHarness {
     /**
      * Executes web actions on a page
      * Not responsible for browser lifecycle
      */
-    private page: Page;
+    private context: BrowserContext;
     private stability: PageStabilityAnalyzer;
     private visualizer: ActionVisualizer;
+    private tabs: TabManager;
 
-    constructor(page: Page) {
-        this.page = page;
-        this.stability = new PageStabilityAnalyzer(this.page);
-        this.visualizer = new ActionVisualizer(this.page);
+    constructor(context: BrowserContext) {
+        //this.page = page;
+        this.context = context;
+        this.stability = new PageStabilityAnalyzer();
+        this.visualizer = new ActionVisualizer();
+        this.tabs = new TabManager(context);
 
-        // Listen for page load events to redraw the visualizer
-        this.page.on('load', async () => {
-            // Use a try-catch as page navigation might interrupt this
-            try {
-                await this.visualizer.redrawLastPosition();
-            } catch (error) {
-                // Ignore errors that might occur during navigation races
-                // console.warn("Error redrawing visualizer on load:", error);
-            }
+        // this.context.on('page', (page: Page) => {
+        //     this.setActivePage(page);
+        //     //logger.info('ayo we got a new page');
+        // });
+        this.tabs.events.on('tabChanged', async (page: Page) => {
+            this.stability.setActivePage(page);
+            this.visualizer.setActivePage(page);
+            
+            //console.log('tabs:', await this.tabs.getState())
+
         });
     }
 
-    getPage() {
-        return this.page;
+    async retrieveTabState(): Promise<TabState> {
+        return this.tabs.retrieveState();
+    }
+
+    // setActivePage(page: Page) {
+    //     this.page = page;
+    //     this.stability.setActivePage(this.page);
+    //     this.visualizer.setActivePage(this.page);
+    // }
+
+    async start() {
+        await this.context.newPage();
+    }
+
+    get page() {
+        return this.tabs.getActivePage();
     }
 
     async screenshot(): Promise<{ image: string, dimensions: { width: number, height: number } }> {
@@ -107,6 +127,10 @@ export class WebHarness {
         await this.page.mouse.wheel(deltaX, deltaY);
     }
 
+    async switchTab({ index }: SwitchTabWebAction) {
+        await this.tabs.switchTab(index);
+    }
+
     async executeAction(action: WebAction) {
         if (action.variant === 'click') {
             await this.click(action);
@@ -114,6 +138,8 @@ export class WebHarness {
             await this.type(action);
         } else if (action.variant === 'scroll') {
             await this.scroll(action);
+        } else if (action.variant === 'tab') {
+            await this.switchTab(action);
         } else {
             throw Error(`Unhandled web action variant: ${(action as any).variant}`);
         }
