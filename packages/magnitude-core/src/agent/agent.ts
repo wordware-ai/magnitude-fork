@@ -11,7 +11,7 @@ import logger from '../logger';
 import { PlannerClient, ExecutorClient } from "@/ai/types";
 import EventEmitter from "eventemitter3";
 import { AgentError } from "./errors";
-import { ActionDescriptor, convertOptionsToTestData, FailureDescriptor } from "../common";
+import { ActionDescriptor, convertOptionsToTestData, FailureDescriptor, retryOnError } from "../common";
 import { TabState } from "@/web/tabs";
 
 export interface TestCaseAgentOptions {
@@ -130,7 +130,13 @@ export class TestCaseAgent {
             // does catch make sense here? essentially indicates very low confidence
             // bad cases either 1. action with low confidence
             // 2. no action (target not identified at all)
-            action = await this.micro.convertAction(screenshot, intent);
+
+            // Retry Moondream calls on rate limit errors
+            // will need to generalize when other moondream calls
+            action = await retryOnError(
+                async () => this.micro.convertAction(screenshot, intent),
+                ['503', '429'], 20, 1000
+            );
             logger.info({ intent: intent, action }, `Converted action`);
         } catch(error: unknown) {
             logger.error(`Error converting action: ${error}`);
@@ -158,10 +164,36 @@ export class TestCaseAgent {
             // }
             // This requires more thought
             // TODO: MAG-103/MAG-104
-            this.fail({
-                'variant': 'misalignment',
-                'message': `Could not align ${intent.variant} action: ${(error as Error).message}`
-            });
+
+            if (error instanceof Error) {
+                if (error.message.includes('502') || error.message.includes('429')) {
+                    // Hit Moondream rate limit
+                    this.fail({
+                        variant: 'rate_limit',
+                        message: `Moondream rate limit exceeded -> ${error.message}`
+                    });
+                }
+                else if (error.message.includes('401')) {
+                    // Invalid API key
+                    this.fail({
+                        variant: 'api_key',
+                        message: `Moondream API key invalid -> ${error.message}`
+                    });
+                } else {
+                    // Some error with how moondream interpreted request - no points generated, too many points, etc.
+                    this.fail({
+                        'variant': 'misalignment',
+                        'message': `Could not align ${intent.variant} action -> ${error.message}`
+                    });
+                }
+            } else {
+                this.fail({
+                    'variant': 'unknown',
+                    'message': `Non-error thrown -> ${error}`
+                });
+            }
+
+            
             //throw new ActionConversionError(ingredient, error as Error);
         }
         try {
@@ -171,7 +203,7 @@ export class TestCaseAgent {
 
             this.fail({
                 variant: 'browser',
-                message: `Failed to execute ${action.variant} action: ${(error as Error).message}`
+                message: `Failed to execute ${action.variant} action -> ${(error as Error).message}`
             });
         }
         return action;
@@ -213,7 +245,7 @@ export class TestCaseAgent {
                  */
                 this.fail({
                     variant: 'misalignment',
-                    message: `Could not create partial recipe: ${(error as Error).message}`
+                    message: `Could not create partial recipe -> ${(error as Error).message}`
                 });
             }
 

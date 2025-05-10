@@ -82,7 +82,12 @@ export function generateFailureString(failure: FailureDescriptor, indent: number
         addSimpleLine('Cancelled', ANSI_GRAY);
     } else {
         const prefixMap: Partial<Record<FailureDescriptor['variant'], string>> = {
-            'unknown': '', 'browser': 'BrowserError: ', 'network': 'NetworkError: ', 'misalignment': 'Misalignment: '
+            'unknown': '',
+            'browser': 'BrowserError: ',
+            'network': 'NetworkError: ',
+            'misalignment': 'Misalignment: ',
+            'api_key': 'APIKeyError: ',
+            'rate_limit': 'RateLimitError: ',
         };
         const typedFailure = failure as Extract<FailureDescriptor, { message?: string }>;
         if ('message' in typedFailure && typedFailure.message) {

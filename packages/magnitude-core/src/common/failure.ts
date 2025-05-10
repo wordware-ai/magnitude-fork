@@ -11,7 +11,7 @@
 // export interface FailureDescriptor {
 //     description: string
 // }
-export type FailureDescriptor = BugDetectedFailure | MisalignmentFailure | NetworkFailure | BrowserFailure | UnknownFailure | CancelledFailure; // Add CancelledFailure
+export type FailureDescriptor = BugDetectedFailure | MisalignmentFailure | NetworkFailure | BrowserFailure | RateLimitFailure | ApiKeyFailure | UnknownFailure | CancelledFailure;
 
 export type BugSeverity = 'critical' | 'high' | 'medium' | 'low';
 
@@ -57,6 +57,16 @@ export interface BrowserFailure {
      * E.g. something goes wrong with playwright interactions, any DOM manipulation, etc.
      */
     variant: 'browser'
+    message: string
+}
+
+export interface RateLimitFailure {
+    variant: 'rate_limit',
+    message: string
+}
+
+export interface ApiKeyFailure {
+    variant: 'api_key'
     message: string
 }
 

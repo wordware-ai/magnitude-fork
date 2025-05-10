@@ -37,3 +37,40 @@ export function convertOptionsToTestData(options: StepOptions): TestData {
         }))}
     }
 }
+
+export async function retryOnError<T>(
+    fnToRetry: () => Promise<T>,
+    errorSubstrings: string[],
+    retryLimit: number,
+    delayMs: number = 200
+): Promise<T> {
+    let lastError: any;
+
+    if (retryLimit < 0) {
+        retryLimit = 0;
+    }
+
+    for (let attempt = 0; attempt <= retryLimit; attempt++) {
+        try {
+            return await fnToRetry();
+        } catch (error: any) {
+            lastError = error;
+
+            const errorMessage = String(error?.message ?? error);
+
+            const includesSubstring = errorSubstrings.some((substring) => errorMessage.includes(substring));
+
+            if (includesSubstring) {
+                if (attempt === retryLimit) {
+                    throw lastError;
+                }
+            } else {
+                // Error message does NOT contain the target substring. This error is not retryable.
+                throw lastError; // Throw this current error immediately.
+            }
+        }
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+
+    throw lastError;
+}
