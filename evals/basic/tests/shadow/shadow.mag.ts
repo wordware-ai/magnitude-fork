@@ -2,18 +2,15 @@ import { test } from 'magnitude-test';
 
 
 test.group('shadow DOM arena', { url: 'localhost:8080/shadow' }, () => {
-    // test('dropdown test 1', async ({ ai, page }) => {
-    //     //await ai.step('select Canada as the country');
-    //     await page.screenshot({ path: 'foo.png'});
-    //     await ai.click("Select a country...")
-    // });
-    // test('dropdown test 1', async ({ ai }) => {
-    //     await ai.step("Select Option 2 for standard select")
-    // });
+    test('dropdown test', async ({ ai }) => {
+        await ai.step('Select option 2 in the dropdown');
+    });
 
-    test('dropdown test 2', async ({ ai, page }) => {
-        //await ai.step("Select Option 2 for standard select")
+    test('colorpicker test', async ({ ai }) => {
+        await ai.step('Put a bright green color in the color input');
+    });
 
-        await page.reload();
+    test('date test', async ({ ai }) => {
+        await ai.step('Put 01/01/2020 in the date input');
     });
 })
