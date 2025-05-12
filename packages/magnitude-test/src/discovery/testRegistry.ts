@@ -2,6 +2,8 @@ import { TestOptions, TestGroup, MagnitudeConfig, CategorizedTestCases, TestFunc
 import { TestCompiler } from "@/compiler";
 import { pathToFileURL } from "node:url";
 
+// Warning: The registry is bundled with every test, be careful about the module tree here.
+
 declare global {
     var __testRegistry: TestRegistry | undefined;
 }
@@ -116,10 +118,14 @@ export class TestRegistry {
 
         //const configuredOptions = this.globalOptions;
         const globalOptions = this.globalOptions.url ? {
-            url: this.globalOptions.url
+            url: processUrl(envOptions.url, this.globalOptions.url)
         } : {};
 
-        const groupOptions = this.currentGroup?.options ?? {};
+        const groupOptions = this.currentGroup?.options ? {
+            ...this.currentGroup.options,
+            url: processUrl(globalOptions.url, this.currentGroup.options.url)
+        } : {};
+
 
         const combinedOptions = {
             ...envOptions,
@@ -155,6 +161,21 @@ export class TestRegistry {
         } finally {
             // Always unset the current file path when done
             this.unsetCurrentFilePath();
+        }
+    }
+}
+
+export function processUrl(base: string | undefined, relative: string | undefined): string | undefined {
+    if (!relative) return base;
+    if (!base) return relative;
+    try {
+        return new URL(relative).toString(); // It's a full URL by itself
+    } catch {
+        try {
+            // Not a full URL on its own, try to combine with base
+            return new URL(relative, base).toString();
+        } catch (e) {
+            return relative;
         }
     }
 }
