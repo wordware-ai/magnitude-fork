@@ -275,7 +275,8 @@ program
                 executor: config.executor,
                 browserContextOptions: config.browser?.contextOptions ?? {},
                 browserLaunchOptions: config.browser?.launchOptions ?? {},
-                telemetry: config.telemetry ?? true
+                telemetry: config.telemetry ?? true,
+                downscaling: config.downscaling ?? 1.0,
             },
             categorizedTests,
             testStates, // Pass the shared state object

@@ -18,7 +18,8 @@ export interface TestCaseAgentOptions {
     planner: PlannerClient,
     executor: ExecutorClient
     browserContextOptions: BrowserContextOptions,
-    signal?: AbortSignal // Add optional AbortSignal
+    signal?: AbortSignal, // Add optional AbortSignal
+    downscaling?: number,
 }
 
 const DEFAULT_CONFIG = {
@@ -40,8 +41,8 @@ export class TestCaseAgent {
     constructor (config: TestCaseAgentOptions)  {
         this.config = { ...DEFAULT_CONFIG, ...config };
         this.abortSignal = config.signal;
-        this.macro = new MacroAgent({ client: this.config.planner });
-        this.micro = new MicroAgent({ client: this.config.executor });
+        this.macro = new MacroAgent({ client: this.config.planner, downscaling: this.config.downscaling });
+        this.micro = new MicroAgent({ client: this.config.executor, downscaling: this.config.downscaling });
         //this.info = { actionCount: 0 };
         this.events = new EventEmitter<AgentEvents>();
         this.lastScreenshot = null;

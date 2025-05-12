@@ -25,35 +25,38 @@ export interface TestRunnerConfig {
     browserContextOptions: BrowserContextOptions;
     browserLaunchOptions: LaunchOptions;
     telemetry: boolean;
+    downscaling: number;
 }
 
-export const DEFAULT_CONFIG = {
-    workerCount: 1,
-    prettyDisplay: true,
-    browserContextOptions: {},
-    browserLaunchOptions: {},
-    telemetry: true,
-};
+// export const DEFAULT_CONFIG = {
+//     workerCount: 1,
+//     prettyDisplay: true,
+//     browserContextOptions: {},
+//     browserLaunchOptions: {},
+//     telemetry: true,
+//     downscalingRatio: 0.75,
+// };
 
 export class TestRunner {
     private config: Required<TestRunnerConfig>;
     private tests: CategorizedTestCases;
     private testStates: AllTestStates;
-    private updateUI: UpdateUIFunction; // Changed from rerender
-    private cleanupUI: CleanupUIFunction; // Changed from unmount
+    private updateUI: UpdateUIFunction;
+    private cleanupUI: CleanupUIFunction;
 
     constructor(
-        config: Required<TestRunnerConfig>,
+        config: TestRunnerConfig,
         tests: CategorizedTestCases,
         testStates: AllTestStates,
-        updateUI: UpdateUIFunction,   // Changed parameter name and type
-        cleanupUI: CleanupUIFunction, // Changed parameter name and type
+        updateUI: UpdateUIFunction,
+        cleanupUI: CleanupUIFunction,
     ) {
         this.config = config;
+        //this.config = { ...DEFAULT_CONFIG, ...config };
         this.tests = tests;
         this.testStates = testStates;
-        this.updateUI = updateUI;     // Assign updateUI
-        this.cleanupUI = cleanupUI;   // Assign cleanupUI
+        this.updateUI = updateUI;
+        this.cleanupUI = cleanupUI;
     }
 
     private updateStateAndRender(testId: string, newState: Partial<TestState>) {
@@ -98,7 +101,8 @@ export class TestRunner {
             planner: this.config.planner,
             executor: this.config.executor,
             browserContextOptions: this.config.browserContextOptions,
-            signal
+            signal: signal,
+            downscaling: this.config.downscaling,
         });
         const stateTracker = new AgentStateTracker(agent);
 
@@ -184,26 +188,28 @@ export class TestRunner {
         }
 
         // Send basic telemetry
-        const state = stateTracker.getState();
-        const numSteps = state.stepsAndChecks.filter(item => item.variant === 'step').length;
-        const numChecks = state.stepsAndChecks.filter(item => item.variant === 'check').length;
-        const actionCount = state.stepsAndChecks
-            .filter((item): item is StepDescriptor => item.variant === 'step')
-            .reduce((sum, step) => sum + step.actions.length, 0);
+        if (this.config.telemetry) {
+            const state = stateTracker.getState();
+            const numSteps = state.stepsAndChecks.filter(item => item.variant === 'step').length;
+            const numChecks = state.stepsAndChecks.filter(item => item.variant === 'check').length;
+            const actionCount = state.stepsAndChecks
+                .filter((item): item is StepDescriptor => item.variant === 'step')
+                .reduce((sum, step) => sum + step.actions.length, 0);
 
-        await sendTelemetry({
-            startedAt: state.startedAt ?? Date.now(),
-            doneAt: Date.now(),
-            macroUsage: state.macroUsage,
-            microUsage: state.microUsage,
-            cached: state.cached ?? false,
-            testCase: {
-                numChecks: numChecks,
-                numSteps: numSteps,
-            },
-            actionCount: actionCount,
-            result: state.failure ? state.failure.variant : 'passed'
-        })
+            await sendTelemetry({
+                startedAt: state.startedAt ?? Date.now(),
+                doneAt: Date.now(),
+                macroUsage: state.macroUsage,
+                microUsage: state.microUsage,
+                cached: state.cached ?? false,
+                testCase: {
+                    numChecks: numChecks,
+                    numSteps: numSteps,
+                },
+                actionCount: actionCount,
+                result: state.failure ? state.failure.variant : 'passed'
+            })
+        }
 
         return !failed;
     }
