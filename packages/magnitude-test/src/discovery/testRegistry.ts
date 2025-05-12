@@ -128,8 +128,8 @@ export class TestRegistry {
 
 
         const combinedOptions = {
-            ...envOptions,
             ...globalOptions,
+            ...envOptions, // env options take precedence over global options
             ...groupOptions
         }
 
