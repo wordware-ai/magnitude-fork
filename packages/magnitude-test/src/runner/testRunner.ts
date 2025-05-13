@@ -25,7 +25,6 @@ export interface TestRunnerConfig {
     browserContextOptions: BrowserContextOptions;
     browserLaunchOptions: LaunchOptions;
     telemetry: boolean;
-    downscaling: number;
 }
 
 // export const DEFAULT_CONFIG = {
@@ -101,8 +100,7 @@ export class TestRunner {
             planner: this.config.planner,
             executor: this.config.executor,
             browserContextOptions: this.config.browserContextOptions,
-            signal: signal,
-            downscaling: this.config.downscaling,
+            signal: signal
         });
         const stateTracker = new AgentStateTracker(agent);
 

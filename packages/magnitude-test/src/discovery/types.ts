@@ -18,8 +18,7 @@ export type MagnitudeConfig = {
     telemetry?: boolean,
     display?: {
         showActions?: boolean;
-    },
-    downscaling?: number;
+    }
 }
 
 export interface TestFunctionContext {

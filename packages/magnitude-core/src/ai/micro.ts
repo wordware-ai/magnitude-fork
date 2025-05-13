@@ -1,5 +1,4 @@
 import { ClickWebAction, PixelCoordinate, Screenshot, ScrollWebAction, TypeWebAction, WebAction } from '@/web/types';
-import { downscaleScreenshot } from './util';
 import { ActionIntent, CheckIntent, ClickIntent, Intent, ScrollIntent, TypeIntent } from '@/intents/types';
 import logger from "@/logger";
 import { Logger } from 'pino';
@@ -8,21 +7,12 @@ import { ExecutorClient } from './types';
 
 
 interface MicroAgentConfig {
-    // How much to downscale screenshots sent to LLM
-    // A little bit of downscaling can improve accuracy in some cases.
-    // More downscaling = less tokens and faster inference.
-    downscaling: number;
     // only supported executor client rn is moondream
     client: ExecutorClient;
-    // moondreamApiKey: string;
-    // moondreamUrl: string;
-    //parsingRetries: 
-    // confidence thresholds, etc. should go here as well
 }
 
 const DEFAULT_CONFIG = {
-    moondreamUrl: "https://api.moondream.ai/v1",
-    downscaling: 0.75
+    moondreamUrl: "https://api.moondream.ai/v1"
 }
 
 export interface MicroAgentInfo {
@@ -47,23 +37,15 @@ export class MicroAgent {
         this.moondream = new MoondreamClient({ apiKey: config.client.options.apiKey, endpoint: config.client.options.baseUrl });
     }
 
-    private async transformScreenshot (screenshot: Screenshot) {
-        if (this.config.downscaling < 1.0) {
-            return await downscaleScreenshot(screenshot, this.config.downscaling);
-        }
-        return screenshot;
-    }
-
     getInfo(): MicroAgentInfo {
         return this.info;
     }
 
     async locateTarget(screenshot: Screenshot, target: string): Promise<PixelCoordinate> {
-        const downscaledScreenshot = await this.transformScreenshot(screenshot);
         const start = Date.now();
 
         const response = await this.moondream.point({
-            image: { imageUrl: downscaledScreenshot.image },
+            image: { imageUrl: screenshot.image },
             object: target
         });
         this.info.numCalls++;
@@ -108,13 +90,12 @@ export class MicroAgent {
 
     async evaluateCheck(screenshot: Screenshot, check: CheckIntent): Promise<boolean> {
         // TODO: Make more robust, add logp analysis for confidence
-        const downscaledScreenshot = await this.transformScreenshot(screenshot);
 
         const start = Date.now();
 
         const jobs = [];
         for (const subcheck of check.checks) {
-            jobs.push(this.evaluateSubcheck(downscaledScreenshot, subcheck));
+            jobs.push(this.evaluateSubcheck(screenshot, subcheck));
         }
         const results = await Promise.all(jobs);
 

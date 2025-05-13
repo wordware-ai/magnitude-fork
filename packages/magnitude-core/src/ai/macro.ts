@@ -1,5 +1,5 @@
 import { Screenshot } from "@/web/types";
-import { convertToBamlClientOptions, downscaleScreenshot } from "./util";
+import { convertToBamlClientOptions } from "./util";
 import { b } from "@/ai/baml_client";
 import { Image, Collector, ClientRegistry } from "@boundaryml/baml";
 import { ActionIntent, Intent } from "@/intents/types";
@@ -11,15 +11,11 @@ import { BugDetectedFailure, MisalignmentFailure } from "@/common";
 import { PlannerClient } from "@/ai/types";
 import { TabState } from "@/web/tabs";
 
-
 interface MacroAgentConfig {
     client: PlannerClient;
-    downscaling: number
 }
 
-const DEFAULT_CONFIG = {
-    downscaling: 0.75
-}
+const DEFAULT_CONFIG = {}
 
 export interface MacroAgentInfo {
     provider: string,
@@ -63,16 +59,7 @@ export class MacroAgent {
         }
     }
 
-    private async transformScreenshot(screenshot: Screenshot) {
-        if (this.config.downscaling < 1.0) {
-            return await downscaleScreenshot(screenshot, this.config.downscaling);
-        }
-        return screenshot;
-    }
-
     async createPartialRecipe(screenshot: Screenshot, testStep: TestStepDefinition, existingRecipe: ActionIntent[], tabState: TabState): Promise<{ actions: ActionIntent[], finished: boolean }> {
-        const downscaledScreenshot = await this.transformScreenshot(screenshot);
-
         const stringifiedExistingRecipe = [];
         for (const action of existingRecipe) {
             stringifiedExistingRecipe.push(JSON.stringify(action, null, 4))
@@ -82,7 +69,7 @@ export class MacroAgent {
         const start = Date.now();
         const response = await this.baml.CreatePartialRecipe(
             {
-                screenshot: Image.fromBase64('image/png', downscaledScreenshot.image),
+                screenshot: Image.fromBase64('image/png', screenshot.image),
                 actionHistory: stringifiedExistingRecipe,
                 tabState: tabState
             },
@@ -93,8 +80,6 @@ export class MacroAgent {
     }
 
     async removeImplicitCheckContext(screenshot: Screenshot, check: string, existingRecipe: ActionIntent[]): Promise<string[]> {
-        const downscaledScreenshot = await this.transformScreenshot(screenshot);
-
         const stringifiedExistingRecipe = [];
         for (const action of existingRecipe) {
             stringifiedExistingRecipe.push(JSON.stringify(action, null, 4))
@@ -102,7 +87,7 @@ export class MacroAgent {
 
         const start = Date.now();
         const response = await this.baml.RemoveImplicitCheckContext(
-            Image.fromBase64('image/png', downscaledScreenshot.image),
+            Image.fromBase64('image/png', screenshot.image),
             check,
             stringifiedExistingRecipe
         );
@@ -114,8 +99,6 @@ export class MacroAgent {
     }
 
     async evaluateCheck(screenshot: Screenshot, check: string, existingRecipe: ActionIntent[], tabState: TabState): Promise<boolean> {
-        const downscaledScreenshot = await this.transformScreenshot(screenshot);
-
         const stringifiedExistingRecipe = [];
         for (const action of existingRecipe) {
             stringifiedExistingRecipe.push(JSON.stringify(action, null, 4))
@@ -124,7 +107,7 @@ export class MacroAgent {
         const start = Date.now();
         const response = await this.baml.EvaluateCheck(
             {
-                screenshot: Image.fromBase64('image/png', downscaledScreenshot.image),
+                screenshot: Image.fromBase64('image/png', screenshot.image),
                 actionHistory: stringifiedExistingRecipe,
                 tabState: tabState
             },
@@ -135,8 +118,6 @@ export class MacroAgent {
     }
 
     async classifyCheckFailure(screenshot: Screenshot, check: string, existingRecipe: ActionIntent[], tabState: TabState): Promise<BugDetectedFailure | MisalignmentFailure> {
-        const downscaledScreenshot = await this.transformScreenshot(screenshot);
-
         const stringifiedExistingRecipe = [];
         for (const action of existingRecipe) {
             stringifiedExistingRecipe.push(JSON.stringify(action, null, 4))
@@ -145,7 +126,7 @@ export class MacroAgent {
         const start = Date.now();
         const response = await this.baml.ClassifyCheckFailure(
             {
-                screenshot: Image.fromBase64('image/png', downscaledScreenshot.image),
+                screenshot: Image.fromBase64('image/png', screenshot.image),
                 actionHistory: stringifiedExistingRecipe,
                 tabState: tabState
             },
