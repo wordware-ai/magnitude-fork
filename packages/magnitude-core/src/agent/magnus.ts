@@ -1,14 +1,14 @@
 import { StepOptions } from "@/types";
-import { TestCaseAgent } from "./agent";
+import { Agent } from "./agent";
 import { ActionIntent } from "@/intents/types";
 
 export class Magnus {
     /**
      * Wrapper to expose only relevant methods of TestCaseAgent to test case writers
      */
-    private agent: TestCaseAgent;
+    private agent: Agent;
 
-    constructor(agent: TestCaseAgent) {
+    constructor(agent: Agent) {
         this.agent = agent;
     }
 

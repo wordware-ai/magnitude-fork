@@ -13,71 +13,95 @@ import EventEmitter from "eventemitter3";
 import { AgentError } from "./errors";
 import { ActionDescriptor, convertOptionsToTestData, FailureDescriptor, retryOnError } from "../common";
 import { TabState } from "@/web/tabs";
+import { AgentMemory } from "./memory";
+import { BrowserProvider } from "@/web/browserProvider";
 
-export interface TestCaseAgentOptions {
-    planner: PlannerClient,
-    executor: ExecutorClient
-    browserContextOptions: BrowserContextOptions,
-    signal?: AbortSignal
+export interface AgentOptions {
+    planner?: PlannerClient,
+    executor?: ExecutorClient
+    browserContextOptions?: BrowserContextOptions,
+    //signal?: AbortSignal
+}
+
+export interface StartAgentOptions {
+    browser?: Browser
+    url?: string
 }
 
 const DEFAULT_CONFIG = {
+    planner: {
+        provider: 'google-ai',
+        options: {
+            model: 'gemini-2.5-pro-preview-05-06',
+            apiKey: process.env.GOOGLE_API_KEY
+        }
+    } as PlannerClient,
+    executor: {
+        provider: 'moondream',
+        options: {
+            apiKey: process.env.MOONDREAM_API_KEY
+        }
+    } as ExecutorClient,
     browserContextOptions: {}
 }
 
-export class TestCaseAgent {
-    private config: TestCaseAgentOptions;
-    private abortSignal?: AbortSignal;
+export async function startAgent(
+    options: AgentOptions & StartAgentOptions = {}
+): Promise<Agent> {
+    const agent = new Agent(options);
+    await agent.start({ browser: options.browser, url: options.url });
+    return agent;
+}
+
+export class Agent {
+    private config: Required<AgentOptions>;
+    //private abortSignal?: AbortSignal;
     private macro: MacroAgent;
     private micro: MicroAgent;
-    // tmp public
     private harness!: WebHarness;
     private context!: BrowserContext;
-    private events: EventEmitter<AgentEvents>;
+    public readonly events: EventEmitter<AgentEvents>;
     private lastScreenshot: Screenshot | null;
     private lastStepActions: ActionIntent[] | null;
+    private memory: AgentMemory;
 
-    constructor (config: TestCaseAgentOptions)  {
+    constructor (config: Partial<AgentOptions>)  {
         this.config = { ...DEFAULT_CONFIG, ...config };
-        this.abortSignal = config.signal;
+        //this.abortSignal = config.signal;
         this.macro = new MacroAgent({ client: this.config.planner });
         this.micro = new MicroAgent({ client: this.config.executor });
         //this.info = { actionCount: 0 };
         this.events = new EventEmitter<AgentEvents>();
         this.lastScreenshot = null;
         this.lastStepActions = null;
+        // mem should replace these ^ but even more robust + customizable
+        this.memory = new AgentMemory(this.events);
     }
 
-    getEvents() {
-        return this.events;
-    }
-
-    getMacro() {
-        return this.macro;
-    }
-
-    getMicro() {
-        return this.micro;
-    }
-
-    getPage(): Page {
+    get page(): Page {
         return this.harness.page;
     }
 
-    getContext(): BrowserContext {
-        return this.context;
-    }
+    // get context(): BrowserContext {
+    //     return this.context;
+    // }
 
     private checkAborted() {
-        if (this.abortSignal?.aborted) {
-            this.fail({
-                variant: 'cancelled'
-            });
-        }
+        // abort signal is funky, reimpl later
+        // if (this.abortSignal?.aborted) {
+        //     this.fail({
+        //         variant: 'cancelled'
+        //     });
+        // }
     }
 
-    async start(browser: Browser, startingUrl: string) {
+    async start({ browser, url }: StartAgentOptions = {}): Promise<void> {
         this.checkAborted();
+
+        if (!browser) {
+            // If no browser is provided, use the singleton browser provider
+            browser = await BrowserProvider.getBrowser();
+        }
 
         logger.info("Creating browser context");
         const dpr = process.env.DEVICE_PIXEL_RATIO ?
@@ -88,18 +112,22 @@ export class TestCaseAgent {
             deviceScaleFactor: dpr,
             ...this.config.browserContextOptions
         });
+
         //const page = await this.context.newPage();
         this.harness = new WebHarness(this.context);
         await this.harness.start();
 
-        this.checkAborted();
         this.events.emit('start');
         logger.info("Agent started");
 
-        this.checkAborted();
-        await this.harness.goto(startingUrl);
+        if (url) {
+            // If starting URL is provided, immediately navigate to it
+            await this.nav(url);
+        }
 
-        await this.harness.waitForStability();
+        // await this.harness.goto(startingUrl);
+
+        // await this.harness.waitForStability();
 
         //console.log('tabs:', await this.harness.retrieveTabState());
         //const screenshot = await this.screenshot();
@@ -107,7 +135,7 @@ export class TestCaseAgent {
         // Removing for now since state tracker will err with no preceding step
         //this.events.emit('action', { 'variant': 'load', 'url': startingUrl, screenshot: screenshot.image })
         
-        logger.info(`Successfully navigated to starting URL: ${startingUrl}`);
+        //logger.info(`Successfully navigated to starting URL: ${startingUrl}`);
     }
 
     async screenshot(): Promise<Screenshot> {
@@ -124,6 +152,14 @@ export class TestCaseAgent {
     private fail(failure: FailureDescriptor): never {
         this.events.emit('fail', failure);
         throw new AgentError(failure);
+    }
+
+    async nav(url: string): Promise<void> {
+        this.checkAborted();
+        logger.info(`Navigating to ${url}`);
+        //this.events.emit('action', { 'variant': 'load', 'url': url });
+        await this.harness.goto(url);
+        await this.harness.waitForStability();
     }
 
     async exec(intent: ActionIntent) {
@@ -216,7 +252,7 @@ export class TestCaseAgent {
         return action;
     }
 
-    async step(description: string, options: StepOptions = {}): Promise<void> {
+    async act(description: string, options: StepOptions = {}): Promise<void> {
         this.checkAborted();
         logger.info(`Begin Step: ${description}`);
 
@@ -357,7 +393,13 @@ export class TestCaseAgent {
         }
     }
 
-    async close() {
+    async stop() {
+        /**
+         * Stop the agent and close the browser context.
+         * May be called asynchronously and interrupt an agent in the middle of a action sequence.
+         */
+        // set signal to cancelled?
+        //this.abortSignal?.throwIfAborted()
         if (this.context) {
             try {
                 await this.context.close();
