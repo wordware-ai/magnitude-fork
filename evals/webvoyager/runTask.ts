@@ -30,12 +30,38 @@ async function findTaskById(filePath: string, taskId: string): Promise<Task | nu
     return null;
 }
 
-async function runTask(taskId: string) {
+async function getAllTasks(filePath: string): Promise<Task[]> {
+    const tasks: Task[] = [];
+    const fileStream = fs.createReadStream(filePath);
+    const rl = readline.createInterface({
+        input: fileStream,
+        crlfDelay: Infinity,
+    });
+
+    for await (const line of rl) {
+        try {
+            const task: Task = JSON.parse(line);
+            tasks.push(task);
+        } catch (error) {
+            console.error('Error parsing JSON line:', error);
+        }
+    }
+    return tasks;
+}
+
+async function runTask(taskToRun: Task | string) {
+    let task: Task | null = null;
     const tasksFilePath = path.join(__dirname, 'tasks.jsonl');
-    const task = await findTaskById(tasksFilePath, taskId);
+
+    if (typeof taskToRun === 'string') {
+        task = await findTaskById(tasksFilePath, taskToRun);
+    } else {
+        task = taskToRun;
+    }
 
     if (!task) {
-        console.error(`Task with ID "${taskId}" not found in ${tasksFilePath}.`);
+        const id = typeof taskToRun === 'string' ? taskToRun : taskToRun.id;
+        console.error(`Task with ID "${id}" not found in ${tasksFilePath}.`);
         return;
     }
 
@@ -52,15 +78,21 @@ async function runTask(taskId: string) {
 
 async function main() {
     const taskId = process.argv[2];
-    if (!taskId) {
-        console.error('Please provide a task ID as a command-line argument.');
-        console.log('Example: bun evals/webvoyager/runTask.ts Allrecipes--0');
-        // Optionally, run a default task or list available tasks
-        // For now, let's run a default task if no ID is provided for testing
-        // await runTask('Allrecipes--0'); 
-        return;
+    const tasksFilePath = path.join(__dirname, 'tasks.jsonl');
+
+    if (!taskId || taskId.toLowerCase() === 'random') {
+        console.log(taskId ? 'Running a random task...' : 'No task ID provided, running a random task...');
+        const allTasks = await getAllTasks(tasksFilePath);
+        if (allTasks.length === 0) {
+            console.error(`No tasks found in ${tasksFilePath}. Cannot run a random task.`);
+            return;
+        }
+        const randomIndex = Math.floor(Math.random() * allTasks.length);
+        const randomTask = allTasks[randomIndex];
+        await runTask(randomTask);
+    } else {
+        await runTask(taskId);
     }
-    await runTask(taskId);
 }
 
 main().catch(console.error);

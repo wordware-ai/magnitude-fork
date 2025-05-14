@@ -1,25 +1,3 @@
-class TestDataEntry {
-    key string
-    value string
-    sensitive bool
-}
-
-class TestData {
-    data TestDataEntry[]?
-    other string?
-}
-
-class TestStep {
-    description string
-    checks string[]
-    testData TestData
-}
-
-class TestCase {
-    url string
-    steps TestStep[]
-}
-
 class ClickIntent {
     variant "click" @description(#"
         Click something
@@ -120,12 +98,12 @@ template_string DescribeBrowserExecutionContext (context: BrowserExecutionContex
     </browser_state>
 "#
 
-function CreatePartialRecipe (context: BrowserExecutionContext, step: TestStep) -> PartialRecipe {
+function CreatePartialRecipe (context: BrowserExecutionContext, task: string) -> PartialRecipe {
     client GeminiPro
     prompt #"
         {{ _.role("system") }}
-        Plan out web actions that should be executed in order to complete the step:
-        <step>{{ step.description }}</step>
+        Plan out web actions that should be executed in order to complete the task:
+        <task>{{ task }}</task>
         Do not always take the step exactly literally - if ambiguity use common sense.
         Target descriptions are located by a small vision LLM. They should be:
         (1) Based only on what can be seen in the screenshot right now.
@@ -139,69 +117,7 @@ function CreatePartialRecipe (context: BrowserExecutionContext, step: TestStep) 
 
         {{ _.role("user") }}
 
-        {%if step.testData.data or step.testData.other %}
-        Additionally, bake this test data into the actions you plan out (only where appropriate):
-        {%if step.testData.data %}
-        {%for field in step.testData.data %}
-        {{field.key}} = {{field.value}}
-        {%endfor%}
-        {%endif%}
-        {%if step.testData.other %}
-        {{ step.testData.other }}
-        {%endif%}
-        {%endif%}
-
         {{ DescribeBrowserExecutionContext(context) }}
-    "# 
-}
-
-// class CheckNoContext {
-//     reasoning string
-//     // Not used as output rn but as an indicator for the LLM, it will not convert and return original check
-//     should_pass bool
-//     check string
-// }
-
-class ConvertedChecks {
-    reasoning string
-    // Not used as output rn but as an indicator for the LLM, it will not convert and return original check
-    should_pass bool
-    checks string[]
-}
-
-function RemoveImplicitCheckContext (screenshot: image, check: string, previousActions: string[]) -> ConvertedChecks {
-    client GeminiPro
-    prompt #"
-        {{ _.role("system") }}
-        Your job is to break down a visual "assertion" that may depend on contextual history into simple, isolated, context-independent "checks".
-        The checks you generate will be verified by a small visual LLM. This LLM is capable of understanding basic descriptions but not lengthy descriptions or high level concepts.
-
-        Each check should be:
-        (1) Simple
-        (2) Grounded in specific visual details
-        (3) Depend only on what is visible in the current screenshot
-
-        Only include enough checks such that their union is semantically equivalent to the assertion.
-
-        If the original assertion does NOT hold true based on the screenshot, instead set should_pass to false, and simply return the original assertion.
-
-        {{ ctx.output_format }}
-
-        {{ _.role("user")}}
-
-        The history of previous actions:
-        {%if not previousActions %}
-        (there are none)
-        {%endif%}
-        {%for action in previousActions%}
-        {{ action }}
-        {%endfor%}
-        
-        The original "check" to convert: 
-        {{ check }}
-
-        Current screenshot:
-        {{screenshot}}
     "# 
 }
 
@@ -209,6 +125,15 @@ class EvaluatedCheck {
     reasoning string
     passes bool
 }
+
+// function Foo() -> @@dynamic {
+
+// }
+
+//type FooThing = @@dynamic
+
+//type FooThing2 = string
+//Placeholder
 
 // Moondream struggles to handle converted check, this is a bypass to use big model to evaluate check directly
 function EvaluateCheck (context: BrowserExecutionContext, check: string) -> EvaluatedCheck {

@@ -73,29 +73,11 @@ export class MacroAgent {
                 actionHistory: stringifiedExistingRecipe,
                 tabState: tabState
             },
-            testStep,
+            // todo: replace param completely
+            testStep.description,
         );
         this.logger.trace(`createPartialRecipe took ${Date.now()-start}ms`);
         return response;
-    }
-
-    async removeImplicitCheckContext(screenshot: Screenshot, check: string, existingRecipe: ActionIntent[]): Promise<string[]> {
-        const stringifiedExistingRecipe = [];
-        for (const action of existingRecipe) {
-            stringifiedExistingRecipe.push(JSON.stringify(action, null, 4))
-        }
-
-        const start = Date.now();
-        const response = await this.baml.RemoveImplicitCheckContext(
-            Image.fromBase64('image/png', screenshot.image),
-            check,
-            stringifiedExistingRecipe
-        );
-        if (response.checks.length < 1) {
-            throw new Error(`Check conversion returned 0 checks`);
-        }
-        this.logger.trace(`removeImplicitCheckContext took ${Date.now()-start}ms`);
-        return response.checks;
     }
 
     async evaluateCheck(screenshot: Screenshot, check: string, existingRecipe: ActionIntent[], tabState: TabState): Promise<boolean> {

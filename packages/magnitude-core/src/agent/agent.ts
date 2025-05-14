@@ -1,3 +1,5 @@
+// import { setLogLevel } from '@/ai/baml_client/config';
+// setLogLevel('OFF');
 import { Screenshot, WebAction, ClickWebAction, TypeWebAction, ScrollWebAction, SwitchTabWebAction } from "@/web/types";
 import { ActionIntent, ClickIntent, TypeIntent, ScrollIntent, SwitchTabIntent } from "@/intents/types";
 import { MicroAgent } from "@/ai/micro";
