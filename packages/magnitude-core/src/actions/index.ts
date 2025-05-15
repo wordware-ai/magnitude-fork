@@ -24,3 +24,10 @@ export function createAction<S extends ZodTypeAny>(
         resolver: action.resolver
     };
 }
+
+
+
+// 2. Create a helper type to extract the payload structure for a single action
+// This payload combines the 'name' (as a literal type) and the inferred schema.
+export type ActionPayload<A extends Action<any>> = { name: A['name'] } & z.infer<A['schema']>;
+

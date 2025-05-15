@@ -1,4 +1,4 @@
-import { Action, createAction } from ".";
+import { Action, ActionPayload, createAction } from ".";
 import { z } from "zod";
 
 
@@ -12,6 +12,16 @@ const clickAction = createAction({
         const screenshot = agent.memory.getLastScreenshot();
         const { x, y } = await agent.micro.locateTarget(screenshot, target);
         await agent.harness.click({ x, y });
+        // a lot of code dupe below but lets not overengineer yet
+        // possible solns: before/after hooks for namespaces, action context injection
+        const updatedScreenshot = await agent.harness.screenshot();
+        agent.memory.addAction({
+            action: {
+                name: 'browser:click',
+                target: target,
+            },
+            screenshot: updatedScreenshot
+        });
     }
 });
 
@@ -26,6 +36,15 @@ const typeAction = createAction({
         const screenshot = agent.memory.getLastScreenshot();
         const { x, y } = await agent.micro.locateTarget(screenshot, target);
         await agent.harness.type({ x, y, content });
+        const updatedScreenshot = await agent.harness.screenshot();
+        agent.memory.addAction({
+            action: {
+                name: 'browser:type',
+                target: target,
+                content: content,
+            },
+            screenshot: updatedScreenshot
+        });
     }
 });
 
@@ -41,6 +60,16 @@ const scrollAction = createAction({
         const screenshot = agent.memory.getLastScreenshot();
         const { x, y } = await agent.micro.locateTarget(screenshot, target);
         await agent.harness.scroll({ x, y, deltaX, deltaY });
+        const updatedScreenshot = await agent.harness.screenshot();
+        agent.memory.addAction({
+            action: {
+                name: 'browser:scroll',
+                target: target,
+                deltaX: deltaX,
+                deltaY: deltaY,
+            },
+            screenshot: updatedScreenshot
+        });
     }
 });
 
@@ -52,5 +81,29 @@ const switchTabAction = createAction({
     }),
     resolver: async ({ input: { index }, agent }) => {
         await agent.harness.switchTab({ index });
+        const updatedScreenshot = await agent.harness.screenshot();
+        agent.memory.addAction({
+            action: {
+                name: 'browser:tab',
+                index: index,
+            },
+            screenshot: updatedScreenshot
+        });
     }
 });
+
+
+// 1. Group your actions
+const webActions = [
+    clickAction,
+    typeAction,
+    scrollAction,
+    switchTabAction,
+] as const; // `as const` is crucial here!
+
+
+// 3. Generate the union type for all web action payloads
+// (typeof webActions)[number] creates a union of the types of the elements in webActions.
+// e.g., typeof clickAction | typeof typeAction | ...
+// Then, ActionPayload is applied to each member of this union.
+export type AnyWebActionPayload = ActionPayload<(typeof webActions)[number]>;
