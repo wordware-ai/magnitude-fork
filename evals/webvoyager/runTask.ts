@@ -1,4 +1,4 @@
-import { startAgent } from '../../packages/magnitude-core/src/agent/agent';
+import { startAgent } from '../../packages/magnitude-core/src/agent';
 import * as fs from 'fs';
 import * as readline from 'readline';
 import * as path from 'path';

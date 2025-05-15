@@ -284,9 +284,10 @@ export class Agent {
             try {
                 ({ actions, finished } = await this.macro.createPartialRecipe(
                     screenshot,
-                    { description: description, checks: [], testData: testData },
+                    description,//{ description: description, checks: [], testData: testData },
                     this.lastStepActions,
-                    tabState
+                    tabState,
+                    this.config.actions
                 ));
             } catch (error: unknown) {
                 logger.error(`Error creating partial recipe: ${error}`);

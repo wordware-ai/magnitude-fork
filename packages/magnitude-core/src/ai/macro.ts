@@ -10,6 +10,9 @@ import { Logger } from 'pino';
 import { BugDetectedFailure, MisalignmentFailure } from "@/common";
 import { PlannerClient } from "@/ai/types";
 import { TabState } from "@/web/tabs";
+import { ActionDefinition } from "@/actions";
+import TypeBuilder from "./baml_client/type_builder";
+import { z } from 'zod';
 
 interface MacroAgentConfig {
     client: PlannerClient;
@@ -59,11 +62,32 @@ export class MacroAgent {
         }
     }
 
-    async createPartialRecipe(screenshot: Screenshot, testStep: TestStepDefinition, existingRecipe: ActionIntent[], tabState: TabState): Promise<{ actions: ActionIntent[], finished: boolean }> {
+    async createPartialRecipe<T>(
+        screenshot: Screenshot,
+        task: string,
+        //testStep: TestStepDefinition,
+        existingRecipe: ActionIntent[],
+        tabState: TabState,
+        actionVocabulary: ActionDefinition<T>[]
+    ): Promise<{ actions: z.infer<ActionDefinition<T>['schema']>[], finished: boolean }> {
         const stringifiedExistingRecipe = [];
         for (const action of existingRecipe) {
             stringifiedExistingRecipe.push(JSON.stringify(action, null, 4))
         }
+
+        const tb = new TypeBuilder();
+
+        //tb.addClass()
+        //const actionType = tb.union([])
+        const clickAction = tb.addClass('ClickAction')
+        clickAction.addProperty('variant', tb.string()).description('Click something');
+        clickAction.addProperty('target', tb.string()).description('Where exactly to click');
+
+        // TODO: Implement the actual zod -> baml tb converter and convert action vocab
+
+        // in reality put a tb.union of derived types in here
+        const actionsType = tb.list(clickAction.type());
+        tb.PartialRecipe.addProperty('actions', actionsType);
 
         //console.log("existing:", stringifiedExistingRecipe);
         const start = Date.now();
@@ -74,10 +98,13 @@ export class MacroAgent {
                 tabState: tabState
             },
             // todo: replace param completely
-            testStep.description,
+            //testStep.description,
+            task,
+            { tb }
         );
         this.logger.trace(`createPartialRecipe took ${Date.now()-start}ms`);
-        return response;
+        // BAML does not carry over action type to @@dynamic of PartialRecipe, so forced cast necssary
+        return response as unknown as { actions: z.infer<ActionDefinition<T>['schema']>[], finished: boolean };
     }
 
     async evaluateCheck(screenshot: Screenshot, check: string, existingRecipe: ActionIntent[], tabState: TabState): Promise<boolean> {

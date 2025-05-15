@@ -53,7 +53,8 @@ type ActionIntent = ClickIntent | TypeIntent | ScrollIntent | SwitchTabIntent
 
 class PartialRecipe {
     reasoning string @description(#"Consider what you can see right now and what actions you can plan without guessing"#)
-    actions ActionIntent[]
+    //actions ActionIntent[]
+    @@dynamic
     finished bool
 }
 
