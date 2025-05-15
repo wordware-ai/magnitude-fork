@@ -17,8 +17,12 @@ import { ActionDescriptor, convertOptionsToTestData, FailureDescriptor, retryOnE
 import { TabState } from "@/web/tabs";
 import { AgentMemory } from "./memory";
 import { BrowserProvider } from "@/web/browserProvider";
+import { ActionDefinition } from "@/actions";
+import { webActions } from "@/actions/webActions";
 
 export interface AgentOptions {
+    // action set usable by the agent
+    actions?: ActionDefinition<any>[],
     planner?: PlannerClient,
     executor?: ExecutorClient
     browserContextOptions?: BrowserContextOptions,
@@ -31,6 +35,7 @@ export interface StartAgentOptions {
 }
 
 const DEFAULT_CONFIG = {
+    actions: [...webActions], // spread to create mutable copy
     planner: {
         provider: 'google-ai',
         options: {

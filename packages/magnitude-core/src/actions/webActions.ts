@@ -1,4 +1,4 @@
-import { Action, ActionPayload, createAction } from ".";
+import { ActionDefinition, ActionPayload, createAction } from ".";
 import { z } from "zod";
 
 
@@ -14,6 +14,7 @@ const clickAction = createAction({
         await agent.harness.click({ x, y });
         // a lot of code dupe below but lets not overengineer yet
         // possible solns: before/after hooks for namespaces, action context injection
+        // it is kind of nice tho seeing explicitly that this is mutating agent mem so maybe better to leave it
         const updatedScreenshot = await agent.harness.screenshot();
         agent.memory.addAction({
             action: {
@@ -94,13 +95,14 @@ const switchTabAction = createAction({
 
 
 // 1. Group your actions
-const webActions = [
+export const webActions = [
     clickAction,
     typeAction,
     scrollAction,
     switchTabAction,
 ] as const; // `as const` is crucial here!
 
+//const webActionsConst = webActions as const;
 
 // 3. Generate the union type for all web action payloads
 // (typeof webActions)[number] creates a union of the types of the elements in webActions.
