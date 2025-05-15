@@ -1,5 +1,5 @@
 import { ClickWebAction, NavigateWebAction, ScrollWebAction, SwitchTabWebAction, TypeWebAction } from "@/web/types";
-import { ClickIntent, TypeIntent, ScrollIntent, SwitchTabIntent } from "@/intents/types";
+import { ClickIntent, TypeIntent, ScrollIntent, SwitchTabIntent } from "@/actions/types";
 
 //'load' | 'click' | 'hover' | 'type' | 'scroll' | 'wait' | 'back';
 

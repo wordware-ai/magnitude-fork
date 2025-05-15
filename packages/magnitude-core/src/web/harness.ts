@@ -14,7 +14,7 @@ export class WebHarness {
      */
     private context: BrowserContext;
     private stability: PageStabilityAnalyzer;
-    private visualizer: ActionVisualizer;
+    public readonly visualizer: ActionVisualizer;
     private transformer: DOMTransformer;
     private tabs: TabManager;
 
@@ -85,13 +85,14 @@ export class WebHarness {
         await this.page.goto(url);
     }
  
-    async click({ x, y }: ClickWebAction) {
+    async click({ x, y }: { x: number, y: number }) {
         await this.visualizer.visualizeAction(x, y);
         this.page.mouse.click(x, y);
+        await this.waitForStability();
         //await this.visualizer.removeActionVisuals();
     }
 
-    async type({ x, y, content }: TypeWebAction) {
+    async type({ x, y, content }: { x: number, y: number, content: string }) {
         // TODO: Implement string placeholders and special chars e.g. <enter>
         //this.page.mouse.click(x, y);
         const chunks = parseTypeContent(content);
@@ -123,18 +124,21 @@ export class WebHarness {
                 //await this.page.keyboard.type(chunk, {delay: 50});
             }
         }
+        await this.waitForStability();
         // TODO: Allow content to specify keypresses like TAB/ENTER
         //await this.page.keyboard.press('Enter');
     }
     
-    async scroll({ x, y, deltaX, deltaY }: ScrollWebAction) {
+    async scroll({ x, y, deltaX, deltaY }: { x: number, y: number, deltaX: number, deltaY: number }) {
         await this.visualizer.visualizeAction(x, y);
         await this.page.mouse.move(x, y);
         await this.page.mouse.wheel(deltaX, deltaY);
+        await this.waitForStability();
     }
 
-    async switchTab({ index }: SwitchTabWebAction) {
+    async switchTab({ index }: { index: number }) {
         await this.tabs.switchTab(index);
+        await this.waitForStability();
     }
 
     async executeAction(action: WebAction) {
@@ -149,7 +153,7 @@ export class WebHarness {
         } else {
             throw Error(`Unhandled web action variant: ${(action as any).variant}`);
         }
-        await this.stability.waitForStability();
+        //await this.stability.waitForStability();
         //await this.visualizer.redrawLastPosition();
     }
 

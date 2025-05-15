@@ -1,7 +1,7 @@
 // import { setLogLevel } from '@/ai/baml_client/config';
 // setLogLevel('OFF');
 import { Screenshot, WebAction, ClickWebAction, TypeWebAction, ScrollWebAction, SwitchTabWebAction } from "@/web/types";
-import { ActionIntent, ClickIntent, TypeIntent, ScrollIntent, SwitchTabIntent } from "@/intents/types";
+import { ActionIntent, ClickIntent, TypeIntent, ScrollIntent, SwitchTabIntent } from "@/actions/types";
 import { MicroAgent } from "@/ai/micro";
 import { MacroAgent } from "@/ai/macro";
 import { Browser, BrowserContext, BrowserContextOptions, Page } from "playwright";
@@ -58,14 +58,14 @@ export async function startAgent(
 export class Agent {
     private config: Required<AgentOptions>;
     //private abortSignal?: AbortSignal;
-    private macro: MacroAgent;
-    private micro: MicroAgent;
-    private harness!: WebHarness;
+    public readonly macro: MacroAgent;
+    public readonly micro: MicroAgent;
+    public harness!: WebHarness;
     private context!: BrowserContext;
     public readonly events: EventEmitter<AgentEvents>;
     private lastScreenshot: Screenshot | null;
     private lastStepActions: ActionIntent[] | null;
-    private memory: AgentMemory;
+    public readonly memory: AgentMemory;
 
     constructor (config: Partial<AgentOptions>)  {
         this.config = { ...DEFAULT_CONFIG, ...config };
@@ -77,7 +77,7 @@ export class Agent {
         this.lastScreenshot = null;
         this.lastStepActions = null;
         // mem should replace these ^ but even more robust + customizable
-        this.memory = new AgentMemory(this.events);
+        this.memory = new AgentMemory();//this.events
     }
 
     get page(): Page {

@@ -2,7 +2,7 @@
 
 import EventEmitter from "eventemitter3"
 import { ActionDescriptor, FailureDescriptor } from "../common"
-import { Agent } from "./agent"
+import { Agent } from "."
 import { TestCaseResult } from "../types"
 
 

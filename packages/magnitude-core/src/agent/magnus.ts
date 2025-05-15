@@ -1,6 +1,6 @@
 import { StepOptions } from "@/types";
-import { Agent } from "./agent";
-import { ActionIntent } from "@/intents/types";
+import { Agent } from ".";
+import { ActionIntent } from "@/actions/types";
 
 export class Magnus {
     /**

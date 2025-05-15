@@ -1,5 +1,5 @@
 import { ClickWebAction, PixelCoordinate, Screenshot, ScrollWebAction, TypeWebAction, WebAction } from '@/web/types';
-import { ActionIntent, CheckIntent, ClickIntent, Intent, ScrollIntent, TypeIntent } from '@/intents/types';
+import { ActionIntent, CheckIntent, ClickIntent, Intent, ScrollIntent, TypeIntent } from '@/actions/types';
 import logger from "@/logger";
 import { Logger } from 'pino';
 import { vl as MoondreamClient } from 'moondream';

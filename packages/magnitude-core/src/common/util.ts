@@ -1,4 +1,4 @@
-import { ActionIntent } from "@/intents/types";
+import { ActionIntent } from "@/actions/types";
 import { WebAction } from "@/web/types";
 import { ActionDescriptor } from "./actions";
 import { StepOptions, TestData } from "@/types";
