@@ -13,6 +13,7 @@ import { TabState } from "@/web/tabs";
 import { ActionDefinition } from "@/actions";
 import TypeBuilder from "./baml_client/type_builder";
 import { z } from 'zod';
+import { convertActionDefinitionsToBaml } from "@/actions/util";
 
 interface MacroAgentConfig {
     client: PlannerClient;
@@ -79,15 +80,17 @@ export class MacroAgent {
 
         //tb.addClass()
         //const actionType = tb.union([])
-        const clickAction = tb.addClass('ClickAction')
-        clickAction.addProperty('variant', tb.string()).description('Click something');
-        clickAction.addProperty('target', tb.string()).description('Where exactly to click');
+        // const clickAction = tb.addClass('ClickAction')
+        // clickAction.addProperty('variant', tb.string()).description('Click something');
+        // clickAction.addProperty('target', tb.string()).description('Where exactly to click');
 
-        // TODO: Implement the actual zod -> baml tb converter and convert action vocab
+        // // TODO: Implement the actual zod -> baml tb converter and convert action vocab
 
-        // in reality put a tb.union of derived types in here
-        const actionsType = tb.list(clickAction.type());
-        tb.PartialRecipe.addProperty('actions', actionsType);
+        // // in reality put a tb.union of derived types in here
+        // const actionsType = tb.list(clickAction.type());
+        // tb.PartialRecipe.addProperty('actions', actionsType);
+
+        tb.PartialRecipe.addProperty('actions', tb.list(convertActionDefinitionsToBaml(tb, actionVocabulary)));
 
         //console.log("existing:", stringifiedExistingRecipe);
         const start = Date.now();
