@@ -1,8 +1,7 @@
-import { ActionDefinition } from ".";
 import zodToJsonSchema from "zod-to-json-schema";
 import TypeBuilder from "@/ai/baml_client/type_builder";
-import { FieldType, ClassBuilder, ClassPropertyBuilder, EnumBuilder, EnumValueBuilder } from "@boundaryml/baml/native";
-import { Schema, z, ZodObject, ZodSchema } from "zod";
+import { FieldType } from "@boundaryml/baml/native";
+import { Schema } from "zod";
 
 export interface JsonSchema {
     type?: string;
@@ -293,47 +292,7 @@ function convertJsonSchemaToBaml(tb: TypeBuilder, jsonSchema: JsonSchema): Field
     return parser.parse(jsonSchema);
 }
 
-function convertZodToBaml(tb: TypeBuilder, schema: Schema) {
+export function convertZodToBaml(tb: TypeBuilder, schema: Schema) {
     const jsonSchema = zodToJsonSchema(schema) as JsonSchema;
     return convertJsonSchemaToBaml(tb, jsonSchema);
 }
-
-export function convertActionDefinitionsToBaml<T>(
-    tb: TypeBuilder,
-    actionVocabulary: ActionDefinition<T>[]
-) {
-    /**
-     * Convert action definitions to BAML TypeBuilder union representing any one of the actions
-     */
-    const actionTypes = [];
-    for (const { name, description, schema } of actionVocabulary) {
-        // Need to augment the schema a bit:
-        // (1) if object, unpack and include variant as literal { variant: name, ...others }
-        // (2) if primitive, add as name input { variant: name, input: <primitive> }
-        let wrapperSchema: ZodSchema<any>;
-
-        const baseWrapperSchema = z.object({
-            variant: description ? z.literal(name).describe(description) : z.literal(name)
-        });
-
-        if (schema instanceof ZodObject) {
-            // Merge the variant field with the existing object schema
-            // The original schema's fields will be at the top level alongside 'variant'.
-            wrapperSchema = baseWrapperSchema.merge(schema as ZodObject<any, any>);
-        } else {
-            wrapperSchema = baseWrapperSchema.extend({
-                input: schema,
-            });
-        }
-
-        //if (description) wrapperSchema = wrapperSchema.describe(description);
-
-        actionTypes.push(convertZodToBaml(tb, wrapperSchema))
-    }
-    return tb.union(actionTypes);
-}
-
-
-//const tb = new TypeBuilder();
-//console.log(convertZodToBaml(tb, z.string()))
-//console.log(zodToJsonSchema(z.string()))

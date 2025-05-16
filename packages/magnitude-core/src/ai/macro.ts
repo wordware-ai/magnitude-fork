@@ -91,6 +91,7 @@ export class MacroAgent {
         // tb.PartialRecipe.addProperty('actions', actionsType);
 
         tb.PartialRecipe.addProperty('actions', tb.list(convertActionDefinitionsToBaml(tb, actionVocabulary)));
+        tb.PartialRecipe.addProperty('finished', tb.bool());
 
         //console.log("existing:", stringifiedExistingRecipe);
         const start = Date.now();
