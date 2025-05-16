@@ -115,6 +115,7 @@ class SchemaAdder {
         if (jsonSchema.type !== "string") {
             throw new Error(`_parseString called with non-string type: ${jsonSchema.type}`);
         }
+
         const title = jsonSchema.title;
         const enumValues = jsonSchema.enum;
 
@@ -210,6 +211,38 @@ class SchemaAdder {
                 throw new Error("'$ref' property must be a string.");
             }
             return this._loadRef(jsonSchema.$ref);
+        }
+
+        // Handle 'const' next, as it's a very specific assertion
+        if (jsonSchema.const !== undefined) {
+            const constValue = jsonSchema.const;
+            if (typeof constValue === 'string') {
+                return this.tb.literalString(constValue);
+            } else if (typeof constValue === 'number') {
+                if (Number.isInteger(constValue)) {
+                    return this.tb.literalInt(constValue);
+                } else {
+                    // BAML does not appear to have a literalFloat, based on available information.
+                    // The 'const' value itself isn't captured as a literal in the BAML type for floats.
+                    console.warn(
+                        `JSON Schema 'const' with float value '${constValue}' encountered. ` +
+                        `BAML will use base type (float) as literalFloat is not available. Title: '${jsonSchema.title || "anonymous"}'`
+                    );
+                    return this.tb.float();
+                }
+            } else if (typeof constValue === 'boolean') {
+                return this.tb.literalBool(constValue);
+            } else if (constValue === null) {
+                return this.tb.null();
+            }
+            if (typeof constValue === 'object' && (jsonSchema.type !== 'object' && jsonSchema.type !== 'array')) {
+                 console.warn(
+                    `JSON Schema 'const' with complex value '${JSON.stringify(constValue)}' ` +
+                    `encountered. Title: '${jsonSchema.title || "anonymous"}'. ` +
+                    `Expected 'type: "object"' or 'type: "array"' if this const is to be further processed as such. ` +
+                    `Falling back to standard type parsing based on 'jsonSchema.type' (if present).`
+                );
+            }
         }
 
         if (jsonSchema.anyOf) {

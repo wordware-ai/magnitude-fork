@@ -1,7 +1,7 @@
 // import { setLogLevel } from '@/ai/baml_client/config';
 // setLogLevel('OFF');
 import { Screenshot, WebAction, ClickWebAction, TypeWebAction, ScrollWebAction, SwitchTabWebAction } from "@/web/types";
-import { ActionIntent, ClickIntent, TypeIntent, ScrollIntent, SwitchTabIntent } from "@/actions/types";
+import { ActionIntent, ClickIntent, TypeIntent, ScrollIntent, SwitchTabIntent, Action } from "@/actions/types";
 import { MicroAgent } from "@/ai/micro";
 import { MacroAgent } from "@/ai/macro";
 import { Browser, BrowserContext, BrowserContextOptions, Page } from "playwright";
@@ -69,7 +69,7 @@ export class Agent {
     private context!: BrowserContext;
     public readonly events: EventEmitter<AgentEvents>;
     private lastScreenshot: Screenshot | null;
-    private lastStepActions: ActionIntent[] | null;
+    private lastStepActions: Action[] | null;
     public readonly memory: AgentMemory;
 
     constructor (config: Partial<AgentOptions>)  {
@@ -169,7 +169,27 @@ export class Agent {
         await this.harness.waitForStability();
     }
 
-    async exec(intent: ActionIntent) {
+    async exec(action: Action): Promise<void> {
+        // based on variant, delegate to appropriate action resolver from available action definitions, or raise error if in current action vocab
+        let actionDefinition: ActionDefinition<any> | null = null;
+        for (const def of this.config.actions) {
+            if (action.variant === def.name) {
+                actionDefinition = def;
+            }
+        }
+        if (!actionDefinition) {
+            // Either LLM hallucinating or actions are cached that don't have the appropriate definitions registered on the executing agent
+            // FatalError
+            throw new Error(`Undefined action type '${action.variant}', either LLM is hallucinating or check that agent is configured with the appropriate action definitions`);
+        }
+        // TODO: should prob try/except this and wrap any errors as AgentError if not already AgentError, setting reasonable default reactive configuration
+        // e.g. flags for whether to try and adapt to the type of error
+        await actionDefinition.resolver(
+            { input: action, agent: this }
+        );
+    }
+
+    async oldExec(intent: ActionIntent) {
         /**
          * Convert intermediate natural language action to a grounded web action and execute it.
          */
@@ -279,7 +299,9 @@ export class Agent {
             //const tabState: TabState = { activeTab: 0, tabs: [{url: 'foo', title: 'foo', page: null as unknown as Page}] };
 
             logger.info(`Creating partial recipe`);
-            let actions: ActionIntent[];
+
+            // hard to fully type - would need clever Agent generic types that derive from action definitions
+            let actions: Action[];
             let finished: boolean;
             try {
                 ({ actions, finished } = await this.macro.createPartialRecipe(
@@ -308,18 +330,19 @@ export class Agent {
             //console.log('Finish expected?', finished);
 
             // Execute partial recipe
-            for (const intent of actions) {
+            for (const action of actions) {
                 this.checkAborted();
                 
 
                 //console.log('Action:', action);
 
-                const action = await this.exec(intent);
-                this.lastStepActions.push(intent);
+               // const action = await this.exec(intent);
+                await this.exec(action);
+                this.lastStepActions.push(action);
 
                 const postActionScreenshot = await this.screenshot();
 
-                const actionDescriptor: ActionDescriptor = { ...intent, ...action, screenshot: postActionScreenshot.image } as ActionDescriptor;
+                const actionDescriptor: ActionDescriptor = { ...action, screenshot: postActionScreenshot.image } as ActionDescriptor;
                 //stepState.actions.push(actionDescriptor);
                 this.events.emit('action', actionDescriptor);
                 //for (const listener of this.listeners) if(listener.onActionTaken) listener.onActionTaken({...ingredient, ...action, screenshot: postActionScreenshot.image});

@@ -2,7 +2,7 @@ import { Screenshot } from "@/web/types";
 import { convertToBamlClientOptions } from "./util";
 import { b } from "@/ai/baml_client";
 import { Image, Collector, ClientRegistry } from "@boundaryml/baml";
-import { ActionIntent, Intent } from "@/actions/types";
+import { Action, ActionIntent, Intent } from "@/actions/types";
 import { TestStepDefinition } from "@/types";
 import { BamlAsyncClient } from "./baml_client/async_client";
 import logger from "@/logger";
@@ -66,8 +66,7 @@ export class MacroAgent {
     async createPartialRecipe<T>(
         screenshot: Screenshot,
         task: string,
-        //testStep: TestStepDefinition,
-        existingRecipe: ActionIntent[],
+        existingRecipe: Action[],
         tabState: TabState,
         actionVocabulary: ActionDefinition<T>[]
     ): Promise<{ actions: z.infer<ActionDefinition<T>['schema']>[], finished: boolean }> {
@@ -77,18 +76,6 @@ export class MacroAgent {
         }
 
         const tb = new TypeBuilder();
-
-        //tb.addClass()
-        //const actionType = tb.union([])
-        // const clickAction = tb.addClass('ClickAction')
-        // clickAction.addProperty('variant', tb.string()).description('Click something');
-        // clickAction.addProperty('target', tb.string()).description('Where exactly to click');
-
-        // // TODO: Implement the actual zod -> baml tb converter and convert action vocab
-
-        // // in reality put a tb.union of derived types in here
-        // const actionsType = tb.list(clickAction.type());
-        // tb.PartialRecipe.addProperty('actions', actionsType);
 
         tb.PartialRecipe.addProperty('actions', tb.list(convertActionDefinitionsToBaml(tb, actionVocabulary)));
         tb.PartialRecipe.addProperty('finished', tb.bool());
@@ -101,8 +88,6 @@ export class MacroAgent {
                 actionHistory: stringifiedExistingRecipe,
                 tabState: tabState
             },
-            // todo: replace param completely
-            //testStep.description,
             task,
             { tb }
         );
@@ -111,7 +96,7 @@ export class MacroAgent {
         return response as unknown as { actions: z.infer<ActionDefinition<T>['schema']>[], finished: boolean };
     }
 
-    async evaluateCheck(screenshot: Screenshot, check: string, existingRecipe: ActionIntent[], tabState: TabState): Promise<boolean> {
+    async evaluateCheck(screenshot: Screenshot, check: string, existingRecipe: Action[], tabState: TabState): Promise<boolean> {
         const stringifiedExistingRecipe = [];
         for (const action of existingRecipe) {
             stringifiedExistingRecipe.push(JSON.stringify(action, null, 4))
@@ -130,7 +115,7 @@ export class MacroAgent {
         return response.passes;
     }
 
-    async classifyCheckFailure(screenshot: Screenshot, check: string, existingRecipe: ActionIntent[], tabState: TabState): Promise<BugDetectedFailure | MisalignmentFailure> {
+    async classifyCheckFailure(screenshot: Screenshot, check: string, existingRecipe: Action[], tabState: TabState): Promise<BugDetectedFailure | MisalignmentFailure> {
         const stringifiedExistingRecipe = [];
         for (const action of existingRecipe) {
             stringifiedExistingRecipe.push(JSON.stringify(action, null, 4))
