@@ -228,7 +228,7 @@ export class Agent {
         this.lastStepActions = [];
 
         while (true) {
-            const screenshot = await this.screenshot();
+            //const screenshot = await this.screenshot();
             // RangeError: Maximum call stack size exceeded.
             const tabState: TabState = await this.harness.retrieveTabState();
             //const tabState: TabState = { activeTab: 0, tabs: [{url: 'foo', title: 'foo', page: null as unknown as Page}] };
@@ -240,10 +240,12 @@ export class Agent {
             let finished: boolean;
             try {
                 ({ actions, finished } = await this.macro.createPartialRecipe(
-                    screenshot,
+                    //this.memory.getLastScreenshot(),
+                    //screenshot,
+                    this.memory.buildContext(tabState),
                     description,//{ description: description, checks: [], testData: testData },
-                    this.lastStepActions,
-                    tabState,
+                    //this.lastStepActions,
+                    //tabState,
                     this.config.actions
                 ));
             } catch (error: unknown) {
@@ -259,28 +261,16 @@ export class Agent {
                 });
             }
 
-            // TODO: Should emit events for recipe creation
             logger.info({ actions, finished }, `Partial recipe created`);
-            //console.log('Partial recipe:', actions);
-            //console.log('Finish expected?', finished);
 
             // Execute partial recipe
             for (const action of actions) {
-                this.checkAborted();
-                
-
-                //console.log('Action:', action);
-
-               // const action = await this.exec(intent);
                 await this.exec(action);
                 this.lastStepActions.push(action);
 
-                const postActionScreenshot = await this.screenshot();
-
-                const actionDescriptor: ActionDescriptor = { ...action, screenshot: postActionScreenshot.image } as ActionDescriptor;
-                //stepState.actions.push(actionDescriptor);
-                this.events.emit('action', actionDescriptor);
-                //for (const listener of this.listeners) if(listener.onActionTaken) listener.onActionTaken({...ingredient, ...action, screenshot: postActionScreenshot.image});
+                // const postActionScreenshot = await this.screenshot();
+                // const actionDescriptor: ActionDescriptor = { ...action, screenshot: postActionScreenshot.image } as ActionDescriptor;
+                // this.events.emit('action', actionDescriptor);
                 logger.info({ action }, `Action taken`);
             }
 

@@ -1,7 +1,10 @@
 import { AnyWebActionPayload } from "@/actions/webActions";
+import { BrowserExecutionContext } from "@/ai/baml_client";
 import { ActionDescriptor, AgentEvents } from "@/common";
+import { TabState } from "@/web/tabs";
 import { Screenshot } from "@/web/types";
 import EventEmitter from "eventemitter3";
+import { Image } from "@boundaryml/baml";
 
 
 // interface BrowserExecutionHistoryItem {
@@ -52,7 +55,27 @@ export class AgentMemory {
         this.initialScreenshot = screenshot;
     }
 
-    addAction(item: BrowserExecutionHistoryItem) {
+    addWebAction(item: BrowserExecutionHistoryItem) {
         this.browserExecutionHistory.push(item);
+    }
+
+    // getHistory() {
+    //     return this.browserExecutionHistory;
+    // }
+
+    buildContext(tabState: TabState): BrowserExecutionContext {
+        /**
+         * build full execution context from memory + state
+         */
+        const stringifiedJsonActions = [];
+        for (const { action } of this.browserExecutionHistory) {
+            stringifiedJsonActions.push(JSON.stringify(action, null, 4));
+        }
+        const screenshot = this.browserExecutionHistory.length > 0 ? this.browserExecutionHistory[0].screenshot : this.initialScreenshot;
+        return {
+            screenshot: Image.fromBase64('image/png', screenshot.image),
+            actionHistory: stringifiedJsonActions,
+            tabState: tabState
+        }
     }
 }

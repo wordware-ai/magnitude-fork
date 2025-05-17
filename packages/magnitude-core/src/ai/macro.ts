@@ -1,6 +1,6 @@
 import { Screenshot } from "@/web/types";
 import { convertToBamlClientOptions } from "./util";
-import { b } from "@/ai/baml_client";
+import { b, BrowserExecutionContext } from "@/ai/baml_client";
 import { Image, Collector, ClientRegistry } from "@boundaryml/baml";
 import { Action, ActionIntent, Intent } from "@/actions/types";
 import { TestStepDefinition } from "@/types";
@@ -64,17 +64,13 @@ export class MacroAgent {
     }
 
     async createPartialRecipe<T>(
-        screenshot: Screenshot,
+        //screenshot: Screenshot,
+        context: BrowserExecutionContext,
         task: string,
-        existingRecipe: Action[],
-        tabState: TabState,
+        //existingRecipe: Action[],
+        //tabState: TabState,
         actionVocabulary: ActionDefinition<T>[]
     ): Promise<{ actions: z.infer<ActionDefinition<T>['schema']>[], finished: boolean }> {
-        const stringifiedExistingRecipe = [];
-        for (const action of existingRecipe) {
-            stringifiedExistingRecipe.push(JSON.stringify(action, null, 4))
-        }
-
         const tb = new TypeBuilder();
 
         tb.PartialRecipe.addProperty('actions', tb.list(convertActionDefinitionsToBaml(tb, actionVocabulary)));
@@ -83,11 +79,12 @@ export class MacroAgent {
         //console.log("existing:", stringifiedExistingRecipe);
         const start = Date.now();
         const response = await this.baml.CreatePartialRecipe(
-            {
-                screenshot: Image.fromBase64('image/png', screenshot.image),
-                actionHistory: stringifiedExistingRecipe,
-                tabState: tabState
-            },
+            context,
+            // {
+            //     screenshot: Image.fromBase64('image/png', screenshot.image),
+            //     actionHistory: stringifiedExistingRecipe,
+            //     tabState: tabState
+            // },
             task,
             { tb }
         );

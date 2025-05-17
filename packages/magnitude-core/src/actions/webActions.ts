@@ -16,7 +16,7 @@ export const clickAction = createAction({
         // possible solns: before/after hooks for namespaces, action context injection
         // it is kind of nice tho seeing explicitly that this is mutating agent mem so maybe better to leave it
         const updatedScreenshot = await agent.harness.screenshot();
-        agent.memory.addAction({
+        agent.memory.addWebAction({
             action: {
                 name: 'browser:click',
                 target: target,
@@ -38,7 +38,7 @@ export const typeAction = createAction({
         const { x, y } = await agent.micro.locateTarget(screenshot, target);
         await agent.harness.type({ x, y, content });
         const updatedScreenshot = await agent.harness.screenshot();
-        agent.memory.addAction({
+        agent.memory.addWebAction({
             action: {
                 name: 'browser:type',
                 target: target,
@@ -62,7 +62,7 @@ export const scrollAction = createAction({
         const { x, y } = await agent.micro.locateTarget(screenshot, target);
         await agent.harness.scroll({ x, y, deltaX, deltaY });
         const updatedScreenshot = await agent.harness.screenshot();
-        agent.memory.addAction({
+        agent.memory.addWebAction({
             action: {
                 name: 'browser:scroll',
                 target: target,
@@ -83,7 +83,7 @@ export const switchTabAction = createAction({
     resolver: async ({ input: { index }, agent }) => {
         await agent.harness.switchTab({ index });
         const updatedScreenshot = await agent.harness.screenshot();
-        agent.memory.addAction({
+        agent.memory.addWebAction({
             action: {
                 name: 'browser:tab',
                 index: index,
