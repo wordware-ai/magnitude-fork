@@ -19,6 +19,7 @@ import { AgentMemory } from "./memory";
 import { BrowserProvider } from "@/web/browserProvider";
 import { ActionDefinition } from "@/actions";
 import { webActions } from "@/actions/webActions";
+import { ZodObject } from "zod";
 
 export interface AgentOptions {
     // action set usable by the agent
@@ -189,101 +190,28 @@ export class Agent {
             // FatalError
             throw new Error(`Undefined action type '${action.variant}', either LLM is hallucinating or check that agent is configured with the appropriate action definitions`);
         }
+        
+        let input: any;
+        // If primitive, extract the input field of the action as the input payload
+        // If object, strip the variant param and send rest
+        if (actionDefinition.schema instanceof ZodObject) {
+            let variant: string;
+            ({ variant, ...input } = action);
+        } else {
+            input = action.input;
+        }
+
+        let parsed = actionDefinition.schema.safeParse(input);
+
+        if (!parsed.success) {
+            // TODO: provide options for LLM to correct these
+            throw new Error(`Generated action violates action definition input schema: ${parsed.error.message}`);
+        }
         // TODO: should prob try/except this and wrap any errors as AgentError if not already AgentError, setting reasonable default reactive configuration
         // e.g. flags for whether to try and adapt to the type of error
         await actionDefinition.resolver(
-            { input: action, agent: this }
+            { input: parsed.data, agent: this }
         );
-    }
-
-    async oldExec(intent: ActionIntent) {
-        /**
-         * Convert intermediate natural language action to a grounded web action and execute it.
-         */
-        const screenshot = await this.screenshot();
-        let action: WebAction;
-        // TODO: Handle conversion parsing/confidence failures
-        try {
-            // does catch make sense here? essentially indicates very low confidence
-            // bad cases either 1. action with low confidence
-            // 2. no action (target not identified at all)
-
-            // Retry Moondream calls on rate limit errors
-            // will need to generalize when other moondream calls
-            action = await retryOnError(
-                async () => this.micro.convertAction(screenshot, intent),
-                ['503', '429'], 20, 1000
-            );
-            logger.info({ intent: intent, action }, `Converted action`);
-        } catch(error: unknown) {
-            logger.error(`Error converting action: ${error}`);
-            /**
-             * When an action cannot convert, currently always because a target could not be found by micro model.
-             * Two cases:
-             * (a) The target is actually there, but the description written by macro could not be identified with micro
-             * (b) The target is not there
-             *    (i) because macro overplanned (most likely)
-             *    (ii) because macro gave nonsense (unlikely)
-             *    [ assume (i) - if (ii) you have bigger problems ]
-             * 
-             * We should diagnose (a) vs (b) to decide next course of action:
-             * (a) should trigger target description rewrite
-             * (b) should trigger recipe adjustment
-             */
-            
-            // action conversion error = bug in app or misalignment
-            // TODO: adjust plan for minor misalignments
-            // - should only actually fail if it's (1) a bug or (2) a test case misalignment that cannot be treated by recipe adjustment
-            // const failure = await this.macro.diagnoseTargetNotFound(screenshot, step, ingredient.target, stepActionIngredients);
-            // return {
-            //     passed: false,
-            //     failure: failure
-            // }
-            // This requires more thought
-            // TODO: MAG-103/MAG-104
-
-            if (error instanceof Error) {
-                if (error.message.includes('502') || error.message.includes('429')) {
-                    // Hit Moondream rate limit
-                    this.fail({
-                        variant: 'rate_limit',
-                        message: `Moondream rate limit exceeded -> ${error.message}`
-                    });
-                }
-                else if (error.message.includes('401')) {
-                    // Invalid API key
-                    this.fail({
-                        variant: 'api_key',
-                        message: `Moondream API key invalid -> ${error.message}`
-                    });
-                } else {
-                    // Some error with how moondream interpreted request - no points generated, too many points, etc.
-                    this.fail({
-                        'variant': 'misalignment',
-                        'message': `Could not align ${intent.variant} action -> ${error.message}`
-                    });
-                }
-            } else {
-                this.fail({
-                    'variant': 'unknown',
-                    'message': `Non-error thrown -> ${error}`
-                });
-            }
-
-            
-            //throw new ActionConversionError(ingredient, error as Error);
-        }
-        try {
-            await this.harness.executeAction(action);
-        } catch (error) {
-            logger.error(`Error executing action: ${error}`);
-
-            this.fail({
-                variant: 'browser',
-                message: `Failed to execute ${action.variant} action -> ${(error as Error).message}`
-            });
-        }
-        return action;
     }
 
     async act(description: string, options: StepOptions = {}): Promise<void> {
