@@ -34,7 +34,6 @@ const typeAction = createAction({
         content: z.string().describe("Content to type, insert sequences <enter> or <tab> for those keypresses respectively."),
     }),
     resolver: async ({ input: { target, content }, agent }) => {
-        console.log("TYPE ACTION RESOLVER");
         const screenshot = agent.memory.getLastScreenshot();
         const { x, y } = await agent.micro.locateTarget(screenshot, target);
         await agent.harness.type({ x, y, content });

@@ -132,6 +132,13 @@ export class Agent {
             await this.nav(url);
         }
 
+        // TOOD: make sure a screenshot is available in memory before taking any actions!
+        // but if no immediate nav then just on about:blank...
+        const screenshot = await this.screenshot();
+        // if no initial url, the hope is they call nav after for a new screenshot..
+        // else it will just be a white page, maybe should warn in that case?
+        this.memory.setInitialScreenshot(screenshot);
+
         // await this.harness.goto(startingUrl);
 
         // await this.harness.waitForStability();
