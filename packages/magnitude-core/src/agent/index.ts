@@ -20,6 +20,7 @@ import { BrowserProvider } from "@/web/browserProvider";
 import { ActionDefinition } from "@/actions";
 import { webActions } from "@/actions/webActions";
 import { ZodObject } from "zod";
+import { AgentState } from "./state";
 
 export interface AgentOptions {
     // action set usable by the agent
@@ -33,11 +34,6 @@ export interface AgentOptions {
 export interface StartAgentOptions {
     browser?: Browser
     url?: string
-}
-
-export interface AgentState {
-    screenshot: Screenshot,
-    tabs: TabState
 }
 
 const DEFAULT_CONFIG = {

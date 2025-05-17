@@ -2,7 +2,7 @@ import { BrowserExecutionContext } from "@/ai/baml_client";
 import { Screenshot } from "@/web/types";
 import { Image } from "@boundaryml/baml";
 import { Action } from "@/actions/types";
-import { AgentState } from ".";
+import { AgentState } from "./state";
 
 
 export interface AgentMemoryOptions {
