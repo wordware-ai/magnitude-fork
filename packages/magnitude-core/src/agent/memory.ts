@@ -56,6 +56,7 @@ export class AgentMemory {
     }
 
     addWebAction(item: BrowserExecutionHistoryItem) {
+        //console.log("adding web action to hist:", item.action.name);
         this.browserExecutionHistory.push(item);
     }
 
@@ -71,7 +72,7 @@ export class AgentMemory {
         for (const { action } of this.browserExecutionHistory) {
             stringifiedJsonActions.push(JSON.stringify(action, null, 4));
         }
-        const screenshot = this.browserExecutionHistory.length > 0 ? this.browserExecutionHistory[0].screenshot : this.initialScreenshot;
+        const screenshot = this.browserExecutionHistory.length > 0 ? this.browserExecutionHistory.at(-1)!.screenshot : this.initialScreenshot;
         return {
             screenshot: Image.fromBase64('image/png', screenshot.image),
             actionHistory: stringifiedJsonActions,

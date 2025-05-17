@@ -69,8 +69,6 @@ export class Agent {
     public harness!: WebHarness;
     private context!: BrowserContext;
     public readonly events: EventEmitter<AgentEvents>;
-    private lastScreenshot: Screenshot | null;
-    private lastStepActions: Action[] | null;
     public readonly memory: AgentMemory;
 
     constructor (config: Partial<AgentOptions>)  {
@@ -80,8 +78,6 @@ export class Agent {
         this.micro = new MicroAgent({ client: this.config.executor });
         //this.info = { actionCount: 0 };
         this.events = new EventEmitter<AgentEvents>();
-        this.lastScreenshot = null;
-        this.lastStepActions = null;
         // mem should replace these ^ but even more robust + customizable
         this.memory = new AgentMemory();//this.events
     }
@@ -93,19 +89,7 @@ export class Agent {
     // get context(): BrowserContext {
     //     return this.context;
     // }
-
-    private checkAborted() {
-        // abort signal is funky, reimpl later
-        // if (this.abortSignal?.aborted) {
-        //     this.fail({
-        //         variant: 'cancelled'
-        //     });
-        // }
-    }
-
     async start({ browser, url }: StartAgentOptions = {}): Promise<void> {
-        this.checkAborted();
-
         if (!browser) {
             // If no browser is provided, use the singleton browser provider
             browser = await BrowserProvider.getBrowser();
@@ -154,13 +138,7 @@ export class Agent {
     }
 
     async screenshot(): Promise<Screenshot> {
-        this.checkAborted();
-
-        // Does applying here make sense? is frequent at least
-        //await this.harness.applyTransformations();
-
         const screenshot = await this.harness.screenshot();
-        this.lastScreenshot = screenshot;
         return screenshot;
     }
 
@@ -170,7 +148,6 @@ export class Agent {
     }
 
     async nav(url: string): Promise<void> {
-        this.checkAborted();
         logger.info(`Navigating to ${url}`);
         //this.events.emit('action', { 'variant': 'load', 'url': url });
         await this.harness.goto(url);
@@ -215,17 +192,11 @@ export class Agent {
     }
 
     async act(description: string, options: StepOptions = {}): Promise<void> {
-        this.checkAborted();
         logger.info(`Begin Step: ${description}`);
 
         const testData = convertOptionsToTestData(options);
 
         this.events.emit('stepStart', description);
-
-        //await this.harness.applyTransformations();
-        //const recipe = []
-        //const stepActionIngredients: ActionIngredient[] = [];
-        this.lastStepActions = [];
 
         while (true) {
             //const screenshot = await this.screenshot();
@@ -266,7 +237,6 @@ export class Agent {
             // Execute partial recipe
             for (const action of actions) {
                 await this.exec(action);
-                this.lastStepActions.push(action);
 
                 // const postActionScreenshot = await this.screenshot();
                 // const actionDescriptor: ActionDescriptor = { ...action, screenshot: postActionScreenshot.image } as ActionDescriptor;
@@ -282,71 +252,6 @@ export class Agent {
 
         logger.info(`Done with step`);
         this.events.emit('stepSuccess');
-    }
-
-    async check(description: string): Promise<void> {
-        logger.info(`check: ${description}`);
-
-        this.events.emit('checkStart', description);
-
-        if (!this.lastScreenshot) {
-            this.lastScreenshot = await this.screenshot();
-        }
-
-        const tabState: TabState = await this.harness.retrieveTabState();
-
-        const result = await this.macro.evaluateCheck(
-            this.lastScreenshot,
-            description,
-            this.lastStepActions ?? [],
-            tabState
-        );
-        
-        // check conversion disabled until moondream can better handle composite/complex checks
-        // const convertedChecks = await this.macro.removeImplicitCheckContext(checkScreenshot, check, stepActionIngredients);
-
-        // logger.info(`Augmented checks: ${convertedChecks}`);
-
-        // const checkIngredient: CheckIngredient = { "variant": "check", checks: convertedChecks };
-
-        // stepCheckIngredients.push(checkIngredient);
-
-        // const result = await this.micro.evaluateCheck(
-        //     checkScreenshot,
-        //     checkIngredient
-        // );
-
-        if (result) {
-            // Passed
-            this.events.emit('checkSuccess');
-            //for (const listener of this.listeners) if (listener.onCheckCompleted) listener.onCheckCompleted();
-            //this.config.onCheckCompleted(check, checkIngredient);
-            logger.info(`Passed check`);
-        } else {
-            // Failed check
-            logger.info(`Failed check`);
-            /**
-             * If check failed, one of:
-             * (a) Check should have passed
-             *   (i) but failed because converted check description was poorly written by macro (misalignment - agent fault)
-             * (b) Check failed correctly
-             *   (i) because the web app has a bug (bug)
-             *   (ii) because the check is unrelated to the current screenshot
-             *     (1) because step actions were not executed as expected (misalignment - agent fault)
-             *     (2) because the test case is written poorly or nonsensically (misalignment - test fault)
-             */
-            // TODO: adjust plan for minor misalignments
-            // - should only actually fail if it's (1) a bug or (2) a test case misalignment that cannot be treated by recipe adjustment
-            this.checkAborted();
-            const failure = await this.macro.classifyCheckFailure(
-                this.lastScreenshot,
-                description,
-                this.lastStepActions ?? [],
-                tabState
-            );
-
-            this.fail(failure);
-        }
     }
 
     async stop() {
