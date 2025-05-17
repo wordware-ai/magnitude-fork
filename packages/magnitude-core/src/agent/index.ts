@@ -35,6 +35,11 @@ export interface StartAgentOptions {
     url?: string
 }
 
+export interface AgentState {
+    screenshot: Screenshot,
+    tabs: TabState
+}
+
 const DEFAULT_CONFIG = {
     actions: [...webActions], // spread to create mutable copy
     planner: {
@@ -119,10 +124,13 @@ export class Agent {
 
         // TOOD: make sure a screenshot is available in memory before taking any actions!
         // but if no immediate nav then just on about:blank...
-        const screenshot = await this.screenshot();
+        //const screenshot = await this.screenshot();
         // if no initial url, the hope is they call nav after for a new screenshot..
         // else it will just be a white page, maybe should warn in that case?
-        this.memory.setInitialScreenshot(screenshot);
+        //this.memory.setInitialScreenshot(screenshot);
+        this.memory.inscribeInitialState(
+            await this.captureState()
+        );
 
         // await this.harness.goto(startingUrl);
 
@@ -137,10 +145,19 @@ export class Agent {
         //logger.info(`Successfully navigated to starting URL: ${startingUrl}`);
     }
 
-    async screenshot(): Promise<Screenshot> {
+    async captureState(): Promise<AgentState> {
         const screenshot = await this.harness.screenshot();
-        return screenshot;
+        const tabState = await this.harness.retrieveTabState();
+        return {
+            screenshot: screenshot,
+            tabs: tabState
+        };
     }
+
+    // async screenshot(): Promise<Screenshot> {
+    //     const screenshot = await this.harness.screenshot();
+    //     return screenshot;
+    // }
 
     private fail(failure: FailureDescriptor): never {
         this.events.emit('fail', failure);
@@ -189,6 +206,9 @@ export class Agent {
         await actionDefinition.resolver(
             { input: parsed.data, agent: this }
         );
+
+        const newState = await this.captureState();
+        this.memory.inscribeObservation(action, newState);
     }
 
     async act(description: string, options: StepOptions = {}): Promise<void> {
@@ -213,7 +233,7 @@ export class Agent {
                 ({ actions, finished } = await this.macro.createPartialRecipe(
                     //this.memory.getLastScreenshot(),
                     //screenshot,
-                    this.memory.buildContext(tabState),
+                    this.memory.buildContext(),//tabState),
                     description,//{ description: description, checks: [], testData: testData },
                     //this.lastStepActions,
                     //tabState,

@@ -83,8 +83,21 @@ async function runTask(taskToRun: Task | string) {
                     console.log("ANSWER GIVEN:", input);
                     await agent.stop();
                 }
+            }),
+            // experiment
+            createAction({
+                name: 'act',
+                description: 'Delegate a subtask',
+                schema: z.string().describe('Task'),
+                resolver: async ({ input, agent }) => {
+                    //console.log("ANSWER GIVEN:", input);
+                    await agent.act(input);
+                }
             })
-        ]
+        ],
+        browserContextOptions: {
+            viewport: { width: 1920, height: 1080 }
+        }
     });
 
     await agent.act(task.ques);

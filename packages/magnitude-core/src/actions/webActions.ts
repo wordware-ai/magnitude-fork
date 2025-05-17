@@ -15,14 +15,14 @@ export const clickAction = createAction({
         // a lot of code dupe below but lets not overengineer yet
         // possible solns: before/after hooks for namespaces, action context injection
         // it is kind of nice tho seeing explicitly that this is mutating agent mem so maybe better to leave it
-        const updatedScreenshot = await agent.harness.screenshot();
-        agent.memory.addWebAction({
-            action: {
-                name: 'browser:click',
-                target: target,
-            },
-            screenshot: updatedScreenshot
-        });
+        // const updatedScreenshot = await agent.harness.screenshot();
+        // agent.memory.addWebAction({
+        //     action: {
+        //         name: 'browser:click',
+        //         target: target,
+        //     },
+        //     screenshot: updatedScreenshot
+        // });
     }
 });
 
@@ -37,15 +37,15 @@ export const typeAction = createAction({
         const screenshot = agent.memory.getLastScreenshot();
         const { x, y } = await agent.micro.locateTarget(screenshot, target);
         await agent.harness.type({ x, y, content });
-        const updatedScreenshot = await agent.harness.screenshot();
-        agent.memory.addWebAction({
-            action: {
-                name: 'browser:type',
-                target: target,
-                content: content,
-            },
-            screenshot: updatedScreenshot
-        });
+        // const updatedScreenshot = await agent.harness.screenshot();
+        // agent.memory.addWebAction({
+        //     action: {
+        //         name: 'browser:type',
+        //         target: target,
+        //         content: content,
+        //     },
+        //     screenshot: updatedScreenshot
+        // });
     }
 });
 
@@ -61,16 +61,16 @@ export const scrollAction = createAction({
         const screenshot = agent.memory.getLastScreenshot();
         const { x, y } = await agent.micro.locateTarget(screenshot, target);
         await agent.harness.scroll({ x, y, deltaX, deltaY });
-        const updatedScreenshot = await agent.harness.screenshot();
-        agent.memory.addWebAction({
-            action: {
-                name: 'browser:scroll',
-                target: target,
-                deltaX: deltaX,
-                deltaY: deltaY,
-            },
-            screenshot: updatedScreenshot
-        });
+        // const updatedScreenshot = await agent.harness.screenshot();
+        // agent.memory.addWebAction({
+        //     action: {
+        //         name: 'browser:scroll',
+        //         target: target,
+        //         deltaX: deltaX,
+        //         deltaY: deltaY,
+        //     },
+        //     screenshot: updatedScreenshot
+        // });
     }
 });
 
@@ -82,14 +82,14 @@ export const switchTabAction = createAction({
     }),
     resolver: async ({ input: { index }, agent }) => {
         await agent.harness.switchTab({ index });
-        const updatedScreenshot = await agent.harness.screenshot();
-        agent.memory.addWebAction({
-            action: {
-                name: 'browser:tab',
-                index: index,
-            },
-            screenshot: updatedScreenshot
-        });
+        // const updatedScreenshot = await agent.harness.screenshot();
+        // agent.memory.addWebAction({
+        //     action: {
+        //         name: 'browser:tab',
+        //         index: index,
+        //     },
+        //     screenshot: updatedScreenshot
+        // });
     }
 });
 
