@@ -2,7 +2,7 @@ import { ActionDefinition, ActionPayload, createAction } from ".";
 import { z } from "zod";
 
 
-const clickAction = createAction({
+export const clickAction = createAction({
     name: 'browser:click',
     description: "Click something",
     schema: z.object({
@@ -26,7 +26,7 @@ const clickAction = createAction({
     }
 });
 
-const typeAction = createAction({
+export const typeAction = createAction({
     name: 'browser:type',
     description: "Click something and type into it",
     schema: z.object({
@@ -49,7 +49,7 @@ const typeAction = createAction({
     }
 });
 
-const scrollAction = createAction({
+export const scrollAction = createAction({
     name: 'browser:scroll',
     description: "Hover mouse over target and scroll",
     schema: z.object({
@@ -74,7 +74,7 @@ const scrollAction = createAction({
     }
 });
 
-const switchTabAction = createAction({
+export const switchTabAction = createAction({
     name: 'browser:tab',
     description: "Switch tabs",
     schema: z.object({

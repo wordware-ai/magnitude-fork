@@ -1,7 +1,10 @@
 import { startAgent } from '../../packages/magnitude-core/src/agent';
+import { webActions } from '../../packages/magnitude-core/src/actions/webActions';
 import * as fs from 'fs';
 import * as readline from 'readline';
 import * as path from 'path';
+import { createAction } from '../../packages/magnitude-core/src/actions';
+import z from 'zod';
 
 interface Task {
     web_name: string;
@@ -68,7 +71,21 @@ async function runTask(taskToRun: Task | string) {
     console.log(`Running task: ${task.id} - ${task.ques}`);
     console.log(`URL: ${task.web}`);
 
-    const agent = await startAgent({ url: task.web });
+    const agent = await startAgent({
+        url: task.web,
+        actions: [
+            ...webActions,
+            createAction({
+                name: 'answer',
+                description: 'Give final answer',
+                schema: z.string(),
+                resolver: async ({ input, agent }) => {
+                    console.log("ANSWER GIVEN:", input);
+                    await agent.stop();
+                }
+            })
+        ]
+    });
 
     await agent.act(task.ques);
 
