@@ -122,27 +122,9 @@ export class Agent {
             await this.nav(url);
         }
 
-        // TOOD: make sure a screenshot is available in memory before taking any actions!
-        // but if no immediate nav then just on about:blank...
-        //const screenshot = await this.screenshot();
-        // if no initial url, the hope is they call nav after for a new screenshot..
-        // else it will just be a white page, maybe should warn in that case?
-        //this.memory.setInitialScreenshot(screenshot);
         this.memory.inscribeInitialState(
             await this.captureState()
         );
-
-        // await this.harness.goto(startingUrl);
-
-        // await this.harness.waitForStability();
-
-        //console.log('tabs:', await this.harness.retrieveTabState());
-        //const screenshot = await this.screenshot();
-        // Synthetic load action
-        // Removing for now since state tracker will err with no preceding step
-        //this.events.emit('action', { 'variant': 'load', 'url': startingUrl, screenshot: screenshot.image })
-        
-        //logger.info(`Successfully navigated to starting URL: ${startingUrl}`);
     }
 
     async captureState(): Promise<AgentState> {
@@ -153,11 +135,6 @@ export class Agent {
             tabs: tabState
         };
     }
-
-    // async screenshot(): Promise<Screenshot> {
-    //     const screenshot = await this.harness.screenshot();
-    //     return screenshot;
-    // }
 
     private fail(failure: FailureDescriptor): never {
         this.events.emit('fail', failure);

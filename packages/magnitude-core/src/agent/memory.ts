@@ -1,9 +1,5 @@
-import { AnyWebActionPayload } from "@/actions/webActions";
 import { BrowserExecutionContext } from "@/ai/baml_client";
-import { ActionDescriptor, AgentEvents } from "@/common";
-import { TabState } from "@/web/tabs";
 import { Screenshot } from "@/web/types";
-import EventEmitter from "eventemitter3";
 import { Image } from "@boundaryml/baml";
 import { Action } from "@/actions/types";
 import { AgentState } from ".";
@@ -12,15 +8,6 @@ import { AgentState } from ".";
 export interface AgentMemoryOptions {
 
 }
-
-interface BrowserExecutionHistoryItem {
-    // the action taken in the browser
-    action: AnyWebActionPayload
-    // screenshot of page after action was taken
-    screenshot: Screenshot;
-}
-
-type Thought = string;
 
 interface HistoryEvent {
     timestamp: number;
@@ -35,7 +22,6 @@ interface HistoryEvent {
     };
 }
 
-
 export class AgentMemory {
     /**
      * Memory configuration should determine default context retrieval policies for acts and queries.
@@ -44,17 +30,9 @@ export class AgentMemory {
      */
 
     private initialState!: AgentState;
-    //private stateHistory: AgentState[];
     private history: HistoryEvent[];
 
-    // private initialScreenshot!: Screenshot;
-    // private browserExecutionHistory: BrowserExecutionHistoryItem[];//BrowserExecutionHistoryItem[];
-
-    // agentEvents: EventEmitter<AgentEvents>
     constructor() {
-        //this.events = events;
-        //this.browserExecutionHistory = [];
-
         this.history = [];
     }
 
@@ -70,45 +48,13 @@ export class AgentMemory {
 
     getLastScreenshot(): Screenshot {
         return this.getLastKnownState().screenshot;
-        // for (let i = this.history.length - 1; i >= 0; i--) {
-        //     const item = this.history.at(i)!;
-        //     if (item.event.variant === 'action') return item.event.state.screenshot;
-        // }
-
-        // if (this.initialState) return this.initialState.screenshot;
-        // throw new Error("No screenshots available!");
-        // // if (!item) throw new Error("No last screenshot available");
-        // // return item.screenshot;
     }
-
-    // setInitialScreenshot(screenshot: Screenshot) {
-    //     this.initialScreenshot = screenshot;
-    // }
-
-    // addWebAction(item: BrowserExecutionHistoryItem) {
-    //     //console.log("adding web action to hist:", item.action.name);
-    //     this.browserExecutionHistory.push(item);
-    // }
-
-    // getHistory() {
-    //     return this.browserExecutionHistory;
-    // }
 
     buildContext(): BrowserExecutionContext {
         /**
          * build full execution context from memory + state
          * TODO: replace this impl: include timestamps, thoughts, options for longer hist length more screenshots etc
          */
-        // const stringifiedJsonActions = [];
-        // for (const { action } of this.browserExecutionHistory) {
-        //     stringifiedJsonActions.push(JSON.stringify(action, null, 4));
-        // }
-        // const screenshot = this.browserExecutionHistory.length > 0 ? this.browserExecutionHistory.at(-1)!.screenshot : this.initialScreenshot;
-        // return {
-        //     screenshot: Image.fromBase64('image/png', screenshot.image),
-        //     actionHistory: stringifiedJsonActions,
-        //     tabState: tabState
-        // }
         const stringifiedJsonActions = [];
         for (const { event } of this.history) {
             if (event.variant === 'action') {
