@@ -88,7 +88,7 @@ template_string DescribeMemoryContext(context: MemoryContext) #"
     <logs>
     {%for log in context.logs %}
     [{{log.timestamp}}] {{log.message}}
-    {%if context.screenshot%}{{context.screenshot}}{%endif%}
+    {%if log.screenshot%}{{log.screenshot}}{%endif%}
     {%endfor%}
     </logs>
 
@@ -148,6 +148,7 @@ function CreatePartialRecipe (context: MemoryContext, task: string) -> PartialRe
     client GeminiPro
     prompt #"
         {{ _.role("system") }}
+        <meta>
         You are a web agent powered by (1) a powerful LLM (you) and (2) a small vision model (Moondream).
         You operate by planning out actions over time to try and complete a certain task.
         To do this successfully you may need to consider and adjust for your own limitations as an agent, so here is some information about how you work:
@@ -157,17 +158,21 @@ function CreatePartialRecipe (context: MemoryContext, task: string) -> PartialRe
         - Mouse movements require a "target", which is located by Moondream as a specific coordinate on the page
         - Moondream may sometimes fail to locate the target you expected it to.
         - Therefore, actions may not always be completely successful and you may need to try different variations
+        </meta>
 
-        Plan out web actions that should be executed in order to complete the task:
-        <task>{{ task }}</task>
-        Do not always take the step exactly literally - if ambiguity use common sense.
+        <targeting>
         Target descriptions are located by a small vision LLM. They should be:
         (1) Based only on what can be seen in the screenshot right now.
         (2) Positional information, shapes, and text - no high level abstractions.
         (3) Simple but unique enough to be distinguished specifically from anything matching a similar description.
+        When in doubt - a SHORTER description is often more effective. For example, if targetting unique text - just the text itself is sufficient.
+        </targeting>
+
+        <instructions>
+        Plan out web actions that should be executed in order to complete the task:
+        <task>{{ task }}</task>
         Only plan out actions that involve things you can see right now.
-        Note that many actions combine click + something else, so you may not need to click separately.
-        For scroll, describe ONE specific element IN the appropriate container rather than trying to describe the container itself.
+        </instructions>
         
         {{ ctx.output_format }}
 

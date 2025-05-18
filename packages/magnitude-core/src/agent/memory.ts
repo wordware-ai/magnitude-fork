@@ -2,7 +2,7 @@ import { BrowserExecutionContext, MemoryContext, MemoryContextLog } from "@/ai/b
 import { Screenshot } from "@/web/types";
 import { Image } from "@boundaryml/baml";
 import { Action } from "@/actions/types";
-import { AgentState } from "./state";
+import { AgentState, deltaState } from "./state";
 
 
 export interface AgentMemoryOptions {
@@ -69,13 +69,28 @@ export class AgentMemory {
         //     tabState: this.getLastKnownState().tabs
         // }
         let logs: MemoryContextLog[] = [];
+        let prevState = this.initialState;
         for (const { timestamp, event } of this.history) {
             const formattedTime = new Date(timestamp).toTimeString().split(' ')[0];
-            logs.push({
-                timestamp: formattedTime,
-                message: event.variant === 'thought' ? event.thought : JSON.stringify(event.action), // TODO: replace with specific description implementations (ideally on action def)
-                screenshot: event.variant === 'action' ? Image.fromBase64('image/png', event.state.screenshot.image) : null
-            });
+
+            if (event.variant === 'thought') {
+                logs.push({
+                    timestamp: formattedTime,
+                    message: event.thought
+                });
+            } else {
+                //console.log("DELTA:", deltaState(prevState, event.state));
+                const screenshot = deltaState(prevState, event.state).screenshot ? Image.fromBase64('image/png', event.state.screenshot.image) : null;
+                //console.log("Screenshot:", screenshot);
+                logs.push({
+                    timestamp: formattedTime,
+                    message: JSON.stringify(event.action), // TODO: replace with specific description implementations (ideally on action def)
+                    // only include screenshot if changed
+                    screenshot: screenshot
+                });
+                prevState = event.state;
+            }
+            
         }
         return {
             logs: logs,
