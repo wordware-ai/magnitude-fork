@@ -1,4 +1,4 @@
-import { BrowserExecutionContext } from "@/ai/baml_client";
+import { BrowserExecutionContext, MemoryContext, MemoryContextLog } from "@/ai/baml_client";
 import { Screenshot } from "@/web/types";
 import { Image } from "@boundaryml/baml";
 import { Action } from "@/actions/types";
@@ -50,23 +50,38 @@ export class AgentMemory {
         return this.getLastKnownState().screenshot;
     }
 
-    buildContext(): BrowserExecutionContext {
+    buildContext(): MemoryContext {
         /**
          * build full execution context from memory + state
          * TODO: replace this impl: include timestamps, thoughts, options for longer hist length more screenshots etc
          */
-        const stringifiedJsonActions = [];
-        for (const { event } of this.history) {
-            if (event.variant === 'action') {
-                stringifiedJsonActions.push(JSON.stringify(event.action, null, 4));
-            }
-            // todo: include thoughts as well
+        // const stringifiedJsonActions = [];
+        // for (const { event } of this.history) {
+        //     if (event.variant === 'action') {
+        //         stringifiedJsonActions.push(JSON.stringify(event.action, null, 4));
+        //     }
+        //     // todo: include thoughts as well
+        // }
+        // const screenshot = this.getLastScreenshot();
+        // return {
+        //     screenshot: Image.fromBase64('image/png', screenshot.image),
+        //     actionHistory: stringifiedJsonActions,
+        //     tabState: this.getLastKnownState().tabs
+        // }
+        let logs: MemoryContextLog[] = [];
+        for (const { timestamp, event } of this.history) {
+            const formattedTime = new Date(timestamp).toTimeString().split(' ')[0];
+            logs.push({
+                timestamp: formattedTime,
+                message: event.variant === 'thought' ? event.thought : JSON.stringify(event.action), // TODO: replace with specific description implementations (ideally on action def)
+                screenshot: event.variant === 'action' ? Image.fromBase64('image/png', event.state.screenshot.image) : null
+            });
         }
-        const screenshot = this.getLastScreenshot();
         return {
-            screenshot: Image.fromBase64('image/png', screenshot.image),
-            actionHistory: stringifiedJsonActions,
-            tabState: this.getLastKnownState().tabs
+            logs: logs,
+            timestamp: new Date(Date.now()).toTimeString().split(' ')[0],
+            screenshot: Image.fromBase64('image/png', this.getLastScreenshot().image),
+            tabs: this.getLastKnownState().tabs
         }
     }
 

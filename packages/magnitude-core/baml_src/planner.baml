@@ -52,6 +52,8 @@ type Intent = ActionIntent | CheckIntent
 type ActionIntent = ClickIntent | TypeIntent | ScrollIntent | SwitchTabIntent
 
 class PartialRecipe {
+    observations string @description(#"Any key observations about past actions or current state"#)
+    meta_reasoning string @description(#"Reflect on the current state of task execution with respect to your own abilities as an agent"#)
     reasoning string @description(#"Consider what you can see right now and what actions you can plan without guessing"#)
     //actions ActionIntent[]
     @@dynamic
@@ -67,6 +69,49 @@ class TabState {
     activeTab int
     tabs OpenTab[]
 }
+
+
+class MemoryContextLog {
+    timestamp string
+    message string
+    screenshot image?
+}
+
+class MemoryContext {
+    logs MemoryContextLog[]
+    timestamp string
+    tabs TabState//string
+    screenshot image
+}
+
+template_string DescribeMemoryContext(context: MemoryContext) #"
+    <logs>
+    {%for log in context.logs %}
+    [{{log.timestamp}}] {{log.message}}
+    {%if context.screenshot%}{{context.screenshot}}{%endif%}
+    {%endfor%}
+    </logs>
+
+    <state>
+    Current time: {{ context.timestamp }}
+    {{ DescribeTabState(context.tabs) }}
+    {{ context.screenshot }}
+    </state>
+"#
+
+
+template_string DescribeTabState(tabState: TabState) #"
+    <tabs>
+    {%for tab in tabState.tabs%}
+        {%if tabState.activeTab == loop.index0%}
+        {{ loop.index0 }} [ACTIVE]: {{ tab.title }} ({{tab.url}})
+        {%else%}
+        {{ loop.index0 }}: {{ tab.title }} ({{tab.url}})
+        {%endif%}
+    {%endfor%}
+    </tabs>
+"#
+
 
 class BrowserExecutionContext {
     screenshot image
@@ -99,10 +144,20 @@ template_string DescribeBrowserExecutionContext (context: BrowserExecutionContex
     </browser_state>
 "#
 
-function CreatePartialRecipe (context: BrowserExecutionContext, task: string) -> PartialRecipe {
+function CreatePartialRecipe (context: MemoryContext, task: string) -> PartialRecipe {
     client GeminiPro
     prompt #"
         {{ _.role("system") }}
+        You are a web agent powered by (1) a powerful LLM (you) and (2) a small vision model (Moondream).
+        You operate by planning out actions over time to try and complete a certain task.
+        To do this successfully you may need to consider and adjust for your own limitations as an agent, so here is some information about how you work:
+        - You plan several actions ahead of time without trying to guess, which are then executed
+        - You are then given a new screenshot of the webpage which is the result of all actions taken
+        - This occurs in a loop until you complete your task
+        - Mouse movements require a "target", which is located by Moondream as a specific coordinate on the page
+        - Moondream may sometimes fail to locate the target you expected it to.
+        - Therefore, actions may not always be completely successful and you may need to try different variations
+
         Plan out web actions that should be executed in order to complete the task:
         <task>{{ task }}</task>
         Do not always take the step exactly literally - if ambiguity use common sense.
@@ -118,7 +173,7 @@ function CreatePartialRecipe (context: BrowserExecutionContext, task: string) ->
 
         {{ _.role("user") }}
 
-        {{ DescribeBrowserExecutionContext(context) }}
+        {{ DescribeMemoryContext(context) }}
     "# 
 }
 

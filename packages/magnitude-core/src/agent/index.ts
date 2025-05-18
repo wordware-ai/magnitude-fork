@@ -200,10 +200,11 @@ export class Agent {
             logger.info(`Creating partial recipe`);
 
             // hard to fully type - would need clever Agent generic types that derive from action definitions
+            let reasoning: string;
             let actions: Action[];
-            let finished: boolean;
+            //let finished: boolean;
             try {
-                ({ actions, finished } = await this.macro.createPartialRecipe(
+                ({ reasoning, actions } = await this.macro.createPartialRecipe(
                     //this.memory.getLastScreenshot(),
                     //screenshot,
                     this.memory.buildContext(),//tabState),
@@ -225,7 +226,9 @@ export class Agent {
                 });
             }
 
-            logger.info({ actions, finished }, `Partial recipe created`);
+            logger.info({ reasoning, actions }, `Partial recipe created`);
+
+            this.memory.inscribeThought(reasoning);
 
             // Execute partial recipe
             for (const action of actions) {
@@ -238,9 +241,9 @@ export class Agent {
             }
 
             // If macro expects these actions should complete the step, break
-            if (finished) {
-                break;
-            }
+            // if (finished) {
+            //     break;
+            // }
         }
 
         logger.info(`Done with step`);

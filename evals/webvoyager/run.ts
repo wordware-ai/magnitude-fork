@@ -97,6 +97,14 @@ async function runTask(taskToRun: Task | string) {
         ],
         browserContextOptions: {
             viewport: { width: 1920, height: 1080 }
+        },
+        planner: {
+            provider: 'google-ai',
+            options: {
+                model: 'gemini-2.5-pro-preview-03-25',
+                apiKey: process.env.GOOGLE_API_KEY,
+                temperature: 0.5
+            }
         }
     });
 

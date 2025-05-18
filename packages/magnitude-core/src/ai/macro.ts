@@ -1,6 +1,6 @@
 import { Screenshot } from "@/web/types";
 import { convertToBamlClientOptions } from "./util";
-import { b, BrowserExecutionContext } from "@/ai/baml_client";
+import { b, BrowserExecutionContext, MemoryContext } from "@/ai/baml_client";
 import { Image, Collector, ClientRegistry } from "@boundaryml/baml";
 import { Action, ActionIntent, Intent } from "@/actions/types";
 import { TestStepDefinition } from "@/types";
@@ -65,12 +65,12 @@ export class MacroAgent {
 
     async createPartialRecipe<T>(
         //screenshot: Screenshot,
-        context: BrowserExecutionContext,
+        context: MemoryContext,
         task: string,
         //existingRecipe: Action[],
         //tabState: TabState,
         actionVocabulary: ActionDefinition<T>[]
-    ): Promise<{ actions: z.infer<ActionDefinition<T>['schema']>[], finished: boolean }> {
+    ): Promise<{ reasoning: string, actions: Action[] }> {//, finished: boolean }> {
         const tb = new TypeBuilder();
 
         tb.PartialRecipe.addProperty('actions', tb.list(convertActionDefinitionsToBaml(tb, actionVocabulary)));
@@ -90,7 +90,11 @@ export class MacroAgent {
         );
         this.logger.trace(`createPartialRecipe took ${Date.now()-start}ms`);
         // BAML does not carry over action type to @@dynamic of PartialRecipe, so forced cast necssary
-        return response as unknown as { actions: z.infer<ActionDefinition<T>['schema']>[], finished: boolean };
+        //return response as unknown as { actions: z.infer<ActionDefinition<T>['schema']>[] };//, finished: boolean };
+        return {
+            reasoning: response.reasoning,
+            actions: response.actions// as z.infer<ActionDefinition<T>['schema']>[]
+        }
     }
 
     async evaluateCheck(screenshot: Screenshot, check: string, existingRecipe: Action[], tabState: TabState): Promise<boolean> {
