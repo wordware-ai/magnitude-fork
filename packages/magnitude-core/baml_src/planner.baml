@@ -161,11 +161,13 @@ function CreatePartialRecipe (context: MemoryContext, task: string) -> PartialRe
         </meta>
 
         <targeting>
-        Target descriptions are located by a small vision LLM. They should be:
-        (1) Based only on what can be seen in the screenshot right now.
-        (2) Positional information, shapes, and text - no high level abstractions.
-        (3) Simple but unique enough to be distinguished specifically from anything matching a similar description.
-        When in doubt - a SHORTER description is often more effective. For example, if targetting unique text - just the text itself is sufficient.
+        Targets descriptions must be carefully chosen to be accurately picked up by Moondream.
+        Build a "minimal unique identifier" - a description that is as brief as possible that uniquely identifies the target on the page.
+        Use only the information needed, and prioritize in this order:
+        - specific text
+        - specific shapes and colors
+        - positional information
+        - high level information (Moondream cannot always understand high level concepts)
         </targeting>
 
         <instructions>
