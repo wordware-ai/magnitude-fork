@@ -99,7 +99,6 @@ export class WebHarness {
 
         await this.visualizer.visualizeAction(x, y);
         await this.page.mouse.click(x, y);
-        //await this.visualizer.removeActionVisuals();
 
         // Total typing period to make typing more natural, in ms
         const totalTextDelay = 500;

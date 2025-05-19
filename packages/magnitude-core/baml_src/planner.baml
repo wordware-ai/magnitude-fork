@@ -144,31 +144,39 @@ template_string DescribeBrowserExecutionContext (context: BrowserExecutionContex
     </browser_state>
 "#
 
+template_string HybridMeta #"
+    <meta>
+    You are a web agent powered by (1) a powerful LLM (you) and (2) a small vision model (Moondream).
+    You operate by planning out actions over time to try and complete a certain task.
+    To do this successfully you may need to consider and adjust for your own limitations as an agent, so here is some information about how you work:
+    - You plan several actions ahead of time without trying to guess, which are then executed
+    - You are then given a new screenshot of the webpage which is the result of all actions taken
+    - This occurs in a loop until you complete your task
+    - Mouse movements require a "target", which is located by Moondream as a specific coordinate on the page
+    - Moondream may sometimes fail to locate the target you expected it to.
+    - Therefore, actions may not always be completely successful and you may need to try different variations
+    </meta>
+"#
+
+template_string TargetingInstructions #"
+    <targeting>
+    Targets descriptions must be carefully chosen to be accurately picked up by Moondream.
+    Build a "minimal unique identifier" - a description that is as brief as possible that uniquely identifies the target on the page.
+    Use only the information needed, and prioritize in this order:
+    - specific text
+    - specific shapes and colors
+    - positional information
+    - high level information (Moondream cannot always understand high level concepts)
+    </targeting>
+"#
+
 function CreatePartialRecipe (context: MemoryContext, task: string) -> PartialRecipe {
     client GeminiPro
     prompt #"
         {{ _.role("system") }}
-        <meta>
-        You are a web agent powered by (1) a powerful LLM (you) and (2) a small vision model (Moondream).
-        You operate by planning out actions over time to try and complete a certain task.
-        To do this successfully you may need to consider and adjust for your own limitations as an agent, so here is some information about how you work:
-        - You plan several actions ahead of time without trying to guess, which are then executed
-        - You are then given a new screenshot of the webpage which is the result of all actions taken
-        - This occurs in a loop until you complete your task
-        - Mouse movements require a "target", which is located by Moondream as a specific coordinate on the page
-        - Moondream may sometimes fail to locate the target you expected it to.
-        - Therefore, actions may not always be completely successful and you may need to try different variations
-        </meta>
+        {{ HybridMeta() }}
 
-        <targeting>
-        Targets descriptions must be carefully chosen to be accurately picked up by Moondream.
-        Build a "minimal unique identifier" - a description that is as brief as possible that uniquely identifies the target on the page.
-        Use only the information needed, and prioritize in this order:
-        - specific text
-        - specific shapes and colors
-        - positional information
-        - high level information (Moondream cannot always understand high level concepts)
-        </targeting>
+        {{ TargetingInstructions() }}
 
         <instructions>
         Plan out web actions that should be executed in order to complete the task:
