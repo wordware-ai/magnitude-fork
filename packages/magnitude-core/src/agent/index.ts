@@ -135,10 +135,10 @@ export class Agent {
         };
     }
 
-    private fail(failure: FailureDescriptor): never {
-        this.events.emit('fail', failure);
-        throw new AgentError(failure);
-    }
+    // private fail(failure: FailureDescriptor): never {
+    //     this.events.emit('fail', failure);
+    //     throw new AgentError(failure);
+    // }
 
     async nav(url: string): Promise<void> {
         logger.info(`Navigating to ${url}`);
@@ -158,7 +158,7 @@ export class Agent {
         if (!actionDefinition) {
             // Either LLM hallucinating or actions are cached that don't have the appropriate definitions registered on the executing agent
             // FatalError
-            throw new Error(`Undefined action type '${action.variant}', either LLM is hallucinating or check that agent is configured with the appropriate action definitions`);
+            throw new AgentError(`Undefined action type '${action.variant}', either LLM is hallucinating or check that agent is configured with the appropriate action definitions`);
         }
         
         let input: any;
@@ -175,7 +175,7 @@ export class Agent {
 
         if (!parsed.success) {
             // TODO: provide options for LLM to correct these
-            throw new Error(`Generated action violates action definition input schema: ${parsed.error.message}`);
+            throw new AgentError(`Generated action violates action definition input schema: ${parsed.error.message}`, { adaptable: true });
         }
         // TODO: should prob try/except this and wrap any errors as AgentError if not already AgentError, setting reasonable default reactive configuration
         // e.g. flags for whether to try and adapt to the type of error
@@ -224,10 +224,13 @@ export class Agent {
                  * (2) Misconfigured BAML client / bad API key
                  * (3) Network error (past max retries)
                  */
-                this.fail({
-                    variant: 'misalignment',
-                    message: `Could not create partial recipe -> ${(error as Error).message}`
-                });
+                // this.fail({
+                //     variant: 'misalignment',
+                //     message: `Could not create partial recipe -> ${(error as Error).message}`
+                // });
+                throw new AgentError(
+                    `Could not create partial recipe -> ${(error as Error).message}`, { variant: 'misalignment' }
+                )
             }
 
             logger.info({ reasoning, actions }, `Partial recipe created`);
