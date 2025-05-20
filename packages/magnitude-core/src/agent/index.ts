@@ -21,6 +21,7 @@ import { ActionDefinition } from "@/actions";
 import { webActions } from "@/actions/webActions";
 import { ZodObject } from "zod";
 import { AgentState } from "./state";
+import { taskActions } from "@/actions/taskActions";
 
 export interface AgentOptions {
     // action set usable by the agent
@@ -37,7 +38,7 @@ export interface StartAgentOptions {
 }
 
 const DEFAULT_CONFIG = {
-    actions: [...webActions], // spread to create mutable copy
+    actions: [...webActions, ...taskActions], // spread to create mutable copy
     planner: {
         provider: 'google-ai',
         options: {
@@ -71,6 +72,7 @@ export class Agent {
     private context!: BrowserContext;
     public readonly events: EventEmitter<AgentEvents>;
     public readonly memory: AgentMemory;
+    private doneActing: boolean;
 
     constructor (config: Partial<AgentOptions>)  {
         this.config = { ...DEFAULT_CONFIG, ...config };
@@ -81,6 +83,7 @@ export class Agent {
         this.events = new EventEmitter<AgentEvents>();
         // mem should replace these ^ but even more robust + customizable
         this.memory = new AgentMemory();//this.events
+        this.doneActing = false;
     }
 
     get page(): Page {
@@ -185,6 +188,7 @@ export class Agent {
     }
 
     async act(description: string, options: StepOptions = {}): Promise<void> {
+        this.doneActing = false;
         logger.info(`Begin Step: ${description}`);
 
         const testData = convertOptionsToTestData(options);
@@ -194,7 +198,7 @@ export class Agent {
         while (true) {
             //const screenshot = await this.screenshot();
             // RangeError: Maximum call stack size exceeded.
-            const tabState: TabState = await this.harness.retrieveTabState();
+            //const tabState: TabState = await this.harness.retrieveTabState();
             //const tabState: TabState = { activeTab: 0, tabs: [{url: 'foo', title: 'foo', page: null as unknown as Page}] };
 
             logger.info(`Creating partial recipe`);
@@ -244,10 +248,17 @@ export class Agent {
             // if (finished) {
             //     break;
             // }
+            if (this.doneActing) {
+                break;
+            }
         }
 
         logger.info(`Done with step`);
         this.events.emit('stepSuccess');
+    }
+
+    async queueDone() {
+        this.doneActing = true;
     }
 
     async stop() {

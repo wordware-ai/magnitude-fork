@@ -36,6 +36,16 @@ export class AgentMemory {
         this.history = [];
     }
 
+    getLastThought(): string {
+        for (let i = this.history.length - 1; i >= 0; i--) {
+            const item = this.history.at(i)!;
+            if (item.event.variant === 'thought') return item.event.thought;
+        }
+
+        return '';
+    }
+
+
     getLastKnownState(): AgentState {
         for (let i = this.history.length - 1; i >= 0; i--) {
             const item = this.history.at(i)!;

@@ -1,11 +1,47 @@
 import { FailureDescriptor } from "../common";
 
-export class AgentError extends Error {
-    public readonly failure: FailureDescriptor;
+export interface AgentErrorOptions {
+    variant?: string,
+    // Whether the LLM may be able to try something else to avoid this error
+    adaptable?: boolean
+}
 
-    constructor(failure: FailureDescriptor) {
-        super(`${failure.variant}: ${JSON.stringify(failure.variant, null, 4)}`)
-        this.failure = failure;
+// export class AgentError extends Error {
+//     public readonly failure: FailureDescriptor;
+//     public readonly options: Required<AgentErrorOptions>;
+
+//     constructor(failure: FailureDescriptor, options: AgentErrorOptions = {}) {
+//         super(`${failure.variant}: ${JSON.stringify(failure.variant, null, 4)}`);
+
+//         this.options = {
+//             adaptable: options.adaptable ?? false
+//         };
+
+//         this.failure = failure;
+//     }
+// }
+
+export class AgentError extends Error {
+    //public readonly failure: FailureDescriptor;
+    public readonly options: Required<AgentErrorOptions>;
+
+    constructor(message: string, options: AgentErrorOptions = {}) {
+        // super(`${failure.variant}: ${JSON.stringify(failure.variant, null, 4)}`);
+        super(message);
+        this.options = {
+            variant: options.variant ?? 'unknown',
+            adaptable: options.adaptable ?? false,
+        };
+
+        
+
+        // if (options.variant !== 'unknown') {
+        //     super(`${failure.variant}: ${JSON.stringify(failure.variant, null, 4)}`);
+        // }
+
+        //this.options = options;
+
+        //this.failure = failure;
     }
 }
 
