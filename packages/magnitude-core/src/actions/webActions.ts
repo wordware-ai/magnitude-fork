@@ -1,5 +1,7 @@
 import { ActionDefinition, ActionPayload, createAction } from ".";
 import { z } from "zod";
+import { WebInteractionFacet } from "@/facets/webFacet"; // Import WebInteractionFacet
+import { AgentError } from "@/agent/errors"; // For error handling
 
 
 export const clickAction = createAction({
@@ -9,9 +11,14 @@ export const clickAction = createAction({
         target: z.string().describe("Where exactly to click"),
     }),
     resolver: async ({ input: { target }, agent }) => {
-        const screenshot = agent.memory.getLastScreenshot();
+        const webFacet = agent.getFacet(WebInteractionFacet);
+        if (!webFacet) {
+            throw new AgentError("WebInteractionFacet not available for click action.");
+        }
+        const harness = webFacet.getState().harness;
+        const screenshot = agent.memory.getLastScreenshot(); // Assuming memory is still on agent
         const { x, y } = await agent.micro.locateTarget(screenshot, target);
-        await agent.harness.click({ x, y });
+        await harness.click({ x, y });
         // a lot of code dupe below but lets not overengineer yet
         // possible solns: before/after hooks for namespaces, action context injection
         // it is kind of nice tho seeing explicitly that this is mutating agent mem so maybe better to leave it
@@ -34,9 +41,14 @@ export const typeAction = createAction({
         content: z.string().describe("Content to type, insert sequences <enter> or <tab> for those keypresses respectively."),
     }),
     resolver: async ({ input: { target, content }, agent }) => {
+        const webFacet = agent.getFacet(WebInteractionFacet);
+        if (!webFacet) {
+            throw new AgentError("WebInteractionFacet not available for type action.");
+        }
+        const harness = webFacet.getState().harness;
         const screenshot = agent.memory.getLastScreenshot();
         const { x, y } = await agent.micro.locateTarget(screenshot, target);
-        await agent.harness.clickAndType({ x, y, content });
+        await harness.clickAndType({ x, y, content });
     }
 });
 
@@ -49,9 +61,14 @@ export const scrollAction = createAction({
         deltaY: z.number().int().describe("Pixels to scroll vertically"),
     }),
     resolver: async ({ input: { target, deltaX, deltaY }, agent }) => {
+        const webFacet = agent.getFacet(WebInteractionFacet);
+        if (!webFacet) {
+            throw new AgentError("WebInteractionFacet not available for scroll action.");
+        }
+        const harness = webFacet.getState().harness;
         const screenshot = agent.memory.getLastScreenshot();
         const { x, y } = await agent.micro.locateTarget(screenshot, target);
-        await agent.harness.scroll({ x, y, deltaX, deltaY });
+        await harness.scroll({ x, y, deltaX, deltaY });
     }
 });
 
@@ -62,7 +79,12 @@ export const switchTabAction = createAction({
         index: z.number().int().describe("Index of tab to switch to"),
     }),
     resolver: async ({ input: { index }, agent }) => {
-        await agent.harness.switchTab({ index });
+        const webFacet = agent.getFacet(WebInteractionFacet);
+        if (!webFacet) {
+            throw new AgentError("WebInteractionFacet not available for switch tab action.");
+        }
+        const harness = webFacet.getState().harness;
+        await harness.switchTab({ index });
     }
 });
 

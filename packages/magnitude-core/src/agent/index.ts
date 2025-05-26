@@ -1,13 +1,17 @@
 // import { setLogLevel } from '@/ai/baml_client/config';
 // setLogLevel('OFF');
+// Screenshot, WebAction etc. might be used by AgentState or specific actions, keep for now.
 import { Screenshot, WebAction, ClickWebAction, TypeWebAction, ScrollWebAction, SwitchTabWebAction } from "@/web/types";
 import { ActionIntent, ClickIntent, TypeIntent, ScrollIntent, SwitchTabIntent, Action } from "@/actions/types";
 import { MicroAgent } from "@/ai/micro";
 import { MacroAgent } from "@/ai/macro";
-import { Browser, BrowserContext, BrowserContextOptions, Page } from "playwright";
-import { WebHarness } from "@/web/harness";
+// Browser, BrowserContext, BrowserContextOptions are now facet concerns primarily. Page is needed for getter.
+import { Page } from "playwright"; 
+// WebHarness might be part of AgentState type, or accessed via facet.
+import { WebHarness } from "@/web/harness"; 
 import { StepOptions } from "@/types";
 import { AgentEvents } from "../common/events";
+import { WebInteractionFacet, WebInteractionFacetOptions } from '../facets/webFacet'; // Import WebInteractionFacet
 import logger from '../logger';
 
 import { PlannerClient, ExecutorClient } from "@/ai/types";
@@ -16,173 +20,164 @@ import { AgentError } from "./errors";
 import { ActionDescriptor, convertOptionsToTestData, FailureDescriptor, retryOnError } from "../common";
 import { TabState } from "@/web/tabs";
 import { AgentMemory } from "./memory";
-import { BrowserProvider } from "@/web/browserProvider";
+// BrowserProvider no longer directly used by Agent
 import { ActionDefinition } from "@/actions";
-import { webActions } from "@/actions/webActions";
+// webActions will come from WebInteractionFacet
 import { ZodObject } from "zod";
-import { AgentState } from "./state";
-import { taskActions } from "@/actions/taskActions";
+import { AgentState } from "./state"; // AgentState might refer to WebHarness or Screenshot
+import { taskActions } from "@/actions/taskActions"; // Keep taskActions for default
 import { AgentFacet } from "@/facets";
 
 export interface AgentOptions {
-    // action set usable by the agent
-    actions?: ActionDefinition<any>[],
-    planner?: PlannerClient,
-    executor?: ExecutorClient
-    //browserContextOptions?: BrowserContextOptions,
-    //signal?: AbortSignal
+    actions?: ActionDefinition<any>[]; // Base actions
+    planner?: PlannerClient;
+    executor?: ExecutorClient;
+    // signal?: AbortSignal; // If needed
 }
 
-export interface StartAgentOptions {
-    browser?: Browser
-    url?: string
+// Options for the startAgent helper function
+export interface StartAgentWithWebOptions {
+    agentBaseOptions?: Partial<AgentOptions>;
+    webOptions?: WebInteractionFacetOptions; // Options for the WebInteractionFacet
 }
 
-const DEFAULT_CONFIG = {
-    actions: [...webActions, ...taskActions], // spread to create mutable copy
+const DEFAULT_CONFIG: Required<Omit<AgentOptions, 'actions'> & { actions: ActionDefinition<any>[] }> = {
+    actions: [...taskActions], // Default to only taskActions; webActions come from facet
     planner: {
         provider: 'google-ai',
         options: {
             model: 'gemini-2.5-pro-preview-05-06',
-            apiKey: process.env.GOOGLE_API_KEY
+            apiKey: process.env.GOOGLE_API_KEY || "YOUR_GOOGLE_API_KEY"
         }
     } as PlannerClient,
     executor: {
         provider: 'moondream',
         options: {
-            apiKey: process.env.MOONDREAM_API_KEY
+            apiKey: process.env.MOONDREAM_API_KEY || "YOUR_MOONDREAM_API_KEY"
         }
     } as ExecutorClient,
-    browserContextOptions: {}
-}
+};
 
+// Helper function to start an agent, typically with WebInteractionFacet
 export async function startAgent(
-    options: AgentOptions & StartAgentOptions = {}
-): Promise<Agent<[]>> {
-    const agent = new Agent(options);
-    await agent.start({ browser: options.browser, url: options.url });
-    // await agent.start({
-        
-    // })
+    options: StartAgentWithWebOptions = {}
+): Promise<Agent> {
+    const agentConfig = options.agentBaseOptions || {};
+    const facets: AgentFacet<any, any, any>[] = [];
+
+    // Add WebInteractionFacet, using provided options or defaults
+    facets.push(new WebInteractionFacet(options.webOptions || {}));
+
+    const agent = new Agent(agentConfig, facets);
+    await agent.start();
     return agent;
 }
 
+// FacetOptions<T> is no longer needed here
 
-// type ExtractFacetOptions<T extends readonly any[]> = T extends readonly [infer First, ...infer Rest]
-//   ? (First extends { options: infer O } ? O : {}) & ExtractFacetOptions<Rest>
-//   : {}
-// type FacetOptions<T extends readonly any[]> = T extends readonly [infer First, ...infer Rest]
-//   ? (First extends { ['options']: infer O } ? O : {}) & FacetOptions<Rest>  
-//   : {}
-type FacetOptions<T extends readonly any[]> = T extends readonly [infer First, ...infer Rest]
-  ? (First extends { ['options']: infer O } ? O : { FACET_OPTIONS_NOT_FOUND: true }) & FacetOptions<Rest>
-  : {}
-// // Extract and intersect all facet options (so you can pass any/all of them)
-// type ExtractFacetOptions<T extends readonly any[]> = T extends readonly [infer First, ...infer Rest]
-//   ? (First extends AgentFacet<any, infer O> ? O : {}) & ExtractFacetOptions<Rest>
-//   : {}
-
-// // For union (pick one set of options)
-// type UnionFacetOptions<T extends readonly any[]> = T extends readonly [infer First, ...infer Rest]
-//   ? (First extends AgentFacet<any, infer O> ? O : never) | UnionFacetOptions<Rest>
-//   : never
-
-export class Agent<T extends readonly AgentFacet<any, any>[]> {
+export class Agent { // No longer generic <T>
     private config: Required<AgentOptions>;
-    //private abortSignal?: AbortSignal;
+    private facets: AgentFacet<any, any, any>[];
+    // abortSignal?: AbortSignal; // If needed
+
     public readonly macro: MacroAgent;
     public readonly micro: MicroAgent;
-    public harness!: WebHarness;
-    private context!: BrowserContext;
     public readonly events: EventEmitter<AgentEvents>;
     public readonly memory: AgentMemory;
     private doneActing: boolean;
 
-    constructor (config: Partial<AgentOptions> & Required<FacetOptions<T>>)  {
-        this.config = { ...DEFAULT_CONFIG, ...config };
-        //this.abortSignal = config.signal;
+    constructor(baseConfig: Partial<AgentOptions> = {}, facets: AgentFacet<any, any, any>[] = []) {
+        // Initialize config with defaults, then override with baseConfig
+        this.config = {
+            ...DEFAULT_CONFIG,
+            ...baseConfig,
+            actions: [...(baseConfig.actions || DEFAULT_CONFIG.actions)], // Ensure actions is an array
+        } as Required<AgentOptions>; // Cast because baseConfig is partial
+
+        this.facets = facets;
+
+        // Aggregate actions from facets
+        const aggregatedActions = [...this.config.actions];
+        for (const facet of this.facets) {
+            aggregatedActions.push(...facet.getActionSpace());
+        }
+        // Deduplicate actions by name
+        this.config.actions = Array.from(new Map(aggregatedActions.map(action => [action.name, action])).values());
+        
+        // Initialize other components
         this.macro = new MacroAgent({ client: this.config.planner });
         this.micro = new MicroAgent({ client: this.config.executor });
-        //this.info = { actionCount: 0 };
         this.events = new EventEmitter<AgentEvents>();
-        // mem should replace these ^ but even more robust + customizable
-        this.memory = new AgentMemory();//this.events
+        this.memory = new AgentMemory(); // For now, memory is not facet-driven
         this.doneActing = false;
+        // if (baseConfig.signal) this.abortSignal = baseConfig.signal;
+    }
+
+    public getFacet<F extends AgentFacet<any, any, any>>(
+        facetClass: new (...args: any[]) => F
+    ): F | undefined {
+        return this.facets.find(f => f instanceof facetClass) as F | undefined;
     }
 
     get page(): Page {
-        return this.harness.page;
+        const webFacet = this.getFacet(WebInteractionFacet);
+        // Explicitly check if webFacet is an instance of WebInteractionFacet before accessing .page
+        if (webFacet instanceof WebInteractionFacet) {
+            return webFacet.page; // webFacet is now definitely WebInteractionFacet
+        }
+        throw new AgentError("WebInteractionFacet not available or page not initialized.");
     }
 
-    // get context(): BrowserContext {
-    //     return this.context;
-    // }
-    async start({ browser, url }: StartAgentOptions = {}): Promise<void> {
-        if (!browser) {
-            // If no browser is provided, use the singleton browser provider
-            browser = await BrowserProvider.getBrowser();
+    async start(): Promise<void> { // No longer takes browser/url options
+        logger.info("Agent: Starting...");
+        for (const facet of this.facets) {
+            await facet.onStart(); // Each facet initializes itself
         }
-
-        logger.info("Creating browser context");
-        const dpr = process.env.DEVICE_PIXEL_RATIO ?
-            parseInt(process.env.DEVICE_PIXEL_RATIO) :
-            process.platform === 'darwin' ? 2 : 1;
-        this.context = await browser.newContext({
-            viewport: { width: 1280, height: 720 },
-            deviceScaleFactor: dpr,
-            ...this.config.browserContextOptions
-        });
-
-        //const page = await this.context.newPage();
-        this.harness = new WebHarness(this.context);
-        await this.harness.start();
-
         this.events.emit('start');
-        logger.info("Agent started");
+        logger.info("Agent: All facets started.");
 
-        if (url) {
-            // If starting URL is provided, immediately navigate to it
-            await this.nav(url);
+        // Initial state capture after facets are started
+        // This assumes that if a state needs to be captured (e.g., web page),
+        // the relevant facet (WebInteractionFacet) is ready.
+        try {
+            const initialState = await this.captureState();
+            this.memory.inscribeInitialState(initialState);
+        } catch (error) {
+            logger.warn(`Agent: Could not capture initial state. ${error instanceof Error ? error.message : String(error)}`);
+            // Depending on requirements, this might be a critical error or ignorable.
         }
-
-        this.memory.inscribeInitialState(
-            await this.captureState()
-        );
+        logger.info("Agent: Started successfully.");
     }
 
     async captureState(): Promise<AgentState> {
-        const screenshot = await this.harness.screenshot();
-        const tabState = await this.harness.retrieveTabState();
+        const webFacet = this.getFacet(WebInteractionFacet);
+        if (!webFacet) {
+            logger.warn("Agent: WebInteractionFacet not found for captureState. Returning empty state.");
+            // Return a minimal state if no web facet, or throw if web state is essential
+            return { 
+                screenshot: { image: '', dimensions: { width: 0, height: 0 } }, 
+                tabs: { activeTab: -1, tabs: [] } 
+            };
+        }
+        const harness = webFacet.getState().harness;
+        if (!harness) {
+            throw new AgentError("WebInteractionFacet's harness not available for capturing state.");
+        }
+        const screenshot = await harness.screenshot();
+        const tabState = await harness.retrieveTabState();
         return {
             screenshot: screenshot,
             tabs: tabState
         };
     }
 
-    // private fail(failure: FailureDescriptor): never {
-    //     this.events.emit('fail', failure);
-    //     throw new AgentError(failure);
-    // }
-
-    async nav(url: string): Promise<void> {
-        logger.info(`Navigating to ${url}`);
-        //this.events.emit('action', { 'variant': 'load', 'url': url });
-        await this.harness.goto(url);
-        await this.harness.waitForStability();
-    }
+    // nav(url: string) method removed, use webFacet.nav(url) via getFacet
 
     async exec(action: Action): Promise<void> {
-        // based on variant, delegate to appropriate action resolver from available action definitions, or raise error if in current action vocab
-        let actionDefinition: ActionDefinition<any> | null = null;
-        for (const def of this.config.actions) {
-            if (action.variant === def.name) {
-                actionDefinition = def;
-            }
-        }
+        let actionDefinition = this.config.actions.find(def => def.name === action.variant);
+
         if (!actionDefinition) {
-            // Either LLM hallucinating or actions are cached that don't have the appropriate definitions registered on the executing agent
-            // FatalError
-            throw new AgentError(`Undefined action type '${action.variant}', either LLM is hallucinating or check that agent is configured with the appropriate action definitions`);
+            throw new AgentError(`Undefined action type '${action.variant}'. Ensure agent is configured with appropriate action definitions from facets.`);
         }
         
         let input: any;
@@ -235,14 +230,12 @@ export class Agent<T extends readonly AgentFacet<any, any>[]> {
                 ({ reasoning, actions } = await this.macro.createPartialRecipe(
                     //this.memory.getLastScreenshot(),
                     //screenshot,
-                    this.memory.buildContext(),//tabState),
-                    description,//{ description: description, checks: [], testData: testData },
-                    //this.lastStepActions,
-                    //tabState,
-                    this.config.actions
+                    this.memory.buildContext(), // Memory context
+                    description,
+                    this.config.actions // Pass the agent's current full action space
                 ));
             } catch (error: unknown) {
-                logger.error(`Error creating partial recipe: ${error}`);
+                logger.error(`Agent: Error creating partial recipe: ${error instanceof Error ? error.message : String(error)}`);
                 /**
                  * (1) Failure to conform to JSON
                  * (2) Misconfigured BAML client / bad API key
@@ -294,13 +287,17 @@ export class Agent<T extends readonly AgentFacet<any, any>[]> {
          * May be called asynchronously and interrupt an agent in the middle of a action sequence.
          */
         // set signal to cancelled?
-        //this.abortSignal?.throwIfAborted()
-        if (this.context) {
+        //this.abortSignal?.throwIfAborted(); // If using abort signals
+        logger.info("Agent: Stopping...");
+        for (const facet of this.facets) {
             try {
-                await this.context.close();
+                await facet.onStop();
             } catch (error) {
-                 logger.warn(`Error closing browser context (might be expected if cancelled): ${error}`);
+                logger.warn(`Agent: Error stopping facet ${facet.constructor.name}: ${error instanceof Error ? error.message : String(error)}`);
             }
         }
+        logger.info("Agent: All facets stopped.");
+        // Perform any other agent-level cleanup here
+        logger.info("Agent: Stopped successfully.");
     }
 }

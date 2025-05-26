@@ -14,9 +14,7 @@ import { ActionDefinition } from "@/actions"
 // }
 
 //A extends ActionDefinition<any>[]
-export interface AgentFacet<S, M> {// A, S, M
-    options?: unknown
-
+export interface AgentFacet<S, M, Opts = {}> {// A, S, M
     getState(): S//StateComponent[]
     getMemory(): M//MemoryComponent[]
 
