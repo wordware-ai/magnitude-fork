@@ -6,8 +6,9 @@ import { ActionVisualizer } from "./visualizer";
 import logger from "@/logger";
 import { TabManager, TabState } from "./tabs";
 import { DOMTransformer } from "./transformer";
+//import { StateComponent } from "@/facets";
 
-export class WebHarness {
+export class WebHarness { // implements StateComponent
     /**
      * Executes web actions on a page
      * Not responsible for browser lifecycle
@@ -86,13 +87,15 @@ export class WebHarness {
     }
  
     async click({ x, y }: { x: number, y: number }) {
+        // console.log("x:", x);
+        // console.log("y:", y);
         await this.visualizer.visualizeAction(x, y);
         this.page.mouse.click(x, y);
         await this.waitForStability();
         //await this.visualizer.removeActionVisuals();
     }
 
-    async type({ x, y, content }: { x: number, y: number, content: string }) {
+    async clickAndType({ x, y, content }: { x: number, y: number, content: string }) {
         // TODO: Implement string placeholders and special chars e.g. <enter>
         //this.page.mouse.click(x, y);
         const chunks = parseTypeContent(content);
@@ -144,7 +147,7 @@ export class WebHarness {
         if (action.variant === 'click') {
             await this.click(action);
         } else if (action.variant === 'type') {
-            await this.type(action);
+            await this.clickAndType(action);
         } else if (action.variant === 'scroll') {
             await this.scroll(action);
         } else if (action.variant === 'tab') {

@@ -36,7 +36,7 @@ export const typeAction = createAction({
     resolver: async ({ input: { target, content }, agent }) => {
         const screenshot = agent.memory.getLastScreenshot();
         const { x, y } = await agent.micro.locateTarget(screenshot, target);
-        await agent.harness.type({ x, y, content });
+        await agent.harness.clickAndType({ x, y, content });
     }
 });
 

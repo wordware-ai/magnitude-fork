@@ -22,13 +22,14 @@ import { webActions } from "@/actions/webActions";
 import { ZodObject } from "zod";
 import { AgentState } from "./state";
 import { taskActions } from "@/actions/taskActions";
+import { AgentFacet } from "@/facets";
 
 export interface AgentOptions {
     // action set usable by the agent
     actions?: ActionDefinition<any>[],
     planner?: PlannerClient,
     executor?: ExecutorClient
-    browserContextOptions?: BrowserContextOptions,
+    //browserContextOptions?: BrowserContextOptions,
     //signal?: AbortSignal
 }
 
@@ -57,13 +58,36 @@ const DEFAULT_CONFIG = {
 
 export async function startAgent(
     options: AgentOptions & StartAgentOptions = {}
-): Promise<Agent> {
+): Promise<Agent<[]>> {
     const agent = new Agent(options);
     await agent.start({ browser: options.browser, url: options.url });
+    // await agent.start({
+        
+    // })
     return agent;
 }
 
-export class Agent {
+
+// type ExtractFacetOptions<T extends readonly any[]> = T extends readonly [infer First, ...infer Rest]
+//   ? (First extends { options: infer O } ? O : {}) & ExtractFacetOptions<Rest>
+//   : {}
+// type FacetOptions<T extends readonly any[]> = T extends readonly [infer First, ...infer Rest]
+//   ? (First extends { ['options']: infer O } ? O : {}) & FacetOptions<Rest>  
+//   : {}
+type FacetOptions<T extends readonly any[]> = T extends readonly [infer First, ...infer Rest]
+  ? (First extends { ['options']: infer O } ? O : { FACET_OPTIONS_NOT_FOUND: true }) & FacetOptions<Rest>
+  : {}
+// // Extract and intersect all facet options (so you can pass any/all of them)
+// type ExtractFacetOptions<T extends readonly any[]> = T extends readonly [infer First, ...infer Rest]
+//   ? (First extends AgentFacet<any, infer O> ? O : {}) & ExtractFacetOptions<Rest>
+//   : {}
+
+// // For union (pick one set of options)
+// type UnionFacetOptions<T extends readonly any[]> = T extends readonly [infer First, ...infer Rest]
+//   ? (First extends AgentFacet<any, infer O> ? O : never) | UnionFacetOptions<Rest>
+//   : never
+
+export class Agent<T extends readonly AgentFacet<any, any>[]> {
     private config: Required<AgentOptions>;
     //private abortSignal?: AbortSignal;
     public readonly macro: MacroAgent;
@@ -74,7 +98,7 @@ export class Agent {
     public readonly memory: AgentMemory;
     private doneActing: boolean;
 
-    constructor (config: Partial<AgentOptions>)  {
+    constructor (config: Partial<AgentOptions> & Required<FacetOptions<T>>)  {
         this.config = { ...DEFAULT_CONFIG, ...config };
         //this.abortSignal = config.signal;
         this.macro = new MacroAgent({ client: this.config.planner });
