@@ -1,6 +1,8 @@
+type Base64Image = `data:image/${'jpeg'|'png'|'gif'};base64,${string}`;
+
 export interface Screenshot {
     // b64-encoded PNG image
-    image: string,
+    image: Base64Image,
     dimensions: {
         width: number,
         height: number

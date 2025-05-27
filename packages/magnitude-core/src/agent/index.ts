@@ -9,13 +9,13 @@ import { AgentEvents } from "../common/events";
 import logger from '../logger';
 import { AgentConnector } from '@/connectors';
 import { WebInteractionConnector, WebInteractionConnectorOptions } from '@/connectors/webConnector';
-import { Observation } from './observationTypes';
+import { Observation } from '@/memory';
 
 import { PlannerClient, ExecutorClient } from "@/ai/types";
 import EventEmitter from "eventemitter3";
 import { AgentError } from "./errors";
 import { ActionDescriptor, convertOptionsToTestData, FailureDescriptor, retryOnError } from "../common";
-import { AgentMemory } from "../memory/memory";
+import { AgentMemory } from "../memory";
 import { ActionDefinition } from "@/actions";
 import { ZodObject } from "zod";
 import { taskActions } from "@/actions/taskActions";

@@ -1,5 +1,5 @@
 import { Page, Browser, BrowserContext, PageScreenshotOptions } from "playwright";
-import { ClickWebAction, ScrollWebAction, SwitchTabWebAction, TypeWebAction, WebAction } from '@/web/types';
+import { ClickWebAction, Screenshot, ScrollWebAction, SwitchTabWebAction, TypeWebAction, WebAction } from '@/web/types';
 import { PageStabilityAnalyzer } from "./stability";
 import { parseTypeContent } from "./util";
 import { ActionVisualizer } from "./visualizer";
@@ -61,7 +61,7 @@ export class WebHarness { // implements StateComponent
         return this.tabs.getActivePage();
     }
 
-    async screenshot(options: PageScreenshotOptions = {}): Promise<{ image: string, dimensions: { width: number, height: number } }> {
+    async screenshot(options: PageScreenshotOptions = {}): Promise<Screenshot> {
         /**
          * Get b64 encoded string of screenshot (PNG) with screen dimensions
          */
@@ -73,7 +73,7 @@ export class WebHarness { // implements StateComponent
         }
 
         return {
-            image: buffer.toString('base64'),
+            image: `data:image/png;base64,${buffer.toString('base64')}`,//buffer.toString('base64'),
             dimensions: {
                 width: viewportSize.width,
                 height: viewportSize.height
