@@ -1,6 +1,7 @@
 import { Screenshot } from "@/web/types";
 import { convertToBamlClientOptions } from "./util";
-import { b, BrowserExecutionContext, MemoryContext } from "@/ai/baml_client";
+// Import ModularMemoryContext instead of old MemoryContext
+import { b, BrowserExecutionContext, ModularMemoryContext, MemoryContext as OldMemoryContext } from "@/ai/baml_client"; 
 import { Image, Collector, ClientRegistry } from "@boundaryml/baml";
 import { Action, ActionIntent, Intent } from "@/actions/types";
 import { TestStepDefinition } from "@/types";
@@ -64,27 +65,19 @@ export class MacroAgent {
     }
 
     async createPartialRecipe<T>(
-        //screenshot: Screenshot,
-        context: MemoryContext,
+        context: ModularMemoryContext, // Changed to ModularMemoryContext
         task: string,
-        //existingRecipe: Action[],
-        //tabState: TabState,
         actionVocabulary: ActionDefinition<T>[]
-    ): Promise<{ reasoning: string, actions: Action[] }> {//, finished: boolean }> {
+    ): Promise<{ reasoning: string, actions: Action[] }> {
         const tb = new TypeBuilder();
 
         tb.PartialRecipe.addProperty('actions', tb.list(convertActionDefinitionsToBaml(tb, actionVocabulary)));
-        //tb.PartialRecipe.addProperty('finished', tb.bool());
 
-        //console.log("existing:", stringifiedExistingRecipe);
         const start = Date.now();
-        const response = await this.baml.CreatePartialRecipe(
+        // Assuming this.baml.CreatePartialRecipe is now typed to accept ModularMemoryContext
+        // after BAML generation picked up changes in planner.baml
+        const response = await this.baml.CreatePartialRecipe( 
             context,
-            // {
-            //     screenshot: Image.fromBase64('image/png', screenshot.image),
-            //     actionHistory: stringifiedExistingRecipe,
-            //     tabState: tabState
-            // },
             task,
             { tb }
         );

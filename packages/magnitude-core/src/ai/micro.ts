@@ -42,6 +42,9 @@ export class MicroAgent {
     }
 
     async locateTarget(screenshot: Screenshot, target: string): Promise<PixelCoordinate> {
+        // console.log(screenshot);
+        // console.log(target)
+
         const start = Date.now();
 
         const response = await this.moondream.point({

@@ -1,7 +1,8 @@
 import { ActionDefinition, ActionPayload, createAction } from ".";
 import { z } from "zod";
-import { WebInteractionFacet } from "@/facets/webFacet"; // Import WebInteractionFacet
+import { WebInteractionConnector } from "@/connectors/webConnector"; // Changed from WebInteractionFacet
 import { AgentError } from "@/agent/errors"; // For error handling
+import { Agent } from "@/agent"; // Import Agent type for agent parameter
 
 
 export const clickAction = createAction({
@@ -10,13 +11,13 @@ export const clickAction = createAction({
     schema: z.object({
         target: z.string().describe("Where exactly to click"),
     }),
-    resolver: async ({ input: { target }, agent }) => {
-        const webFacet = agent.getFacet(WebInteractionFacet);
-        if (!webFacet) {
-            throw new AgentError("WebInteractionFacet not available for click action.");
+    resolver: async ({ input: { target }, agent }: { input: { target: string }, agent: Agent }) => {
+        const webConnector = agent.getConnector(WebInteractionConnector);
+        if (!webConnector) {
+            throw new AgentError("WebInteractionConnector not available for click action.");
         }
-        const harness = webFacet.getState().harness;
-        const screenshot = agent.memory.getLastScreenshot(); // Assuming memory is still on agent
+        const harness = webConnector.getHarness();
+        const screenshot = await webConnector.getLastScreenshot();//agent.memory.getLastScreenshot(); 
         const { x, y } = await agent.micro.locateTarget(screenshot, target);
         await harness.click({ x, y });
         // a lot of code dupe below but lets not overengineer yet
@@ -40,13 +41,13 @@ export const typeAction = createAction({
         target: z.string().describe("Where exactly to click before typing"),
         content: z.string().describe("Content to type, insert sequences <enter> or <tab> for those keypresses respectively."),
     }),
-    resolver: async ({ input: { target, content }, agent }) => {
-        const webFacet = agent.getFacet(WebInteractionFacet);
-        if (!webFacet) {
-            throw new AgentError("WebInteractionFacet not available for type action.");
+    resolver: async ({ input: { target, content }, agent }: { input: { target: string, content: string }, agent: Agent }) => {
+        const webConnector = agent.getConnector(WebInteractionConnector);
+        if (!webConnector) {
+            throw new AgentError("WebInteractionConnector not available for type action.");
         }
-        const harness = webFacet.getState().harness;
-        const screenshot = agent.memory.getLastScreenshot();
+        const harness = webConnector.getHarness();
+        const screenshot = await webConnector.getLastScreenshot();
         const { x, y } = await agent.micro.locateTarget(screenshot, target);
         await harness.clickAndType({ x, y, content });
     }
@@ -60,13 +61,13 @@ export const scrollAction = createAction({
         deltaX: z.number().int().describe("Pixels to scroll horizontally"),
         deltaY: z.number().int().describe("Pixels to scroll vertically"),
     }),
-    resolver: async ({ input: { target, deltaX, deltaY }, agent }) => {
-        const webFacet = agent.getFacet(WebInteractionFacet);
-        if (!webFacet) {
-            throw new AgentError("WebInteractionFacet not available for scroll action.");
+    resolver: async ({ input: { target, deltaX, deltaY }, agent }: { input: { target: string, deltaX: number, deltaY: number }, agent: Agent }) => {
+        const webConnector = agent.getConnector(WebInteractionConnector);
+        if (!webConnector) {
+            throw new AgentError("WebInteractionConnector not available for scroll action.");
         }
-        const harness = webFacet.getState().harness;
-        const screenshot = agent.memory.getLastScreenshot();
+        const harness = webConnector.getHarness();
+        const screenshot = await webConnector.getLastScreenshot();
         const { x, y } = await agent.micro.locateTarget(screenshot, target);
         await harness.scroll({ x, y, deltaX, deltaY });
     }
@@ -78,12 +79,12 @@ export const switchTabAction = createAction({
     schema: z.object({
         index: z.number().int().describe("Index of tab to switch to"),
     }),
-    resolver: async ({ input: { index }, agent }) => {
-        const webFacet = agent.getFacet(WebInteractionFacet);
-        if (!webFacet) {
-            throw new AgentError("WebInteractionFacet not available for switch tab action.");
+    resolver: async ({ input: { index }, agent }: { input: { index: number }, agent: Agent }) => {
+        const webConnector = agent.getConnector(WebInteractionConnector);
+        if (!webConnector) {
+            throw new AgentError("WebInteractionConnector not available for switch tab action.");
         }
-        const harness = webFacet.getState().harness;
+        const harness = webConnector.getHarness();
         await harness.switchTab({ index });
     }
 });

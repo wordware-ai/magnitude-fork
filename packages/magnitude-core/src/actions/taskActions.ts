@@ -16,7 +16,7 @@ export const failAction = createAction({
     description: 'Use if task was attempted but does not seem possible. Use common sense',//'Designate current task as infeasible',
     schema: z.object({}),
     resolver: async ({ agent }) => {
-        throw new AgentError(`Task failed: ${agent.memory.getLastThought()}`);
+        throw new AgentError(`Task failed: ${agent.memory.getLastThoughtMessage() ?? "No thought recorded"}`);
     },
 });
 

@@ -70,7 +70,6 @@ class TabState {
     tabs OpenTab[]
 }
 
-
 class MemoryContextLog {
     timestamp string
     message string
@@ -99,6 +98,32 @@ template_string DescribeMemoryContext(context: MemoryContext) #"
     </state>
 "#
 
+
+template_string DescribeModularMemoryContext(context: ModularMemoryContext) #"
+    <logs>
+    {% for entry in context.history %}
+      {% if entry.variant == "thought" %}
+    [{{entry.timestamp}}] {{entry.message}}
+      {% elif entry.variant == "turn" %}
+    [{{entry.timestamp}}] {{entry.action}}
+        {% for obs in entry.observations %}
+    {{obs}}
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+    </logs>
+
+    <state>
+    Current time: {{ context.current_timestamp }}
+    {% for connector_state in context.current_connector_states %}
+      {% if connector_state.connector_id == "web" %}
+        {% for el in connector_state.elements %}
+    {{el}}
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+    </state>
+"#
 
 template_string DescribeTabState(tabState: TabState) #"
     <tabs>
@@ -170,7 +195,7 @@ template_string TargetingInstructions #"
     </targeting>
 "#
 
-function CreatePartialRecipe (context: MemoryContext, task: string) -> PartialRecipe {
+function CreatePartialRecipe (context: ModularMemoryContext, task: string) -> PartialRecipe {
     client GeminiPro
     prompt #"
         {{ _.role("system") }}
@@ -188,7 +213,7 @@ function CreatePartialRecipe (context: MemoryContext, task: string) -> PartialRe
 
         {{ _.role("user") }}
 
-        {{ DescribeMemoryContext(context) }}
+        {{ DescribeModularMemoryContext(context) }}
     "# 
 }
 
