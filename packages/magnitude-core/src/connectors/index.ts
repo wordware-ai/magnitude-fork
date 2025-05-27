@@ -1,4 +1,4 @@
-import { Observation, BamlRenderable } from '@/agent/observationTypes';
+import { Observation, BamlRenderable } from '@/memory';
 
 import { ActionDefinition } from '@/actions';
 

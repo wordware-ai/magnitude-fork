@@ -1,5 +1,5 @@
 import { AgentConnector } from ".";
-import { Observation, BamlRenderable } from "@/agent/observationTypes";
+import { Observation, BamlRenderable } from "@/memory";
 import { WebHarness } from "@/web/harness";
 import { ActionDefinition } from '@/actions';
 import { webActions } from '@/actions/webActions';
