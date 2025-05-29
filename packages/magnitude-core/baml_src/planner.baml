@@ -107,21 +107,21 @@ template_string RenderContent(content: (string | image)[]) #"
 template_string DescribeModularMemoryContext(context: ModularMemoryContext) #"
     <logs>
     {% for entry in context.history %}
-      {% if entry.variant == "thought" %}
-    [{{entry.timestamp}}] {{entry.message}}
-      {% elif entry.variant == "turn" %}
-    [{{entry.timestamp}}] {{entry.action}}
-        {{ RenderContent(entry.content) }}
-      {% endif %}
+        {% if entry.variant == "thought" %}
+            [{{entry.timestamp}}] {{entry.message}}
+        {% elif entry.variant == "turn" %}
+            [{{entry.timestamp}}] {{entry.action}}
+            {{ RenderContent(entry.content) }}
+        {% endif %}
     {% endfor %}
     </logs>
 
     <state>
     Current time: {{ context.current_timestamp }}
     {% for connector_state in context.current_connector_states %}
-      {% if connector_state.connector_id == "web" %}
-        {{ RenderContent(connector_state.content) }}
-      {% endif %}
+    {% if connector_state.connector_id == "web" %}
+    {{ RenderContent(connector_state.content) }}
+    {% endif %}
     {% endfor %}
     </state>
 "#

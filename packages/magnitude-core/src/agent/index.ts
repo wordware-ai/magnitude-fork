@@ -173,7 +173,7 @@ export class Agent {
 
         for (const connector of this.connectors) {
             try {
-                const connObservations = connector.getObservations ? await connector.getObservations() : [];
+                const connObservations = connector.collectObservations ? await connector.collectObservations() : [];
                 observations.push(...connObservations);
             } catch (error) {
                 logger.warn(`Agent: Error getting observations from connector ${connector.id}: ${error instanceof Error ? error.message : String(error)}`);

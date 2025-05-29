@@ -10,7 +10,7 @@ import logger from "@/logger";
 import { Logger } from 'pino';
 import { Screenshot } from "@/web/types";
 import { TabState } from '@/web/tabs';
-import { Observation } from "@/memory/observation";
+import { ObservableData, Observation } from "@/memory/observation";
 import { BamlRenderable } from "@/memory/context";
 import { Image } from "@/memory/image";
 
@@ -121,24 +121,13 @@ export class WebInteractionConnector implements AgentConnector {
         return (await this.captureCurrentState()).screenshot;
     }
 
-    async getObservations(): Promise<Observation[]> {
+    async collectObservations(): Promise<Observation[]> {
         const currentState = await this.captureCurrentState();
         const observations: Observation[] = [];
 
         if (this.previousState) {
             // TODO: screenshot should use Image class instead
             if (currentState.screenshot?.image !== this.previousState.screenshot?.image) {
-                // const screenUpdateObservation = {
-                //     sourceConnectorId: this.id,
-                //     type: "screenUpdate", 
-                //     imageBase64: currentState.screenshot!.image,
-
-                //     renderToBaml: function(): BamlRenderable[] {
-                //         const bamlImg = BamlImage.fromBase64('image/png', this.imageBase64);
-                //         return [bamlImg];
-                //     }
-                // };
-                // observations.push(screenUpdateObservation);
                 observations.push({
                     source: `connector:${this.id}`,
                     timestamp: Date.now(),
@@ -146,19 +135,6 @@ export class WebInteractionConnector implements AgentConnector {
                 });
             }
         } else {
-            // const initialStateObservation = {
-            //     sourceConnectorId: this.id,
-            //     type: "initialState",
-            //     // initialUrl: currentState.url,
-            //     // initialPageTitle: currentState.pageTitle,
-            //     imageBase64: currentState.screenshot!.image,
-
-            //     renderToBaml: function(): BamlRenderable[] {
-            //         const bamlImg = BamlImage.fromBase64('image/png', this.imageBase64);
-            //         return [bamlImg];
-            //     }
-            // };
-            // observations.push(initialStateObservation);
             observations.push({
                 source: `connector:${this.id}`,
                 timestamp: Date.now(),
@@ -186,5 +162,27 @@ export class WebInteractionConnector implements AgentConnector {
             bamlRenderables.push(tabsString.trim());
         }
         return bamlRenderables;
+    }
+
+    async viewState(): Promise<ObservableData> {
+        const state = await this.captureCurrentState();
+        const currentTabs = state.tabs;
+        let tabsString = "Open Tabs:\n";
+        currentTabs.tabs.forEach((tab, index) => {
+            tabsString += `${index === currentTabs.activeTab ? '[ACTIVE] ' : ''}${tab.title} (${tab.url})\n`;
+        });
+        // return {
+        //     screenshot: Image.fromBase64(state.screenshot.image, 'image/png'),
+        //     //tabs: tabsString
+        //     tabs: currentTabs.tabs.map(
+        //         (tab, index) => `Tab ${index}${index === currentTabs.activeTab ? ' [ACTIVE]' : ''}: ${tab.title} (${tab.url})\n`
+        //     )
+        // };
+
+        return [
+            Image.fromBase64(state.screenshot.image, 'image/png'),
+            tabsString
+        ]
+        // return Image.fromBase64(state.screenshot.image, 'image/png');
     }
 }

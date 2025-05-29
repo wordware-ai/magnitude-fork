@@ -1,6 +1,6 @@
 import { ActionDefinition } from '@/actions';
 import { BamlRenderable } from '@/memory/context';
-import { Observation } from '@/memory/observation';
+import { ObservableData, Observation } from '@/memory/observation';
 
 export interface AgentConnector {
     // Unique connector ID (required)
@@ -11,7 +11,8 @@ export interface AgentConnector {
     // Action space (optional)
     getActionSpace?(): ActionDefinition<any>[];
     // State retrieval (WIP)
-    renderCurrentStateToBaml?(): Promise<BamlRenderable[]>;
+    //renderCurrentStateToBaml?(): Promise<BamlRenderable[]>;
+    viewState?(): Promise<ObservableData>;
     // Observation retrieval (WIP)
-    getObservations?(): Promise<Observation[]>;
+    collectObservations?(): Promise<Observation[]>;
 }

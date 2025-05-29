@@ -97,8 +97,8 @@ export class AgentMemory {
         const current_timestamp_str = new Date().toTimeString().split(' ')[0];
 
         for (const connector of activeConnectors) {
-            if (connector.renderCurrentStateToBaml) {
-                const renderables = await connector.renderCurrentStateToBaml();
+            if (connector.viewState) {
+                const renderables = observableDataToContext(await connector.viewState());//await connector.renderCurrentStateToBaml();
                 if (renderables && renderables.length > 0) {
                     connector_states_for_context.push({
                         connector_id: connector.id,

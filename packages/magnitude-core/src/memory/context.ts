@@ -3,133 +3,111 @@
  */
 import { Image as BamlImage } from '@boundaryml/baml';
 import { ObservableData, ObservableDataObject, ObservableDataArray, ObservableDataPrimitive } from './observation';
-import { Image as CustomImage } from './image'; // Our custom Image class
+import { Image } from './image'; // Our custom Image class
 
 export type BamlRenderable = BamlImage | string;
 
-// TODO: needs more testing esp. images as boject values sandwiching str + image + str properly
+function buildRenderableListRecursive(data: ObservableData, targetList: BamlRenderable[]): void {
+    if (data instanceof Image) {
+        const bamlImg = data.toBaml();
+        if (bamlImg) {
+            targetList.push(bamlImg);
+        }
+        // If toBaml() returns undefined/null, it's intentionally omitted.
+        return;
+    }
+    if (data instanceof BamlImage) {
+        targetList.push(data);
+        return;
+    }
+    if (typeof data === 'string') {
+        targetList.push(data);
+        return;
+    }
+    if (typeof data === 'number' || typeof data === 'boolean') {
+        targetList.push(String(data));
+        return;
+    }
+    if (data === null) {
+        targetList.push('null'); // JSON representation of null
+        return;
+    }
+    if (data === undefined) {
+        // In JSON, undefined in arrays becomes null. For object properties, the key is omitted.
+        // We'll push 'null' if undefined is encountered directly in a structure we're stringifying parts of.
+        targetList.push('null'); 
+        return;
+    }
+
+    if (Array.isArray(data)) {
+        targetList.push('[');
+        data.forEach((element, index) => {
+            buildRenderableListRecursive(element, targetList);
+            if (index < data.length - 1) {
+                targetList.push(',');
+            }
+        });
+        targetList.push(']');
+        return;
+    }
+
+    if (typeof data === 'object' && data !== null) { // Plain objects
+        targetList.push('{');
+        // Filter out entries with undefined values, as JSON.stringify does.
+        const entries = Object.entries(data as ObservableDataObject).filter(([, val]) => val !== undefined);
+        entries.forEach(([key, value], index) => {
+            // Keys in JSON must be strings and are typically quoted.
+            // JSON.stringify is safe and standard for keys.
+            targetList.push(JSON.stringify(key)); 
+            targetList.push(':');
+            buildRenderableListRecursive(value, targetList);
+            if (index < entries.length - 1) {
+                targetList.push(',');
+            }
+        });
+        targetList.push('}');
+        return;
+    }
+
+    // Fallback for any unhandled types: explicitly mark as unsupported.
+    // console.warn(`[BAML CONTEXT] buildRenderableListRecursive: Encountered unhandled data type: ${typeof data}`, data);
+    //targetList.push(`[UNSUPPORTED DATA TYPE: ${typeof data}]`);
+    throw new Error(`UNSUPPORTED DATA TYPE: ${typeof data}`);
+}
+
 export function observableDataToContext(data: ObservableData): BamlRenderable[] {
-    const results: BamlRenderable[] = [];
+    const rawList: BamlRenderable[] = [];
+    buildRenderableListRecursive(data, rawList);
 
-    // This replacer and placeholder logic is used by both object and array processing.
-    // It needs access to a local placeholder map and counter for the current processing scope.
-    const createReplacer = (imagePlaceholders: Map<string, BamlImage>, placeholderIdCounterObj: { id: number }) => {
-        return (key: string, value: any): any => {
-            if (value instanceof CustomImage) {
-                const bamlImg = value.toBaml();
-                if (bamlImg) {
-                    const placeholder = `__IMAGE_PLACEHOLDER_${placeholderIdCounterObj.id++}__`;
-                    imagePlaceholders.set(placeholder, bamlImg);
-                    return placeholder;
-                }
-                return undefined; // Omit if CustomImage can't be converted
-            } else if (value instanceof BamlImage) {
-                const placeholder = `__IMAGE_PLACEHOLDER_${placeholderIdCounterObj.id++}__`;
-                imagePlaceholders.set(placeholder, value);
-                return placeholder;
+    // Merge adjacent strings
+    if (rawList.length === 0) {
+        return [];
+    }
+
+    const mergedList: BamlRenderable[] = [];
+    let currentString = "";
+
+    for (const item of rawList) {
+        if (typeof item === 'string') {
+            currentString += item;
+        } else { // It's a BamlImage
+            if (currentString.length > 0) {
+                mergedList.push(currentString);
+                currentString = "";
             }
-            return value;
-        };
-    };
-
-    function process(currentData: ObservableData) {
-        if (currentData instanceof CustomImage) {
-            const bamlImg = currentData.toBaml();
-            if (bamlImg) {
-                results.push(bamlImg);
-            }
-        } else if (currentData instanceof BamlImage) {
-            results.push(currentData);
-        } else if (typeof currentData === 'string') {
-            results.push(currentData);
-        } else if (typeof currentData === 'number' || typeof currentData === 'boolean') {
-            results.push(String(currentData));
-        } else if (currentData === null || currentData === undefined) {
-            // Ignored
-        } else if (Array.isArray(currentData)) {
-            const arrayParts = processArrayInternal(currentData, createReplacer);
-            results.push(...arrayParts);
-        } else if (typeof currentData === 'object' && currentData !== null) {
-            const objectParts = processObjectInternal(currentData as ObservableDataObject, createReplacer);
-            results.push(...objectParts);
+            mergedList.push(item); // Push the BamlImage
         }
     }
-
-    process(data);
-    return results;
-}
-
-function processArrayInternal(
-    arr: ObservableDataArray,
-    createReplacerFn: (imagePlaceholders: Map<string, BamlImage>, placeholderIdCounterObj: { id: number }) => (key: string, value: any) => any
-): BamlRenderable[] {
-    const imagePlaceholders = new Map<string, BamlImage>();
-    const placeholderIdCounterObj = { id: 0 };
-    const replacer = createReplacerFn(imagePlaceholders, placeholderIdCounterObj);
-
-    const jsonStringWithPlaceholders = JSON.stringify(arr, replacer);
-
-    if (imagePlaceholders.size === 0) {
-        return [jsonStringWithPlaceholders];
+    // Add any trailing string
+    if (currentString.length > 0) {
+        mergedList.push(currentString);
     }
     
-    return splitStringByPlaceholders(jsonStringWithPlaceholders, imagePlaceholders);
-}
+    // Final check: if the entire merged list is just one string that looks like a simple primitive
+    // that was stringified (e.g. "123", "true", "null") but should have been handled by BAML as such,
+    // this might indicate an issue. However, BAML expects (string | image)[], so strings are fine.
+    // The main goal is that Image objects become BamlImage objects, and other structures are stringified
+    // in a way that BAML can parse if it's expecting complex string content.
 
-
-function processObjectInternal(
-    obj: ObservableDataObject,
-    createReplacerFn: (imagePlaceholders: Map<string, BamlImage>, placeholderIdCounterObj: { id: number }) => (key: string, value: any) => any
-): BamlRenderable[] {
-    const imagePlaceholders = new Map<string, BamlImage>();
-    const placeholderIdCounterObj = { id: 0 };
-    const replacer = createReplacerFn(imagePlaceholders, placeholderIdCounterObj);
-
-    const jsonStringWithPlaceholders = JSON.stringify(obj, replacer);
-
-    if (imagePlaceholders.size === 0) {
-        return [jsonStringWithPlaceholders];
-    }
-    
-    return splitStringByPlaceholders(jsonStringWithPlaceholders, imagePlaceholders);
-}
-
-function splitStringByPlaceholders(jsonStringWithPlaceholders: string, imagePlaceholders: Map<string, BamlImage>): BamlRenderable[] {
-    const renderables: BamlRenderable[] = [];
-    const sortedPlaceholders = Array.from(imagePlaceholders.entries()).sort((a, b) => {
-        const idA = parseInt(a[0].substring("__IMAGE_PLACEHOLDER_".length, a[0].lastIndexOf("__")));
-        const idB = parseInt(b[0].substring("__IMAGE_PLACEHOLDER_".length, b[0].lastIndexOf("__")));
-        return idA - idB;
-    });
-    
-    let currentIndex = 0;
-    for (const [placeholderKey, bamlImageInstance] of sortedPlaceholders) {
-        // Placeholders in JSON strings are quoted if they represent string values.
-        // If an image is a direct element of an array, its placeholder (a string) will be quoted.
-        // If an image is a value of an object key, its placeholder (a string) will also be quoted.
-        const quotedPlaceholder = `"${placeholderKey}"`; 
-        const placeholderPos = jsonStringWithPlaceholders.indexOf(quotedPlaceholder, currentIndex);
-
-        if (placeholderPos === -1) {
-            // This might happen if a placeholder was for a non-string value that JSON.stringify doesn't quote
-            // (e.g. if a placeholder somehow ended up as a boolean or number, though our replacer returns strings).
-            // Or if the placeholder itself contained quotes, which would break simple indexOf.
-            // For now, assume placeholders are simple strings and will be quoted by JSON.stringify.
-            // console.warn(`Placeholder ${quotedPlaceholder} not found in JSON string: "${jsonStringWithPlaceholders}" starting from index ${currentIndex}`);
-            continue; 
-        }
-
-        if (placeholderPos > currentIndex) {
-            renderables.push(jsonStringWithPlaceholders.substring(currentIndex, placeholderPos));
-        }
-        
-        renderables.push(bamlImageInstance);
-        currentIndex = placeholderPos + quotedPlaceholder.length;
-    }
-
-    if (currentIndex < jsonStringWithPlaceholders.length) {
-        renderables.push(jsonStringWithPlaceholders.substring(currentIndex));
-    }
-    
-    return renderables;
+    return mergedList;
 }
