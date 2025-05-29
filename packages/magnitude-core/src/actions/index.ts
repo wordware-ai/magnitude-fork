@@ -1,12 +1,12 @@
 import { Agent } from "@/agent"
-import { Observation } from "@/memory";
+import { ObservableData } from "@/memory/observation";
 import { z, Schema, ZodTypeAny } from "zod"
 
 export interface ActionDefinition<T> {
     name: string;
     description?: string;
     schema: Schema<T>;
-    resolver: ({ input, agent }: { input: T, agent: Agent }) => Promise<void | Observation>;
+    resolver: ({ input, agent }: { input: T, agent: Agent }) => Promise<void | ObservableData>;
 }
 
 export function createAction<S extends ZodTypeAny>(
@@ -14,7 +14,7 @@ export function createAction<S extends ZodTypeAny>(
         name: string;
         description: string;
         schema: S;
-        resolver: ({ input, agent }: { input: z.infer<S>; agent: Agent }) => Promise<void | Observation>;
+        resolver: ({ input, agent }: { input: z.infer<S>; agent: Agent }) => Promise<void | ObservableData>;
     }
 ): ActionDefinition<z.infer<S>> {
     // Just a helper for automatic schema typing

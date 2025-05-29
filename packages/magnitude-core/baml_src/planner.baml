@@ -98,6 +98,11 @@ template_string DescribeMemoryContext(context: MemoryContext) #"
     </state>
 "#
 
+// render "chunked" multimedia content of strings or images with no added whitespace between
+template_string RenderContent(content: (string | image)[]) #"
+    {% for chunk in content -%}{{chunk}}{%- endfor %}
+"#
+
 
 template_string DescribeModularMemoryContext(context: ModularMemoryContext) #"
     <logs>
@@ -106,9 +111,7 @@ template_string DescribeModularMemoryContext(context: ModularMemoryContext) #"
     [{{entry.timestamp}}] {{entry.message}}
       {% elif entry.variant == "turn" %}
     [{{entry.timestamp}}] {{entry.action}}
-        {% for obs in entry.observations %}
-    {{obs}}
-        {% endfor %}
+        {{ RenderContent(entry.content) }}
       {% endif %}
     {% endfor %}
     </logs>
@@ -117,9 +120,7 @@ template_string DescribeModularMemoryContext(context: ModularMemoryContext) #"
     Current time: {{ context.current_timestamp }}
     {% for connector_state in context.current_connector_states %}
       {% if connector_state.connector_id == "web" %}
-        {% for el in connector_state.elements %}
-    {{el}}
-        {% endfor %}
+        {{ RenderContent(connector_state.content) }}
       {% endif %}
     {% endfor %}
     </state>

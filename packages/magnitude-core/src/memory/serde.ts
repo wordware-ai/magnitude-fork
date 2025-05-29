@@ -78,3 +78,5 @@ export function observableDataToJSON(data: ObservableData): MultiMediaJson {
     // Returning undefined is consistent with how unrepresentable values are handled.
     return undefined;
 }
+
+// TODO: Implement deserialization, and actually leverage serde for logging stuff

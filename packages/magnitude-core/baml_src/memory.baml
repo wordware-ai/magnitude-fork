@@ -13,12 +13,12 @@ class BamlTurn {
   variant "turn"
   timestamp string
   action string 
-  observations (string | image)[]
+  content (string | image)[] // multimedia content "chunks"
 }
 
 class ConnectorState {
   connector_id string
-  elements (string | image)[]
+  content (string | image)[]
 }
 
 class ModularMemoryContext {

@@ -156,21 +156,30 @@ export class Agent {
             throw new AgentError(`Generated action '${action.variant}' violates input schema: ${parsed.error.message}`, { adaptable: true });
         }
         
-        await actionDefinition.resolver(
+        const data = await actionDefinition.resolver(
             { input: parsed.data, agent: this }
         );
 
-        // Observations are now gathered after action execution
-        const allObservationsForAction: Observation[] = [];
+        let observations: Observation[] = [];
+
+        // See if any observations from action return value need to be added to turn observations
+        if (data) {
+            observations.push({
+                source: `action:${actionDefinition.name}`,
+                timestamp: Date.now(),
+                data: data
+            });
+        }
+
         for (const connector of this.connectors) {
             try {
-                const newObservations = connector.getObservations ? await connector.getObservations() : [];
-                allObservationsForAction.push(...newObservations);
+                const connObservations = connector.getObservations ? await connector.getObservations() : [];
+                observations.push(...connObservations);
             } catch (error) {
                 logger.warn(`Agent: Error getting observations from connector ${connector.id}: ${error instanceof Error ? error.message : String(error)}`);
             }
         }
-        this.memory.recordTurn(action, allObservationsForAction);
+        this.memory.recordTurn(action, observations);
     }
 
     async act(description: string, options: StepOptions = {}): Promise<void> {

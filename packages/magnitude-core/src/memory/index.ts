@@ -78,13 +78,17 @@ export class AgentMemory {
             } else if (entry.variant === 'turn') {
                 const renderables: BamlRenderable[] = [];
                 for (const observation of entry.observations) {
+                    if (observation.source.startsWith('action')) {
+                        renderables.push('Result: ');
+                    }
                     renderables.push(...observableDataToContext(observation.data));
+                    renderables.push('\n'); // newline after each observation
                 }
                 processed_history.push({
                     variant: 'turn',
                     timestamp: formattedTime,
                     action: JSON.stringify(entry.action),
-                    observations: renderables
+                    content: renderables
                 } as BamlTurn);
             }
         }
@@ -94,11 +98,11 @@ export class AgentMemory {
 
         for (const connector of activeConnectors) {
             if (connector.renderCurrentStateToBaml) {
-                const stateElements = await connector.renderCurrentStateToBaml();
-                if (stateElements && stateElements.length > 0) {
+                const renderables = await connector.renderCurrentStateToBaml();
+                if (renderables && renderables.length > 0) {
                     connector_states_for_context.push({
                         connector_id: connector.id,
-                        elements: stateElements
+                        content: renderables
                     });
                 }
             }
