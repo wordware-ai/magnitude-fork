@@ -48,6 +48,11 @@ export class WebInteractionConnector implements AgentConnector {
         }
     }
 
+    requireGrounding(): GroundingService {
+        if (!this.grounding) throw new Error("Grounding not configured on web connector");
+        return this.grounding;
+    }
+
     async onStart(): Promise<void> {
         this.logger.info("Starting...");
         let browserInstance = this.options.browser;

@@ -12,10 +12,10 @@ export const clickTargetAction = createAction({
         target: z.string().describe("Where exactly to click"),
     }),
     resolver: async ({ input: { target }, agent }) => {
-        const webConnector = agent.require(WebInteractionConnector);
-        const harness = webConnector.getHarness();
-        const screenshot = await webConnector.getLastScreenshot();//agent.memory.getLastScreenshot(); 
-        const { x, y } = await agent.micro.locateTarget(screenshot, target);
+        const web = agent.require(WebInteractionConnector);
+        const harness = web.getHarness();
+        const screenshot = await web.getLastScreenshot();
+        const { x, y } = await web.requireGrounding().locateTarget(screenshot, target);
         await harness.click({ x, y });
     }
 });
@@ -29,10 +29,10 @@ export const clickTargetAndType = createAction({
         content: z.string().describe("Content to type, insert sequences <enter> or <tab> for those keypresses respectively."),
     }),
     resolver: async ({ input: { target, content }, agent }) => {
-        const webConnector = agent.require(WebInteractionConnector);
-        const harness = webConnector.getHarness();
-        const screenshot = await webConnector.getLastScreenshot();
-        const { x, y } = await agent.micro.locateTarget(screenshot, target);
+        const web = agent.require(WebInteractionConnector);
+        const harness = web.getHarness();
+        const screenshot = await web.getLastScreenshot();
+        const { x, y } = await web.requireGrounding().locateTarget(screenshot, target);
         await harness.clickAndType({ x, y, content });
     }
 });
@@ -47,10 +47,10 @@ export const scrollTargetAction = createAction({
         deltaY: z.number().int().describe("Pixels to scroll vertically"),
     }),
     resolver: async ({ input: { target, deltaX, deltaY }, agent }) => {
-        const webConnector = agent.require(WebInteractionConnector);
-        const harness = webConnector.getHarness();
-        const screenshot = await webConnector.getLastScreenshot();
-        const { x, y } = await agent.micro.locateTarget(screenshot, target);
+        const web = agent.require(WebInteractionConnector);
+        const harness = web.getHarness();
+        const screenshot = await web.getLastScreenshot();
+        const { x, y } = await web.requireGrounding().locateTarget(screenshot, target);
         await harness.scroll({ x, y, deltaX, deltaY });
     }
 });
