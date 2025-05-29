@@ -1,5 +1,5 @@
 import { AgentConnector } from ".";
-import { Observation, BamlRenderable } from "@/memory";
+//import { Observation, BamlRenderable } from "@/memory";
 import { WebHarness } from "@/web/harness";
 import { ActionDefinition } from '@/actions';
 import { webActions } from '@/actions/webActions';
@@ -10,6 +10,9 @@ import logger from "@/logger";
 import { Logger } from 'pino';
 import { Screenshot } from "@/web/types";
 import { TabState } from '@/web/tabs';
+import { Observation } from "@/memory/observation";
+import { BamlRenderable } from "@/memory/context";
+import { Image } from "@/memory/image";
 
 export interface WebInteractionConnectorOptions {
     browser?: Browser
@@ -123,33 +126,44 @@ export class WebInteractionConnector implements AgentConnector {
         const observations: Observation[] = [];
 
         if (this.previousState) {
+            // TODO: screenshot should use Image class instead
             if (currentState.screenshot?.image !== this.previousState.screenshot?.image) {
-                const screenUpdateObservation = {
-                    sourceConnectorId: this.id,
-                    type: "screenUpdate", 
-                    imageBase64: currentState.screenshot!.image,
+                // const screenUpdateObservation = {
+                //     sourceConnectorId: this.id,
+                //     type: "screenUpdate", 
+                //     imageBase64: currentState.screenshot!.image,
 
-                    renderToBaml: function(): BamlRenderable[] {
-                        const bamlImg = BamlImage.fromBase64('image/png', this.imageBase64);
-                        return [bamlImg];
-                    }
-                };
-                observations.push(screenUpdateObservation as Observation);
+                //     renderToBaml: function(): BamlRenderable[] {
+                //         const bamlImg = BamlImage.fromBase64('image/png', this.imageBase64);
+                //         return [bamlImg];
+                //     }
+                // };
+                // observations.push(screenUpdateObservation);
+                observations.push({
+                    source: `connector:${this.id}`,
+                    timestamp: Date.now(),
+                    data: Image.fromBase64(currentState.screenshot!.image, 'image/png')
+                });
             }
         } else {
-            const initialStateObservation = {
-                sourceConnectorId: this.id,
-                type: "initialState",
-                // initialUrl: currentState.url,
-                // initialPageTitle: currentState.pageTitle,
-                imageBase64: currentState.screenshot!.image,
+            // const initialStateObservation = {
+            //     sourceConnectorId: this.id,
+            //     type: "initialState",
+            //     // initialUrl: currentState.url,
+            //     // initialPageTitle: currentState.pageTitle,
+            //     imageBase64: currentState.screenshot!.image,
 
-                renderToBaml: function(): BamlRenderable[] {
-                    const bamlImg = BamlImage.fromBase64('image/png', this.imageBase64);
-                    return [bamlImg];
-                }
-            };
-            observations.push(initialStateObservation as Observation);
+            //     renderToBaml: function(): BamlRenderable[] {
+            //         const bamlImg = BamlImage.fromBase64('image/png', this.imageBase64);
+            //         return [bamlImg];
+            //     }
+            // };
+            // observations.push(initialStateObservation);
+            observations.push({
+                source: `connector:${this.id}`,
+                timestamp: Date.now(),
+                data: Image.fromBase64(currentState.screenshot!.image, 'image/png')
+            });
         }
 
         this.previousState = currentState;

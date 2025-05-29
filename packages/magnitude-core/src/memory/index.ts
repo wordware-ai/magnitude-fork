@@ -6,15 +6,12 @@ import {
     BamlTurn, 
     ConnectorState 
 } from '@/ai/baml_client';
-import { Image as BamlImage } from '@boundaryml/baml';
+import { Observation } from './observation';
+import { BamlRenderable, observableDataToContext } from './context';
 
-export type BamlRenderable = BamlImage | string;
 
-export interface Observation {
-    sourceConnectorId: string;
-    renderToBaml: () => BamlRenderable[];
-}
 
+// does this actually need to be distinct or can it be a type of observation?
 interface ThoughtEntry {
     variant: 'thought';
     timestamp: number;
@@ -79,19 +76,15 @@ export class AgentMemory {
                     message: entry.content
                 } as BamlThought);
             } else if (entry.variant === 'turn') {
-                const turn_observation_items: BamlRenderable[] = [];
+                const renderables: BamlRenderable[] = [];
                 for (const observation of entry.observations) {
-                    try {
-                        const items = observation.renderToBaml();
-                        turn_observation_items.push(...items);
-                    } catch (e) {
-                    }
+                    renderables.push(...observableDataToContext(observation.data));
                 }
                 processed_history.push({
                     variant: 'turn',
                     timestamp: formattedTime,
                     action: JSON.stringify(entry.action),
-                    observations: turn_observation_items
+                    observations: renderables
                 } as BamlTurn);
             }
         }

@@ -1,4 +1,5 @@
-type Base64Image = `data:image/${'jpeg'|'png'|'gif'};base64,${string}`;
+// todo: use memory Image type
+export type Base64Image = `data:image/${'jpeg'|'png'|'gif'};base64,${string}`;
 
 export interface Screenshot {
     // b64-encoded PNG image

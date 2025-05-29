@@ -9,7 +9,7 @@ import { AgentEvents } from "../common/events";
 import logger from '../logger';
 import { AgentConnector } from '@/connectors';
 import { WebInteractionConnector, WebInteractionConnectorOptions } from '@/connectors/webConnector';
-import { Observation } from '@/memory';
+import { Observation } from '@/memory/observation';
 
 import { PlannerClient, ExecutorClient } from "@/ai/types";
 import EventEmitter from "eventemitter3";
