@@ -1,5 +1,5 @@
 /**
- * Convert observations to form that can be passed as BAML context
+ * Convert observations to form that can be passed as BAML context, rendered as a custom XML-like structure.
  */
 import { Image as BamlImage } from '@boundaryml/baml';
 import { ObservableData, ObservableDataObject, ObservableDataArray, ObservableDataPrimitive } from './observation';
@@ -7,77 +7,102 @@ import { Image } from './image'; // Our custom Image class
 
 export type BamlRenderable = BamlImage | string;
 
-function buildRenderableListRecursive(data: ObservableData, targetList: BamlRenderable[]): void {
+function buildXmlPartsRecursive(
+    data: ObservableData,
+    indentLevel: number,
+    partsList: BamlRenderable[],
+    isInsideList: boolean = false
+): void {
+    const indent = '  '.repeat(indentLevel);
+
     if (data instanceof Image) {
         const bamlImg = data.toBaml();
         if (bamlImg) {
-            targetList.push(bamlImg);
+            partsList.push(bamlImg);
         }
-        // If toBaml() returns undefined/null, it's intentionally omitted.
         return;
     }
     if (data instanceof BamlImage) {
-        targetList.push(data);
+        partsList.push(data);
         return;
     }
-    if (typeof data === 'string') {
-        targetList.push(data);
-        return;
-    }
-    if (typeof data === 'number' || typeof data === 'boolean') {
-        targetList.push(String(data));
-        return;
-    }
-    if (data === null) {
-        targetList.push('null'); // JSON representation of null
+    if (typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean' || data === null) {
+        partsList.push(String(data)); // No XML escaping, direct string conversion
         return;
     }
     if (data === undefined) {
-        // In JSON, undefined in arrays becomes null. For object properties, the key is omitted.
-        // We'll push 'null' if undefined is encountered directly in a structure we're stringifying parts of.
-        targetList.push('null'); 
-        return;
+        return; // Undefined values are omitted
     }
 
     if (Array.isArray(data)) {
-        targetList.push('[');
-        data.forEach((element, index) => {
-            buildRenderableListRecursive(element, targetList);
+        data.forEach((item, index) => {
+            buildXmlPartsRecursive(item, indentLevel, partsList, true);
             if (index < data.length - 1) {
-                targetList.push(',');
+                partsList.push("\n");
             }
         });
-        targetList.push(']');
         return;
     }
 
-    if (typeof data === 'object' && data !== null) { // Plain objects
-        targetList.push('{');
-        // Filter out entries with undefined values, as JSON.stringify does.
-        const entries = Object.entries(data as ObservableDataObject).filter(([, val]) => val !== undefined);
-        entries.forEach(([key, value], index) => {
-            // Keys in JSON must be strings and are typically quoted.
-            // JSON.stringify is safe and standard for keys.
-            targetList.push(JSON.stringify(key)); 
-            targetList.push(':');
-            buildRenderableListRecursive(value, targetList);
-            if (index < entries.length - 1) {
-                targetList.push(',');
+    if (typeof data === 'object' && data !== null) {
+        const objectEntries = Object.entries(data as ObservableDataObject).filter(([, val]) => val !== undefined);
+        
+        objectEntries.forEach(([key, value], entryIndex) => {
+            const tagName = key; // Use key directly as tag name
+            const currentValueParts: BamlRenderable[] = [];
+            
+            buildXmlPartsRecursive(value, indentLevel + 1, currentValueParts, false);
+
+            // Merge adjacent strings in currentValueParts for easier analysis
+            const mergedValueParts: BamlRenderable[] = [];
+            let currentStr = "";
+            for (const part of currentValueParts) {
+                if (typeof part === 'string') {
+                    currentStr += part;
+                } else {
+                    if (currentStr) mergedValueParts.push(currentStr);
+                    currentStr = "";
+                    mergedValueParts.push(part);
+                }
+            }
+            if (currentStr) mergedValueParts.push(currentStr);
+
+            // Apply styling rules
+            if (mergedValueParts.length === 1 && mergedValueParts[0] instanceof BamlImage) {
+                partsList.push(`${indent}<${tagName}>`);
+                partsList.push(mergedValueParts[0]); // The BamlImage
+                partsList.push(`</${tagName}>`);
+            } else if (mergedValueParts.length === 1 && typeof mergedValueParts[0] === 'string') {
+                const contentStr = mergedValueParts[0] as string;
+                if (contentStr.includes('\n')) {
+                    partsList.push(`${indent}<${tagName}>\n${contentStr}\n${indent}</${tagName}>`);
+                } else {
+                    partsList.push(`${indent}<${tagName}>${contentStr}</${tagName}>`);
+                }
+            } else { // Empty content or multiple parts (complex/nested)
+                partsList.push(`${indent}<${tagName}>\n`);
+                mergedValueParts.forEach((part, partIdx) => {
+                    partsList.push(part);
+                    if (partIdx < mergedValueParts.length - 1) {
+                        partsList.push("\n");
+                    }
+                });
+                partsList.push(`\n${indent}</${tagName}>`);
+            }
+
+            if (entryIndex < objectEntries.length - 1) {
+                partsList.push("\n"); // Newline between sibling XML elements
             }
         });
-        targetList.push('}');
         return;
     }
 
-    // Fallback for any unhandled types: explicitly mark as unsupported.
-    // console.warn(`[BAML CONTEXT] buildRenderableListRecursive: Encountered unhandled data type: ${typeof data}`, data);
-    //targetList.push(`[UNSUPPORTED DATA TYPE: ${typeof data}]`);
-    throw new Error(`UNSUPPORTED DATA TYPE: ${typeof data}`);
+    throw new Error(`Object type not supported for LLM context: ${typeof data}`);
 }
 
 export function observableDataToContext(data: ObservableData): BamlRenderable[] {
     const rawList: BamlRenderable[] = [];
-    buildRenderableListRecursive(data, rawList);
+    buildXmlPartsRecursive(data, 0, rawList);
 
     // Merge adjacent strings
     if (rawList.length === 0) {
@@ -93,8 +118,8 @@ export function observableDataToContext(data: ObservableData): BamlRenderable[] 
         } else { // It's a BamlImage
             if (currentString.length > 0) {
                 mergedList.push(currentString);
-                currentString = "";
             }
+            currentString = ""; // Reset accumulator
             mergedList.push(item); // Push the BamlImage
         }
     }
@@ -103,11 +128,5 @@ export function observableDataToContext(data: ObservableData): BamlRenderable[] 
         mergedList.push(currentString);
     }
     
-    // Final check: if the entire merged list is just one string that looks like a simple primitive
-    // that was stringified (e.g. "123", "true", "null") but should have been handled by BAML as such,
-    // this might indicate an issue. However, BAML expects (string | image)[], so strings are fine.
-    // The main goal is that Image objects become BamlImage objects, and other structures are stringified
-    // in a way that BAML can parse if it's expecting complex string content.
-
     return mergedList;
 }
