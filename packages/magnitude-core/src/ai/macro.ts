@@ -9,7 +9,7 @@ import { BamlAsyncClient } from "./baml_client/async_client";
 import logger from "@/logger";
 import { Logger } from 'pino';
 import { BugDetectedFailure, MisalignmentFailure } from "@/common";
-import { PlannerClient } from "@/ai/types";
+import { LLMClient } from "@/ai/types";
 import { TabState } from "@/web/tabs";
 import { ActionDefinition } from "@/actions";
 import TypeBuilder from "./baml_client/type_builder";
@@ -17,7 +17,7 @@ import { z } from 'zod';
 import { convertActionDefinitionsToBaml } from "@/actions/util";
 
 interface MacroAgentConfig {
-    client: PlannerClient;
+    client: LLMClient;
 }
 
 const DEFAULT_CONFIG = {}
@@ -40,7 +40,7 @@ export class MacroAgent {
     private baml: BamlAsyncClient;
     private logger: Logger;
 
-    constructor(config: { client: PlannerClient } & Partial<MacroAgentConfig>) {
+    constructor(config: { client: LLMClient } & Partial<MacroAgentConfig>) {
         this.config = {...DEFAULT_CONFIG, ...config};
         this.collector = new Collector("macro");
         this.cr = new ClientRegistry();

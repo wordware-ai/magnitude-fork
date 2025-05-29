@@ -85,23 +85,10 @@ export class WebHarness { // implements StateComponent
         // No need to redraw here anymore, the 'load' event listener handles it
         await this.page.goto(url);
     }
- 
-    async click({ x, y }: { x: number, y: number }) {
-        // console.log("x:", x);
-        // console.log("y:", y);
-        await this.visualizer.visualizeAction(x, y);
-        this.page.mouse.click(x, y);
-        await this.waitForStability();
-        //await this.visualizer.removeActionVisuals();
-    }
 
-    async clickAndType({ x, y, content }: { x: number, y: number, content: string }) {
-        // TODO: Implement string placeholders and special chars e.g. <enter>
-        //this.page.mouse.click(x, y);
+    async _type(content: string) {
+        /** Util for typing + keypresses */
         const chunks = parseTypeContent(content);
-
-        await this.visualizer.visualizeAction(x, y);
-        await this.page.mouse.click(x, y);
 
         // Total typing period to make typing more natural, in ms
         const totalTextDelay = 500;
@@ -123,12 +110,29 @@ export class WebHarness { // implements StateComponent
                 const chunkDelay = totalTextDelay * chunkProportion;
                 const chunkCharDelay = chunkDelay / chunk.length;
                 await this.page.keyboard.type(chunk, {delay: chunkCharDelay});
-                //await this.page.keyboard.type(chunk, {delay: 50});
             }
         }
+    }
+
+    async click({ x, y }: { x: number, y: number }) {
+        // console.log("x:", x);
+        // console.log("y:", y);
+        await this.visualizer.visualizeAction(x, y);
+        this.page.mouse.click(x, y);
         await this.waitForStability();
-        // TODO: Allow content to specify keypresses like TAB/ENTER
-        //await this.page.keyboard.press('Enter');
+        //await this.visualizer.removeActionVisuals();
+    }
+
+    async type({ content }: { content: string }) {
+        await this._type(content);
+        await this.waitForStability();
+    }
+
+    async clickAndType({ x, y, content }: { x: number, y: number, content: string }) {
+        await this.visualizer.visualizeAction(x, y);
+        await this.page.mouse.click(x, y);
+        await this._type(content);
+        await this.waitForStability();
     }
     
     async scroll({ x, y, deltaX, deltaY }: { x: number, y: number, deltaX: number, deltaY: number }) {

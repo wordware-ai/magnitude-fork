@@ -2,7 +2,7 @@ import { AgentConnector } from ".";
 //import { Observation, BamlRenderable } from "@/memory";
 import { WebHarness } from "@/web/harness";
 import { ActionDefinition } from '@/actions';
-import { webActions } from '@/actions/webActions';
+import { agnosticWebActions, coordWebActions, targetWebActions } from '@/actions/webActions';
 import { Image as BamlImage } from "@boundaryml/baml";
 import { Page, Browser, BrowserContext, BrowserContextOptions } from "playwright";
 import { BrowserProvider } from "@/web/browserProvider";
@@ -13,12 +13,14 @@ import { TabState } from '@/web/tabs';
 import { ObservableData, Observation } from "@/memory/observation";
 import { BamlRenderable } from "@/memory/context";
 import { Image } from "@/memory/image";
+import { GroundingClient } from "@/ai/types";
+import { GroundingService } from "@/ai/grounding";
 
 export interface WebInteractionConnectorOptions {
     browser?: Browser
     url?: string
     browserContextOptions?: BrowserContextOptions
-    groundingProvider?: {}
+    grounding?: GroundingClient
 }
 
 export interface WebConnectorStateData {
@@ -34,12 +36,16 @@ export class WebInteractionConnector implements AgentConnector {
     private browser?: Browser;
     private context!: BrowserContext;
     private logger: Logger;
+    private grounding?: GroundingService;
 
     constructor(options: WebInteractionConnectorOptions = {}) {
         this.options = options;
         this.logger = logger.child({
             name: `connectors.${this.id}`
         });
+        if (this.options.grounding) {
+            this.grounding = new GroundingService({ client: this.options.grounding });
+        }
     }
 
     async onStart(): Promise<void> {
@@ -87,7 +93,13 @@ export class WebInteractionConnector implements AgentConnector {
     }
 
     getActionSpace(): ActionDefinition<any>[] {
-        return [...webActions];
+        if (this.grounding) {
+            // Separate grounding
+            return [...targetWebActions, ...agnosticWebActions];
+        } else {
+            // Planner is grounded
+            return [...coordWebActions, ...agnosticWebActions];
+        }
     }
     
     public get page(): Page {

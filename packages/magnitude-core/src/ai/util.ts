@@ -1,5 +1,5 @@
 import { Screenshot } from "@/web/types";
-import { type PlannerClient } from '@/ai/types';
+import { type LLMClient } from '@/ai/types';
 import sharp from "sharp";
 
 function cleanNestedObject(obj: object): object {
@@ -16,7 +16,7 @@ function cleanNestedObject(obj: object): object {
     );
 }
 
-export function convertToBamlClientOptions(client: PlannerClient): Record<string, any> {
+export function convertToBamlClientOptions(client: LLMClient): Record<string, any> {
     // extract options compatible with https://docs.boundaryml.com/ref/llm-client-providers/overview
 
     // Default to temperature 0.0

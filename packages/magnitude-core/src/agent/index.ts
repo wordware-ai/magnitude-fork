@@ -1,6 +1,6 @@
 import { Screenshot, WebAction, ClickWebAction, TypeWebAction, ScrollWebAction, SwitchTabWebAction } from "@/web/types";
 import { ActionIntent, ClickIntent, TypeIntent, ScrollIntent, SwitchTabIntent, Action } from "@/actions/types";
-import { MicroAgent } from "@/ai/micro";
+import { GroundingService } from "@/ai/grounding";
 import { MacroAgent } from "@/ai/macro";
 import { Page } from "playwright"; 
 import { WebHarness } from "@/web/harness"; 
@@ -11,7 +11,7 @@ import { AgentConnector } from '@/connectors';
 import { WebInteractionConnector, WebInteractionConnectorOptions } from '@/connectors/webConnector';
 import { Observation } from '@/memory/observation';
 
-import { PlannerClient, ExecutorClient } from "@/ai/types";
+import { LLMClient, GroundingClient } from "@/ai/types";
 import EventEmitter from "eventemitter3";
 import { AgentError } from "./errors";
 import { ActionDescriptor, convertOptionsToTestData, FailureDescriptor, retryOnError } from "../common";
@@ -22,8 +22,8 @@ import { taskActions } from "@/actions/taskActions";
 
 export interface AgentOptions {
     actions?: ActionDefinition<any>[]; // Base actions; connector-provided actions are added separately.
-    planner?: PlannerClient;
-    executor?: ExecutorClient;
+    planner?: LLMClient;
+    executor?: GroundingClient;
 }
 
 // Options for the startAgent helper function
@@ -40,13 +40,13 @@ const DEFAULT_CONFIG: Required<Omit<AgentOptions, 'actions'> & { actions: Action
             model: 'gemini-2.5-pro-preview-05-06',
             apiKey: process.env.GOOGLE_API_KEY || "YOUR_GOOGLE_API_KEY"
         }
-    } as PlannerClient,
+    } as LLMClient,
     executor: {
         provider: 'moondream',
         options: {
             apiKey: process.env.MOONDREAM_API_KEY || "YOUR_MOONDREAM_API_KEY"
         }
-    } as ExecutorClient,
+    } as GroundingClient,
 };
 
 // Helper function to start an agent, typically with WebInteractionFacet
@@ -71,7 +71,7 @@ export class Agent {
     private connectors: AgentConnector[];
 
     public readonly macro: MacroAgent;
-    public readonly micro: MicroAgent;
+    public readonly micro: GroundingService;
     public readonly events: EventEmitter<AgentEvents>;
     public readonly memory: AgentMemory;
     private doneActing: boolean;
@@ -95,7 +95,7 @@ export class Agent {
         this.config.actions = Array.from(new Map(aggregatedActions.map(actDef => [actDef.name, actDef])).values());
         
         this.macro = new MacroAgent({ client: this.config.planner });
-        this.micro = new MicroAgent({ client: this.config.executor });
+        this.micro = new GroundingService({ client: this.config.executor });
         this.events = new EventEmitter<AgentEvents>();
         this.memory = new AgentMemory();
         this.doneActing = false;
