@@ -8,7 +8,7 @@ import { StepOptions } from "@/types";
 import { AgentEvents } from "../common/events";
 import logger from '../logger';
 import { AgentConnector } from '@/connectors';
-import { WebInteractionConnector, WebInteractionConnectorOptions } from '@/connectors/webConnector';
+import { BrowserConnector, BrowserConnectorOptions } from '@/connectors/browserConnector';
 import { Observation } from '@/memory/observation';
 
 import { LLMClient, GroundingClient } from "@/ai/types";
@@ -29,10 +29,6 @@ export interface AgentOptions {
 }
 
 // Options for the startAgent helper function
-export interface StartAgentWithWebOptions {
-    agentBaseOptions?: Partial<AgentOptions>;
-    webConnectorOptions?: WebInteractionConnectorOptions;
-}
 
 const DEFAULT_CONFIG: Required<Omit<AgentOptions, 'actions'> & { actions: ActionDefinition<any>[] }> = {
     actions: [...taskActions], // Default to taskActions; other actions come from connectors
@@ -44,27 +40,8 @@ const DEFAULT_CONFIG: Required<Omit<AgentOptions, 'actions'> & { actions: Action
             apiKey: process.env.GOOGLE_API_KEY || "YOUR_GOOGLE_API_KEY"
         }
     } as LLMClient,
-    // executor: {
-    //     provider: 'moondream',
-    //     options: {
-    //         apiKey: process.env.MOONDREAM_API_KEY || "YOUR_MOONDREAM_API_KEY"
-    //     }
-    // } as GroundingClient,
+    
 };
-
-// Helper function to start an agent, typically with WebInteractionFacet
-export async function startAgent(
-    options: StartAgentWithWebOptions = {}
-): Promise<Agent> {
-    const agentConfig = options.agentBaseOptions || {};
-
-    const agent = new Agent({ ...agentConfig, connectors: [
-        new WebInteractionConnector(options.webConnectorOptions || {}),
-        ...(agentConfig.connectors ?? [])
-    ]});
-    await agent.start();
-    return agent;
-}
 
 export class Agent {
     // maybe remove conns/actions from options since stored sep
@@ -121,9 +98,7 @@ export class Agent {
 
     // Access to page now goes through WebInteractionConnector
     // TODO: Move to a WebAgent subclass
-    get page(): Page {
-        return this.require(WebInteractionConnector).page;
-    }
+    
 
     async start(): Promise<void> { 
         logger.info("Agent: Starting connectors...");

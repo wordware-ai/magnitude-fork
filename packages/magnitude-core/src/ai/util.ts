@@ -45,6 +45,7 @@ export function convertToBamlClientOptions(client: LLMClient): Record<string, an
             api_key: client.options.apiKey,
             generationConfig: {
                 temperature: temp,
+                //thinking_budget: 0
             }
         };
     } else if (client.provider === 'vertex-ai') {

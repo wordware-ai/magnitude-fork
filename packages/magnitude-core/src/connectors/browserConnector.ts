@@ -16,29 +16,29 @@ import { Image } from "@/memory/image";
 import { GroundingClient } from "@/ai/types";
 import { GroundingService } from "@/ai/grounding";
 
-export interface WebInteractionConnectorOptions {
+export interface BrowserConnectorOptions {
     browser?: Browser
     url?: string
     browserContextOptions?: BrowserContextOptions
     grounding?: GroundingClient
 }
 
-export interface WebConnectorStateData {
+export interface BrowserConnectorStateData {
     screenshot: Screenshot;
     tabs: TabState;
 }
 
-export class WebInteractionConnector implements AgentConnector {
+export class BrowserConnector implements AgentConnector {
     public readonly id: string = "web";
     private harness!: WebHarness;
-    private previousState: WebConnectorStateData | undefined = undefined;
-    private options: WebInteractionConnectorOptions;
+    private previousState: BrowserConnectorStateData | undefined = undefined;
+    private options: BrowserConnectorOptions;
     private browser?: Browser;
     private context!: BrowserContext;
     private logger: Logger;
     private grounding?: GroundingService;
 
-    constructor(options: WebInteractionConnectorOptions = {}) {
+    constructor(options: BrowserConnectorOptions = {}) {
         this.options = options;
         this.logger = logger.child({
             name: `connectors.${this.id}`
@@ -107,12 +107,12 @@ export class WebInteractionConnector implements AgentConnector {
         }
     }
     
-    public get page(): Page {
-        if (!this.harness || !this.harness.page) {
-            throw new Error("WebInteractionConnector: Harness or Page is not available. Ensure onStart has completed.");
-        }
-        return this.harness.page;
-    }
+    // public get page(): Page {
+    //     if (!this.harness || !this.harness.page) {
+    //         throw new Error("WebInteractionConnector: Harness or Page is not available. Ensure onStart has completed.");
+    //     }
+    //     return this.harness.page;
+    // }
 
     public getHarness(): WebHarness {
         if (!this.harness) {
@@ -121,7 +121,7 @@ export class WebInteractionConnector implements AgentConnector {
         return this.harness;
     }
 
-    private async captureCurrentState(): Promise<WebConnectorStateData> {
+    private async captureCurrentState(): Promise<BrowserConnectorStateData> {
         if (!this.harness || !this.harness.page) {
             throw new Error("WebInteractionConnector: Harness or Page is not available for capturing state.");
         }

@@ -13,7 +13,7 @@ export class WebHarness { // implements StateComponent
      * Executes web actions on a page
      * Not responsible for browser lifecycle
      */
-    private context: BrowserContext;
+    public readonly context: BrowserContext;
     private stability: PageStabilityAnalyzer;
     public readonly visualizer: ActionVisualizer;
     private transformer: DOMTransformer;

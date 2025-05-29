@@ -1,6 +1,6 @@
 import { ActionDefinition, ActionPayload, createAction } from ".";
 import { z } from "zod";
-import { WebInteractionConnector } from "@/connectors/webConnector"; // Changed from WebInteractionFacet
+import { BrowserConnector } from "@/connectors/browserConnector"; // Changed from WebInteractionFacet
 import { AgentError } from "@/agent/errors"; // For error handling
 import { Agent } from "@/agent"; // Import Agent type for agent parameter
 
@@ -12,7 +12,7 @@ export const clickTargetAction = createAction({
         target: z.string().describe("Where exactly to click"),
     }),
     resolver: async ({ input: { target }, agent }) => {
-        const web = agent.require(WebInteractionConnector);
+        const web = agent.require(BrowserConnector);
         const harness = web.getHarness();
         const screenshot = await web.getLastScreenshot();
         const { x, y } = await web.requireGrounding().locateTarget(screenshot, target);
@@ -29,7 +29,7 @@ export const clickTargetAndType = createAction({
         content: z.string().describe("Content to type, insert sequences <enter> or <tab> for those keypresses respectively."),
     }),
     resolver: async ({ input: { target, content }, agent }) => {
-        const web = agent.require(WebInteractionConnector);
+        const web = agent.require(BrowserConnector);
         const harness = web.getHarness();
         const screenshot = await web.getLastScreenshot();
         const { x, y } = await web.requireGrounding().locateTarget(screenshot, target);
@@ -47,7 +47,7 @@ export const scrollTargetAction = createAction({
         deltaY: z.number().int().describe("Pixels to scroll vertically"),
     }),
     resolver: async ({ input: { target, deltaX, deltaY }, agent }) => {
-        const web = agent.require(WebInteractionConnector);
+        const web = agent.require(BrowserConnector);
         const harness = web.getHarness();
         const screenshot = await web.getLastScreenshot();
         const { x, y } = await web.requireGrounding().locateTarget(screenshot, target);
@@ -64,7 +64,7 @@ export const clickCoordAction = createAction({
         y: z.number().int(),
     }),
     resolver: async ({ input: { x, y }, agent }) => {
-        const web = agent.require(WebInteractionConnector);
+        const web = agent.require(BrowserConnector);
         const harness = web.getHarness();
         await harness.click({ x, y });
     }
@@ -78,7 +78,7 @@ export const typeAction = createAction({
         content: z.string().describe("Content to type, insert sequences <enter> or <tab> for those keypresses respectively."),
     }),
     resolver: async ({ input: { content }, agent }) => {
-        const webConnector = agent.require(WebInteractionConnector);
+        const webConnector = agent.require(BrowserConnector);
         const harness = webConnector.getHarness();
         await harness.type({ content });
     }
@@ -95,7 +95,7 @@ export const scrollCoordAction = createAction({
         deltaY: z.number().int().describe("Pixels to scroll vertically"),
     }),
     resolver: async ({ input: { x, y, deltaX, deltaY }, agent }) => {
-        const webConnector = agent.require(WebInteractionConnector);
+        const webConnector = agent.require(BrowserConnector);
         const harness = webConnector.getHarness();
         await harness.scroll({ x, y, deltaX, deltaY });
     }
@@ -109,7 +109,7 @@ export const switchTabAction = createAction({
         index: z.number().int().describe("Index of tab to switch to"),
     }),
     resolver: async ({ input: { index }, agent }: { input: { index: number }, agent: Agent }) => {
-        const webConnector = agent.require(WebInteractionConnector);
+        const webConnector = agent.require(BrowserConnector);
         const harness = webConnector.getHarness();
         await harness.switchTab({ index });
     }

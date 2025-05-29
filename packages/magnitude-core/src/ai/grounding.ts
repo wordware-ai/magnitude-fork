@@ -11,8 +11,16 @@ interface GroundingServiceConfig {
     client: GroundingClient;
 }
 
+// TODO: if provider moondream, have default options e.g.
+// executor: {
+//     provider: 'moondream',
+//     options: {
+//         apiKey: process.env.MOONDREAM_API_KEY || "YOUR_MOONDREAM_API_KEY"
+//     }
+// } as GroundingClient,
+
 const DEFAULT_CONFIG = {
-    moondreamUrl: "https://api.moondream.ai/v1"
+    //moondreamUrl: "https://api.moondream.ai/v1"
 }
 
 export interface GroundingServiceInfo {

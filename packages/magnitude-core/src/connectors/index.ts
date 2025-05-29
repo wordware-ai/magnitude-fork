@@ -16,3 +16,5 @@ export interface AgentConnector {
     // Observation retrieval (WIP)
     collectObservations?(): Promise<Observation[]>;
 }
+
+export { BrowserConnector as WebInteractionConnector } from './browserConnector';
