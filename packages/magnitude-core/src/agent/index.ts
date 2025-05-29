@@ -21,20 +21,23 @@ import { ZodObject } from "zod";
 import { taskActions } from "@/actions/taskActions";
 
 export interface AgentOptions {
-    actions?: ActionDefinition<any>[]; // Base actions; connector-provided actions are added separately.
-    planner?: LLMClient;
+    llm?: LLMClient;
+    connectors?: AgentConnector[];
+    actions?: ActionDefinition<any>[]; // any additional actions not provided by connectors
+    
     //executor?: GroundingClient;
 }
 
 // Options for the startAgent helper function
 export interface StartAgentWithWebOptions {
     agentBaseOptions?: Partial<AgentOptions>;
-    webConnectorOptions?: WebInteractionConnectorOptions; // Options for WebInteractionConnector
+    webConnectorOptions?: WebInteractionConnectorOptions;
 }
 
 const DEFAULT_CONFIG: Required<Omit<AgentOptions, 'actions'> & { actions: ActionDefinition<any>[] }> = {
     actions: [...taskActions], // Default to taskActions; other actions come from connectors
-    planner: {
+    connectors: [],
+    llm: {
         provider: 'google-ai',
         options: {
             model: 'gemini-2.5-pro-preview-05-06',
@@ -54,21 +57,20 @@ export async function startAgent(
     options: StartAgentWithWebOptions = {}
 ): Promise<Agent> {
     const agentConfig = options.agentBaseOptions || {};
-    const connectors: AgentConnector[] = [];
 
-    // Add WebInteractionConnector if options are provided or by default
-    connectors.push(new WebInteractionConnector(options.webConnectorOptions || {}));
-    
-    // TODO: Add other default connectors here if any (e.g., FileSystemConnector)
-
-    const agent = new Agent(agentConfig, connectors);
+    const agent = new Agent({ ...agentConfig, connectors: [
+        new WebInteractionConnector(options.webConnectorOptions || {}),
+        ...(agentConfig.connectors ?? [])
+    ]});
     await agent.start();
     return agent;
 }
 
 export class Agent {
-    private config: Required<AgentOptions>;
+    // maybe remove conns/actions from options since stored sep
+    private options: Required<AgentOptions>//Omit<Required<AgentOptions>, 'actions'>;
     private connectors: AgentConnector[];
+    private actions: ActionDefinition<any>[]; // actions from connectors + any other additional ones configured
 
     public readonly macro: MacroAgent;
     //public readonly micro: GroundingService;
@@ -76,25 +78,27 @@ export class Agent {
     public readonly memory: AgentMemory;
     private doneActing: boolean;
 
-    constructor(baseConfig: Partial<AgentOptions> = {}, connectors: AgentConnector[] = []) {
-        this.config = {
+    constructor(baseConfig: Partial<AgentOptions> = {}) {
+        this.options = {
             ...DEFAULT_CONFIG,
             ...baseConfig,
+            connectors: baseConfig.connectors ?? [],
             actions: [...(baseConfig.actions || DEFAULT_CONFIG.actions)], 
         } as Required<AgentOptions>;
 
-        this.connectors = connectors;
+        this.connectors = this.options.connectors;
 
         // Aggregate actions from connectors
-        const aggregatedActions = [...this.config.actions];
+        //const aggregatedActions = [...this.options.actions];
+        this.actions = [...this.options.actions];
         for (const connector of this.connectors) {
-            aggregatedActions.push(...(connector.getActionSpace ? connector.getActionSpace() : []));
+            this.actions.push(...(connector.getActionSpace ? connector.getActionSpace() : []));
         }
         // Deduplicate actions by name
         // TODO: maybe error instead, or automatically differentiate them?
-        this.config.actions = Array.from(new Map(aggregatedActions.map(actDef => [actDef.name, actDef])).values());
+        //this.options.actions = Array.from(new Map(aggregatedActions.map(actDef => [actDef.name, actDef])).values());
         
-        this.macro = new MacroAgent({ client: this.config.planner });
+        this.macro = new MacroAgent({ client: this.options.llm });
         //this.micro = new GroundingService({ client: this.config.executor });
         this.events = new EventEmitter<AgentEvents>();
         this.memory = new AgentMemory();
@@ -134,7 +138,7 @@ export class Agent {
     // captureState is removed as state is now captured by connectors and surfaced via observations/renderCurrentStateToBaml
 
     async exec(action: Action): Promise<void> {
-        let actionDefinition = this.config.actions.find(def => def.name === action.variant);
+        let actionDefinition = this.actions.find(def => def.name === action.variant);
 
         if (!actionDefinition) {
             // It's possible the action name was from a connector that is no longer active,
@@ -201,7 +205,7 @@ export class Agent {
                 ({ reasoning, actions } = await this.macro.createPartialRecipe(
                     memoryContext, 
                     description,
-                    this.config.actions 
+                    this.actions 
                 ));
             } catch (error: unknown) {
                 logger.error(`Agent: Error creating partial recipe: ${error instanceof Error ? error.message : String(error)}`);
