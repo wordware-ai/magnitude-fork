@@ -18,8 +18,9 @@ export async function startBrowserAgent(
 
 export class BrowserAgent extends Agent {
     constructor(options: { agent?: Partial<AgentOptions>, web?: BrowserConnectorOptions }) {
+        //console.log("agent options:", agent);
         super({
-            ...options,
+            ...options.agent,
             connectors: [new BrowserConnector(options.web || {}), ...(options.agent?.connectors ?? [])]
         });
     }
