@@ -1,5 +1,5 @@
-import { startAgent } from '../../packages/magnitude-core/src/agent';
-import { webActions } from '../../packages/magnitude-core/src/actions/webActions';
+import { startBrowserAgent } from '../../packages/magnitude-core/src/agent/browserAgent';
+//import { webActions } from '../../packages/magnitude-core/src/actions/webActions';
 import * as fs from 'fs';
 import * as readline from 'readline';
 import * as path from 'path';
@@ -71,41 +71,48 @@ async function runTask(taskToRun: Task | string) {
     console.log(`Running task: ${task.id} - ${task.ques}`);
     console.log(`URL: ${task.web}`);
 
-    const agent = await startAgent({
+    const agent = await startBrowserAgent({
+        llm: {
+            provider: 'anthropic',
+            options: {
+                model: 'claude-sonnet-4-20250514',
+            }
+        },
         url: task.web,
         actions: [
-            ...webActions,
+            //...webActions,
+            // Instead of typical task actions, have an answer action
             createAction({
                 name: 'answer',
                 description: 'Give final answer',
                 schema: z.string(),
                 resolver: async ({ input, agent }) => {
                     console.log("ANSWER GIVEN:", input);
-                    await agent.stop();
+                    await agent.queueDone();
                 }
             }),
             // experiment
-            createAction({
-                name: 'act',
-                description: 'Delegate a subtask',
-                schema: z.string().describe('Task'),
-                resolver: async ({ input, agent }) => {
-                    //console.log("ANSWER GIVEN:", input);
-                    await agent.act(input);
-                }
-            })
+            // createAction({
+            //     name: 'act',
+            //     description: 'Delegate a subtask',
+            //     schema: z.string().describe('Task'),
+            //     resolver: async ({ input, agent }) => {
+            //         //console.log("ANSWER GIVEN:", input);
+            //         await agent.act(input);
+            //     }
+            // })
         ],
-        browserContextOptions: {
-            viewport: { width: 1920, height: 1080 }
-        },
-        planner: {
-            provider: 'google-ai',
-            options: {
-                model: 'gemini-2.5-pro-preview-03-25',
-                apiKey: process.env.GOOGLE_API_KEY,
-                temperature: 0.5
-            }
-        }
+        // browserContextOptions: {
+        //     viewport: { width: 1920, height: 1080 }
+        // },
+        // planner: {
+        //     provider: 'google-ai',
+        //     options: {
+        //         model: 'gemini-2.5-pro-preview-03-25',
+        //         apiKey: process.env.GOOGLE_API_KEY,
+        //         temperature: 0.5
+        //     }
+        // }
     });
 
     await agent.act(task.ques);

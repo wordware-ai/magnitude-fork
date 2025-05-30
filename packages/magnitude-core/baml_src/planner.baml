@@ -196,14 +196,11 @@ template_string TargetingInstructions #"
     </targeting>
 "#
 
+// TODO: connector system instructions
 function CreatePartialRecipe (context: ModularMemoryContext, task: string) -> PartialRecipe {
     client GeminiPro
     prompt #"
         {{ _.role("system") }}
-        {{ HybridMeta() }}
-
-        {{ TargetingInstructions() }}
-
         <instructions>
         Plan out web actions that should be executed in order to complete the task:
         <task>{{ task }}</task>
