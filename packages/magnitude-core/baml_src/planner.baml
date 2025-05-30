@@ -53,7 +53,7 @@ type ActionIntent = ClickIntent | TypeIntent | ScrollIntent | SwitchTabIntent
 
 class PartialRecipe {
     // this CoT pipeline is not thoroughly tested against alternatives
-    observations string @description(#"Any key observations about past actions or current state"#)
+    observations string? @description(#"Any key observations about past actions or current state"#)
     meta_reasoning string @description(#"Reflect on the current state of task execution with respect to your own abilities as an agent"#)
     reasoning string @description(#"Consider what you can see right now and what actions you can plan without guessing"#)
     //actions ActionIntent[]
@@ -120,9 +120,7 @@ template_string DescribeModularMemoryContext(context: ModularMemoryContext) #"
     <state>
     Current time: {{ context.current_timestamp }}
     {% for connector_state in context.current_connector_states %}
-    {% if connector_state.connector_id == "web" %}
     {{ RenderContent(connector_state.content) }}
-    {% endif %}
     {% endfor %}
     </state>
 "#
@@ -197,6 +195,17 @@ template_string TargetingInstructions #"
     </targeting>
 "#
 
+template_string DescribeConnectorInstructions(context: ModularMemoryContext) #"
+    {% for connector_state in context.current_connector_states %}
+    {% if connector_state.instructions %}
+    <{{ connector_state.connector_id }}>
+    {{- connector_state.instructions -}}
+    </{{ connector_state.connector_id }}>
+    {% endif %}
+    {% endfor %}
+"#
+
+
 // TODO: connector system instructions
 function CreatePartialRecipe (context: ModularMemoryContext, task: string) -> PartialRecipe {
     client GeminiPro
@@ -208,6 +217,8 @@ function CreatePartialRecipe (context: ModularMemoryContext, task: string) -> Pa
         
         Plan out as many actions as possible, but stopping at the point where you will need to observe to plan further.
         </instructions>
+
+        {{ DescribeConnectorInstructions(context) }}
         
         {{ ctx.output_format }}
 

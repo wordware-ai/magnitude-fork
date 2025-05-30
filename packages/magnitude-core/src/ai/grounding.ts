@@ -33,6 +33,16 @@ export interface GroundingServiceInfo {
     numCalls: number
 }
 
+export const moondreamTargetingInstructions = `
+Targets descriptions must be carefully chosen to be accurately picked up by Moondream, a small vision model.
+Build a "minimal unique identifier" - a description that is as brief as possible that uniquely identifies the target on the page.
+Use only the information needed, and prioritize in this order:
+- specific text
+- specific shapes and colors
+- positional information
+- high level information (Moondream cannot always understand high level concepts)
+`;
+
 export class GroundingService {
     /**
      * Small, fast, vision agent to translate high level web actions to precise, executable actions.

@@ -18,6 +18,7 @@ class BamlTurn {
 
 class ConnectorState {
   connector_id string
+  instructions string?
   content (string | image)[]
 }
 

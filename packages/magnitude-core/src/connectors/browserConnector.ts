@@ -7,14 +7,14 @@ import { Image as BamlImage } from "@boundaryml/baml";
 import { Page, Browser, BrowserContext, BrowserContextOptions } from "playwright";
 import { BrowserProvider } from "@/web/browserProvider";
 import logger from "@/logger";
-import { Logger } from 'pino';
+import { Logger, P } from 'pino';
 import { Screenshot } from "@/web/types";
 import { TabState } from '@/web/tabs';
 import { ObservableData, Observation } from "@/memory/observation";
 import { BamlRenderable } from "@/memory/context";
 import { Image } from "@/memory/image";
 import { GroundingClient } from "@/ai/types";
-import { GroundingService } from "@/ai/grounding";
+import { GroundingService, moondreamTargetingInstructions } from "@/ai/grounding";
 
 export interface BrowserConnectorOptions {
     browser?: Browser
@@ -201,5 +201,11 @@ export class BrowserConnector implements AgentConnector {
             tabsString
         ]
         // return Image.fromBase64(state.screenshot.image, 'image/png');
+    }
+
+    async getInstructions(): Promise<void | string> {
+        if (this.grounding) {
+            return moondreamTargetingInstructions;
+        }
     }
 }

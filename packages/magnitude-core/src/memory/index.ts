@@ -93,19 +93,37 @@ export class AgentMemory {
             }
         }
 
+        // TODO: doesn't really make sense for memory to be responsible for current state and instruction render logic
         const connector_states_for_context: ConnectorState[] = [];
         const current_timestamp_str = new Date().toTimeString().split(' ')[0];
 
         for (const connector of activeConnectors) {
+            let stateContent: BamlRenderable[] = [];
+            let instructions: string | null = null;
             if (connector.viewState) {
                 const renderables = observableDataToContext(await connector.viewState());//await connector.renderCurrentStateToBaml();
                 if (renderables && renderables.length > 0) {
-                    connector_states_for_context.push({
-                        connector_id: connector.id,
-                        content: renderables
-                    });
+                    stateContent = renderables;
+                    // connector_states_for_context.push({
+                    //     connector_id: connector.id,
+                    //     content: renderables
+                    // });
                 }
             }
+            if (connector.getInstructions) {
+                instructions = await connector.getInstructions() ?? null;
+                // if (instructions) {
+
+                // }
+            }
+            connector_states_for_context.push({
+                connector_id: connector.id,
+                // content: stateContent,
+                // instructions: instructions
+                content: stateContent,
+                //...(stateContent ? { content: stateContent } : {}),
+                ...(instructions ? { instructions: instructions } : {})
+            });
         }
 
         return {

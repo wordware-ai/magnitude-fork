@@ -11,10 +11,11 @@ export interface AgentConnector {
     // Action space (optional)
     getActionSpace?(): ActionDefinition<any>[];
     // State retrieval (WIP)
-    //renderCurrentStateToBaml?(): Promise<BamlRenderable[]>;
     viewState?(): Promise<ObservableData>;
     // Observation retrieval (WIP)
     collectObservations?(): Promise<Observation[]>;
+    // TODO: unify ^ prob return ObservableData from both viewState/collectObservations? or union/option of either
+    getInstructions?(): Promise<void | string>;
 }
 
 export { BrowserConnector as WebInteractionConnector } from './browserConnector';
