@@ -52,6 +52,7 @@ type Intent = ActionIntent | CheckIntent
 type ActionIntent = ClickIntent | TypeIntent | ScrollIntent | SwitchTabIntent
 
 class PartialRecipe {
+    // this CoT pipeline is not thoroughly tested against alternatives
     observations string @description(#"Any key observations about past actions or current state"#)
     meta_reasoning string @description(#"Reflect on the current state of task execution with respect to your own abilities as an agent"#)
     reasoning string @description(#"Consider what you can see right now and what actions you can plan without guessing"#)
@@ -202,9 +203,10 @@ function CreatePartialRecipe (context: ModularMemoryContext, task: string) -> Pa
     prompt #"
         {{ _.role("system") }}
         <instructions>
-        Plan out web actions that should be executed in order to complete the task:
+        Plan out actions that should be executed in order to complete the task:
         <task>{{ task }}</task>
-        Only plan out actions that involve things you can see right now.
+        
+        Plan out as many actions as possible, but stopping at the point where you will need to observe to plan further.
         </instructions>
         
         {{ ctx.output_format }}

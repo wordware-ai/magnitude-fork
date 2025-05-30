@@ -4,8 +4,10 @@ import { z } from "zod";
 
 export const doneAction = createAction({
     name: 'task:done',
-    description: 'Use once sure that task is finished',//'Designate current task as finished',
-    schema: z.object({}),
+    description: "ONLY once you have seen sufficient evidence of the task's completion, mark it as done",//Use once sure that task is finished',//'Designate current task as finished',// Do not use until you can verify the task is completed.
+    schema: z.object({
+        evidence: z.string().describe(`Specific observed evidence that verifies the task's completion. Do NOT predict this evidence.`)
+    }),
     resolver: async ({ agent }) => {
         agent.queueDone();
     },
