@@ -73,7 +73,7 @@ export const clickCoordAction = createAction({
 // For grounded planner
 export const typeAction = createAction({
     name: 'browser:type',
-    description: "Click something and type into it",
+    description: "Make sure to click where you need to type first", // make sure you click into it first
     schema: z.object({
         content: z.string().describe("Content to type, insert sequences <enter> or <tab> for those keypresses respectively."),
     }),
