@@ -4,11 +4,12 @@ import logger from "@/logger";
 import { Logger } from 'pino';
 import { vl as MoondreamClient } from 'moondream';
 import { GroundingClient } from './types';
+import { retryOnError } from '@/common/util';
 
 
 interface GroundingServiceConfig {
     // only supported executor client rn is moondream
-    client: GroundingClient;
+    client?: GroundingClient;
 }
 
 // TODO: if provider moondream, have default options e.g.
@@ -19,8 +20,12 @@ interface GroundingServiceConfig {
 //     }
 // } as GroundingClient,
 
-const DEFAULT_CONFIG = {
-    //moondreamUrl: "https://api.moondream.ai/v1"
+const DEFAULT_CLIENT: GroundingClient = {
+    provider: 'moondream',
+    options: {
+        baseUrl: "https://api.moondream.ai/v1",
+        apiKey: process.env.MOONDREAM_API_KEY
+    }
 }
 
 export interface GroundingServiceInfo {
@@ -33,16 +38,19 @@ export class GroundingService {
      * Small, fast, vision agent to translate high level web actions to precise, executable actions.
      * Uses Moondream for pixel precision pointing.
      */
-    private config: GroundingServiceConfig;
+    private config: Required<GroundingServiceConfig>;
     private info: GroundingServiceInfo;
     private logger: Logger;
     private moondream: MoondreamClient;
 
-    constructor(config: { client: GroundingClient } & Partial<GroundingServiceConfig>) {
-        this.config = {...DEFAULT_CONFIG, ...config};
+    constructor(config: GroundingServiceConfig) {
+        //const clientOptions = { ...DEFAULT_CLIENT_OPTIONS, ...config.client };
+        const clientOptions = { ...DEFAULT_CLIENT.options, ...(config.client?.options ?? {}) };
+        const client = { ...DEFAULT_CLIENT, ...(config.client ?? {}), options: clientOptions };
+        this.config = {...config, client: client };
         this.info = { provider: 'moondream', numCalls: 0 };
-        this.logger = logger.child({ name: 'magnus.executor' });
-        this.moondream = new MoondreamClient({ apiKey: config.client.options.apiKey, endpoint: config.client.options.baseUrl });
+        this.logger = logger.child({ name: 'agent.grounding' });
+        this.moondream = new MoondreamClient({ apiKey: this.config.client.options.apiKey, endpoint: this.config.client.options.baseUrl });
     }
 
     getInfo(): GroundingServiceInfo {
@@ -50,10 +58,13 @@ export class GroundingService {
     }
 
     async locateTarget(screenshot: Screenshot, target: string): Promise<PixelCoordinate> {
-        // TODO: ADD RETRIES
-        // console.log(screenshot);
-        // console.log(target)
+        return await retryOnError(
+            async () => this._locateTarget(screenshot, target),
+            ['429', '503', '524'], 20, 1000
+        );
+    }
 
+    async _locateTarget(screenshot: Screenshot, target: string): Promise<PixelCoordinate> {
         const start = Date.now();
 
         const response = await this.moondream.point({
@@ -80,99 +91,4 @@ export class GroundingService {
             y: relCoords.y * screenshot.dimensions.height
         }
     }
-
-    // private async evaluateSubcheck(screenshot: Screenshot, check: string): Promise<boolean> {
-    //     const response = await this.moondream.query({
-    //         image: { imageUrl: screenshot.image },
-    //         question: `${check}\n\nTrue or False`
-    //     });
-    //     this.info.numCalls++;
-
-    //     const answer = (response.answer as string).trim().toLowerCase();
-
-    //     if (answer === 'true') {
-    //         return true;
-    //     } else if (answer === 'false') {
-    //         return false;
-    //     } else {
-    //         console.warn(`Received invalid response for check: ${response}`);
-    //         return false;
-    //     }
-    // }
-
-    // async evaluateCheck(screenshot: Screenshot, check: CheckIntent): Promise<boolean> {
-    //     // TODO: Make more robust, add logp analysis for confidence
-
-    //     const start = Date.now();
-
-    //     const jobs = [];
-    //     for (const subcheck of check.checks) {
-    //         jobs.push(this.evaluateSubcheck(screenshot, subcheck));
-    //     }
-    //     const results = await Promise.all(jobs);
-
-    //     this.logger.trace(`evaluateCheck took ${Date.now()-start}ms`);
-
-    //     return results.every(passed => passed);
-    // }
-
-    // async convertAction(screenshot: Screenshot, intent: ActionIntent): Promise<WebAction> {
-    //     if ((intent as Intent).variant === 'check') {
-    //         throw Error('Checks cannot be converted to web actions! Use validateCheck()');
-    //     }
-    //     else if (intent.variant === 'click') {
-    //         return await this.convertClick(screenshot, intent as ClickIntent);
-    //     }
-    //     else if (intent.variant === 'type') {
-    //         return await this.convertType(screenshot, intent as TypeIntent);
-    //     }
-    //     else if (intent.variant === 'scroll') {
-    //         return await this.convertScroll(screenshot, intent as ScrollIntent);
-    //     }
-    //     else if (intent.variant === 'tab') {
-    //         // tab switch requires no lm conversion, already web action
-    //         return intent;
-    //     }
-
-    //     throw Error(`Unhandled intent variant: ${(intent as any).variant}`);
-    // }
-
-    // async convertClick(screenshot: Screenshot, intent: ClickIntent): Promise<ClickWebAction> {
-    //     // todo: nondet-detection
-
-    //     // Convert semantic target to coordinates
-    //     const coords = await this.locateTarget(screenshot, intent.target);
-        
-    //     return {
-    //         variant: 'click',
-    //         x: coords.x,
-    //         y: coords.y
-    //     }
-    // }
-
-    // async convertType(screenshot: Screenshot, intent: TypeIntent): Promise<TypeWebAction> {
-    //     // todo: nondet-detection
-
-    //     // Convert semantic target to coordinates
-    //     const coords = await this.locateTarget(screenshot, intent.target);
-        
-    //     return {
-    //         variant: 'type',
-    //         x: coords.x,
-    //         y: coords.y,
-    //         content: intent.content
-    //     };
-    // }
-
-    // async convertScroll(screenshot: Screenshot, intent: ScrollIntent): Promise<ScrollWebAction> {
-    //     const coords = await this.locateTarget(screenshot, intent.target);
-        
-    //     return {
-    //         variant: 'scroll',
-    //         x: coords.x,
-    //         y: coords.y,
-    //         deltaX: intent.deltaX,
-    //         deltaY: intent.deltaY
-    //     };
-    // }
 }
