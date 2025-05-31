@@ -85,7 +85,7 @@ export class MacroAgent {
         // BAML does not carry over action type to @@dynamic of PartialRecipe, so forced cast necssary
         //return response as unknown as { actions: z.infer<ActionDefinition<T>['schema']>[] };//, finished: boolean };
         return {
-            reasoning: (response.observations ? response.observations + " " : "") + response.meta_reasoning + " " + response.reasoning,
+            reasoning: response.reasoning,//(response.observations ? response.observations + " " : "") + response.meta_reasoning + " " + response.reasoning,
             actions: response.actions// as z.infer<ActionDefinition<T>['schema']>[]
         }
     }

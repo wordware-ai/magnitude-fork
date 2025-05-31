@@ -53,9 +53,14 @@ type ActionIntent = ClickIntent | TypeIntent | ScrollIntent | SwitchTabIntent
 
 class PartialRecipe {
     // this CoT pipeline is not thoroughly tested against alternatives
-    observations string? @description(#"Any key observations about past actions or current state"#)
-    meta_reasoning string @description(#"Reflect on the current state of task execution with respect to your own abilities as an agent"#)
-    reasoning string @description(#"Consider what you can see right now and what actions you can plan without guessing"#)
+    // observations string? @description(#"Any key observations about past actions or current state"#)
+    // meta_reasoning string @description(#"Reflect on the current state of task execution with respect to your own abilities as an agent"#)
+    // reasoning string @description(#"Consider what you can see right now and what actions you can plan without guessing"#)
+
+    // Simplifying CoT - seemed to be causing underplanning on Claude
+    //observations string @description(#"What important clues or key information are worth considering?"#)
+    reasoning string @description(#"What is the most actions you can safely take at once?"#)
+
     //actions ActionIntent[]
     @@dynamic
     //finished bool

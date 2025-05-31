@@ -96,7 +96,10 @@ export function tryDeriveUIGroundedClients(): { llm: LLMClient | null, grounding
             provider: 'anthropic',
             options: {
                 // TODO: do more testing on best claude model for visuals
-                model: 'claude-sonnet-4-20250514',//'claude-3-7-sonnet-latest',
+                // model: 'claude-3-5-sonnet-20240620', // <- definitely not, pre computer use
+                // model: 'claude-3-5-sonnet-20241022', // <- not great on rescaling res
+                model: 'claude-3-7-sonnet-latest', // <- underplans
+                // model: 'claude-sonnet-4-20250514', // <- underplans, also supposedly worse at visual reasoning
                 apiKey: process.env.ANTHROPIC_API_KEY
             }
         }
