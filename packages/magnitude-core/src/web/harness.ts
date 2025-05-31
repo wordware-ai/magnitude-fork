@@ -1,11 +1,12 @@
 import { Page, Browser, BrowserContext, PageScreenshotOptions } from "playwright";
-import { ClickWebAction, Screenshot, ScrollWebAction, SwitchTabWebAction, TypeWebAction, WebAction } from '@/web/types';
+import { ClickWebAction, ScrollWebAction, SwitchTabWebAction, TypeWebAction, WebAction } from '@/web/types';
 import { PageStabilityAnalyzer } from "./stability";
 import { parseTypeContent } from "./util";
 import { ActionVisualizer } from "./visualizer";
 import logger from "@/logger";
 import { TabManager, TabState } from "./tabs";
 import { DOMTransformer } from "./transformer";
+import { Image } from '@/memory/image';
 //import { StateComponent } from "@/facets";
 
 export class WebHarness { // implements StateComponent
@@ -61,28 +62,29 @@ export class WebHarness { // implements StateComponent
         return this.tabs.getActivePage();
     }
 
-    async screenshot(options: PageScreenshotOptions = {}): Promise<Screenshot> {
+    async screenshot(options: PageScreenshotOptions = {}): Promise<Image> {
         /**
          * Get b64 encoded string of screenshot (PNG) with screen dimensions
          */
-        const viewportSize = this.page.viewportSize();
+        //const viewportSize = this.page.viewportSize();
         const buffer = await this.page.screenshot({ type: 'png', ...options }, );
 
-        if (!viewportSize) {
-            throw Error("Invalid viewport for screenshot");
-        }
+        // if (!viewportSize) {
+        //     throw Error("Invalid viewport for screenshot");
+        // }
 
         const base64data = buffer.toString('base64');
 
         //console.log("Screenshot DATA:", base64data.substring(0, 100));
+        return Image.fromBase64(base64data);
 
-        return {
-            image: `data:image/png;base64,${base64data}`,//buffer.toString('base64'),
-            dimensions: {
-                width: viewportSize.width,
-                height: viewportSize.height
-            }
-        };
+        // return {
+        //     image: `data:image/png;base64,${base64data}`,//buffer.toString('base64'),
+        //     dimensions: {
+        //         width: viewportSize.width,
+        //         height: viewportSize.height
+        //     }
+        // };
     }
  
     async goto(url: string) {

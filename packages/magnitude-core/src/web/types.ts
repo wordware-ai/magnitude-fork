@@ -1,14 +1,14 @@
 // todo: use memory Image type
 export type Base64Image = `data:image/${'jpeg'|'png'|'gif'};base64,${string}`;
 
-export interface Screenshot {
-    // b64-encoded PNG image
-    image: Base64Image,
-    dimensions: {
-        width: number,
-        height: number
-    }
-}
+// export interface Screenshot {
+//     // b64-encoded PNG image
+//     image: Base64Image,
+//     dimensions: {
+//         width: number,
+//         height: number
+//     }
+// }
 
 // export interface WebAction {
 //     variant: ActionVariant

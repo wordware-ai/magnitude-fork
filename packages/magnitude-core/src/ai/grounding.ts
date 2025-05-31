@@ -1,10 +1,11 @@
-import { ClickWebAction, PixelCoordinate, Screenshot, ScrollWebAction, TypeWebAction, WebAction } from '@/web/types';
+import { ClickWebAction, PixelCoordinate, ScrollWebAction, TypeWebAction, WebAction } from '@/web/types';
 import { ActionIntent, CheckIntent, ClickIntent, Intent, ScrollIntent, TypeIntent } from '@/actions/types';
 import logger from "@/logger";
 import { Logger } from 'pino';
 import { vl as MoondreamClient } from 'moondream';
 import { GroundingClient } from './types';
 import { retryOnError } from '@/common/util';
+import { Image } from '@/memory/image';
 
 
 interface GroundingServiceConfig {
@@ -67,18 +68,18 @@ export class GroundingService {
         return this.info;
     }
 
-    async locateTarget(screenshot: Screenshot, target: string): Promise<PixelCoordinate> {
+    async locateTarget(screenshot: Image, target: string): Promise<PixelCoordinate> {
         return await retryOnError(
             async () => this._locateTarget(screenshot, target),
             ['429', '503', '524'], 20, 1000
         );
     }
 
-    async _locateTarget(screenshot: Screenshot, target: string): Promise<PixelCoordinate> {
+    async _locateTarget(screenshot: Image, target: string): Promise<PixelCoordinate> {
         const start = Date.now();
 
         const response = await this.moondream.point({
-            image: { imageUrl: screenshot.image },
+            image: { imageUrl: await screenshot.toBase64() },
             object: target
         });
         this.info.numCalls++;
@@ -95,10 +96,11 @@ export class GroundingService {
         const relCoords = response.points[0];
         this.logger.trace(`locateTarget took ${Date.now()-start}ms`);
 
-        // Use ORIGINAL screenshot coordinate space (not downscaled)
+        // Convert from [0,1] to screen space
+        const { width, height } = await screenshot.getDimensions();
         return {
-            x: relCoords.x * screenshot.dimensions.width,
-            y: relCoords.y * screenshot.dimensions.height
+            x: relCoords.x * width,
+            y: relCoords.y * height
         }
     }
 }

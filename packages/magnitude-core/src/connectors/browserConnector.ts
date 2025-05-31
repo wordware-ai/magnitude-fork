@@ -8,7 +8,6 @@ import { Page, Browser, BrowserContext, BrowserContextOptions } from "playwright
 import { BrowserProvider } from "@/web/browserProvider";
 import logger from "@/logger";
 import { Logger, P } from 'pino';
-import { Screenshot } from "@/web/types";
 import { TabState } from '@/web/tabs';
 import { ObservableData, Observation } from "@/memory/observation";
 import { BamlRenderable } from "@/memory/context";
@@ -24,7 +23,7 @@ export interface BrowserConnectorOptions {
 }
 
 export interface BrowserConnectorStateData {
-    screenshot: Screenshot;
+    screenshot: Image;
     tabs: TabState;
 }
 
@@ -132,7 +131,7 @@ export class BrowserConnector implements AgentConnector {
         return { screenshot, tabs };
     }
 
-    public async getLastScreenshot(): Promise<Screenshot> {
+    public async getLastScreenshot(): Promise<Image> {
         //return { image: "", dimensions: { width: 0, height: 0 } };
         // TODO: better to use last
         return (await this.captureCurrentState()).screenshot;
@@ -144,18 +143,18 @@ export class BrowserConnector implements AgentConnector {
 
         if (this.previousState) {
             // TODO: screenshot should use Image class instead
-            if (currentState.screenshot?.image !== this.previousState.screenshot?.image) {
+            if ((await currentState.screenshot.toBase64()) !== (await this.previousState.screenshot.toBase64())) {
                 observations.push({
                     source: `connector:${this.id}`,
                     timestamp: Date.now(),
-                    data: Image.fromBase64(currentState.screenshot!.image)//, 'image/png')
+                    data: currentState.screenshot//Image.fromBase64(currentState.screenshot!.image)//, 'image/png')
                 });
             }
         } else {
             observations.push({
                 source: `connector:${this.id}`,
                 timestamp: Date.now(),
-                data: Image.fromBase64(currentState.screenshot!.image)//, 'image/png')
+                data: currentState.screenshot//Image.fromBase64(currentState.screenshot!.image)//, 'image/png')
             });
         }
 
@@ -197,7 +196,7 @@ export class BrowserConnector implements AgentConnector {
         // };
 
         const items = [
-            Image.fromBase64(state.screenshot.image),//, 'image/png'),
+            state.screenshot,//Image.fromBase64(state.screenshot.image),//, 'image/png'),
             tabsString
         ]
         return items;
