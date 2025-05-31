@@ -2,11 +2,14 @@ import { BrowserContext, Page } from "playwright";
 import { Agent, AgentOptions } from ".";
 import { BrowserConnector, BrowserConnectorOptions } from "@/connectors/browserConnector";
 import { isClaude, isGroundedLlm, tryDeriveUIGroundedClients } from "@/ai/util";
+import { LLMClient } from "@/ai/types";
 
 // export interface StartAgentWithWebOptions {
 //     agentBaseOptions?: Partial<AgentOptions>;
 //     webConnectorOptions?: BrowserConnectorOptions;
 // }
+
+const DEFAULT_BROWSER_AGENT_TEMP = 0.2;
 
 // Helper function to start a web agent
 export async function startBrowserAgent(
@@ -17,7 +20,7 @@ export async function startBrowserAgent(
     
     const { llm: envLlm, grounding: envGrounding } = tryDeriveUIGroundedClients();
 
-    const llm = options.llm ?? envLlm;
+    let llm: LLMClient | null = options.llm ?? envLlm;
     const grounding = (llm && isGroundedLlm(llm)) ? null : (options.grounding ?? envGrounding);//llm?.options?.model?.includes('claude') ? null : (options.grounding ?? envGrounding);
     
     if (!llm) {
@@ -25,6 +28,10 @@ export async function startBrowserAgent(
     } else if (!isGroundedLlm(llm) && !grounding) {
         throw new Error("Ungrounded LLM is configured without Moondream. Either use Anthropic (set ANTHROPIC_API_KEY) or provide a MOONDREAM_API_KEY");
     }
+
+    // Set reasonable temp if not provided
+    let llmOptions: LLMClient['options'] = { temperature: DEFAULT_BROWSER_AGENT_TEMP, ...(llm?.options ?? {}) };
+    llm = {...llm, options: llmOptions as any }
 
     let virtualScreenDimensions = null;
     if (isClaude(llm)) {
