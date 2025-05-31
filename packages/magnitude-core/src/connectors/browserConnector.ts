@@ -148,14 +148,14 @@ export class BrowserConnector implements AgentConnector {
                 observations.push({
                     source: `connector:${this.id}`,
                     timestamp: Date.now(),
-                    data: Image.fromBase64(currentState.screenshot!.image, 'image/png')
+                    data: Image.fromBase64(currentState.screenshot!.image)//, 'image/png')
                 });
             }
         } else {
             observations.push({
                 source: `connector:${this.id}`,
                 timestamp: Date.now(),
-                data: Image.fromBase64(currentState.screenshot!.image, 'image/png')
+                data: Image.fromBase64(currentState.screenshot!.image)//, 'image/png')
             });
         }
 
@@ -163,23 +163,23 @@ export class BrowserConnector implements AgentConnector {
         return observations;
     }
 
-    async renderCurrentStateToBaml(): Promise<BamlRenderable[]> {
-        const state = await this.captureCurrentState();
-        const bamlRenderables: BamlRenderable[] = [];
+    // async renderCurrentStateToBaml(): Promise<BamlRenderable[]> {
+    //     const state = await this.captureCurrentState();
+    //     const bamlRenderables: BamlRenderable[] = [];
 
-        if (state.screenshot?.image) {
-            bamlRenderables.push(BamlImage.fromBase64('image/png', state.screenshot.image));
-        }
-        if (state.tabs) {
-            const currentTabs = state.tabs;
-            let tabsString = "Open Tabs:\n";
-            currentTabs.tabs.forEach((tab, index) => {
-                tabsString += `${index === currentTabs.activeTab ? '[ACTIVE] ' : ''}${tab.title} (${tab.url})\n`;
-            });
-            bamlRenderables.push(tabsString.trim());
-        }
-        return bamlRenderables;
-    }
+    //     if (state.screenshot?.image) {
+    //         bamlRenderables.push(BamlImage.fromBase64('image/png', state.screenshot.image));
+    //     }
+    //     if (state.tabs) {
+    //         const currentTabs = state.tabs;
+    //         let tabsString = "Open Tabs:\n";
+    //         currentTabs.tabs.forEach((tab, index) => {
+    //             tabsString += `${index === currentTabs.activeTab ? '[ACTIVE] ' : ''}${tab.title} (${tab.url})\n`;
+    //         });
+    //         bamlRenderables.push(tabsString.trim());
+    //     }
+    //     return bamlRenderables;
+    // }
 
     async viewState(): Promise<ObservableData> {
         const state = await this.captureCurrentState();
@@ -196,10 +196,11 @@ export class BrowserConnector implements AgentConnector {
         //     )
         // };
 
-        return [
-            Image.fromBase64(state.screenshot.image, 'image/png'),
+        const items = [
+            Image.fromBase64(state.screenshot.image),//, 'image/png'),
             tabsString
         ]
+        return items;
         // return Image.fromBase64(state.screenshot.image, 'image/png');
     }
 

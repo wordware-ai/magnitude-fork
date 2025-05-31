@@ -81,7 +81,7 @@ export class AgentMemory {
                     if (observation.source.startsWith('action')) {
                         renderables.push('Result: ');
                     }
-                    renderables.push(...observableDataToContext(observation.data));
+                    renderables.push(...(await observableDataToContext(observation.data)));
                     renderables.push('\n'); // newline after each observation
                 }
                 processed_history.push({
@@ -101,7 +101,7 @@ export class AgentMemory {
             let stateContent: BamlRenderable[] = [];
             let instructions: string | null = null;
             if (connector.viewState) {
-                const renderables = observableDataToContext(await connector.viewState());//await connector.renderCurrentStateToBaml();
+                const renderables = await observableDataToContext(await connector.viewState());//await connector.renderCurrentStateToBaml();
                 if (renderables && renderables.length > 0) {
                     stateContent = renderables;
                     // connector_states_for_context.push({

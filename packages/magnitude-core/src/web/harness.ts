@@ -72,8 +72,12 @@ export class WebHarness { // implements StateComponent
             throw Error("Invalid viewport for screenshot");
         }
 
+        const base64data = buffer.toString('base64');
+
+        //console.log("Screenshot DATA:", base64data.substring(0, 100));
+
         return {
-            image: `data:image/png;base64,${buffer.toString('base64')}`,//buffer.toString('base64'),
+            image: `data:image/png;base64,${base64data}`,//buffer.toString('base64'),
             dimensions: {
                 width: viewportSize.width,
                 height: viewportSize.height

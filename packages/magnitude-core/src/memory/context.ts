@@ -7,16 +7,16 @@ import { Image } from './image'; // Our custom Image class
 
 export type BamlRenderable = BamlImage | string;
 
-function buildXmlPartsRecursive(
+async function buildXmlPartsRecursive(
     data: ObservableData,
     indentLevel: number,
     partsList: BamlRenderable[],
     isInsideList: boolean = false
-): void {
+): Promise<void> {
     const indent = '  '.repeat(indentLevel);
 
     if (data instanceof Image) {
-        const bamlImg = data.toBaml();
+        const bamlImg = await data.toBaml();
         if (bamlImg) {
             partsList.push(bamlImg);
         }
@@ -35,23 +35,29 @@ function buildXmlPartsRecursive(
     }
 
     if (Array.isArray(data)) {
-        data.forEach((item, index) => {
-            buildXmlPartsRecursive(item, indentLevel, partsList, true);
+        // data.forEach(async (item, index) => {
+        //     await buildXmlPartsRecursive(item, indentLevel, partsList, true);
+        //     if (index < data.length - 1) {
+        //         partsList.push("\n");
+        //     }
+        // });
+        for (let index = 0; index < data.length; index++) {
+            await buildXmlPartsRecursive(data[index], indentLevel, partsList, true);
             if (index < data.length - 1) {
                 partsList.push("\n");
             }
-        });
+        }
         return;
     }
 
     if (typeof data === 'object' && data !== null) {
         const objectEntries = Object.entries(data as ObservableDataObject).filter(([, val]) => val !== undefined);
         
-        objectEntries.forEach(([key, value], entryIndex) => {
+        objectEntries.forEach(async ([key, value], entryIndex) => {
             const tagName = key; // Use key directly as tag name
             const currentValueParts: BamlRenderable[] = [];
             
-            buildXmlPartsRecursive(value, indentLevel + 1, currentValueParts, false);
+            await buildXmlPartsRecursive(value, indentLevel + 1, currentValueParts, false);
 
             // Merge adjacent strings in currentValueParts for easier analysis
             const mergedValueParts: BamlRenderable[] = [];
@@ -100,9 +106,9 @@ function buildXmlPartsRecursive(
     throw new Error(`Object type not supported for LLM context: ${typeof data}`);
 }
 
-export function observableDataToContext(data: ObservableData): BamlRenderable[] {
+export async function observableDataToContext(data: ObservableData): Promise<BamlRenderable[]> {
     const rawList: BamlRenderable[] = [];
-    buildXmlPartsRecursive(data, 0, rawList);
+    await buildXmlPartsRecursive(data, 0, rawList);
 
     // Merge adjacent strings
     if (rawList.length === 0) {

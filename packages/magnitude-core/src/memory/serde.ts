@@ -8,17 +8,23 @@ import { Image } from './image';
 
 
 // JSON primitives for the custom multi-media dialect
+// export type StoredMedia = {
+//     type: 'media',
+//     mediaType: string, // e.g. image/png mime type
+//     storageType: 'url',
+//     url: string
+// } | {
+//     type: 'media',
+//     mediaType: string,
+//     storageType: 'base64',
+//     base64: string//Base64Image
+// }; // TODO: add file storage type
 export type StoredMedia = {
     type: 'media',
-    mediaType: string, // e.g. image/png mime type
-    storageType: 'url',
-    url: string
-} | {
-    type: 'media',
-    mediaType: string,
-    storageType: 'base64',
-    base64: string//Base64Image
-}; // TODO: add file storage type
+    format: string,
+    storage: 'base64',
+    base64: string
+}
 
 export interface StoredPrimitive {
     type: 'primitive',
@@ -34,9 +40,9 @@ export type MultiMediaObject = {
 
 export type MultiMediaJson = MultiMediaPrimitive | MultiMediaArray | MultiMediaObject;
 
-export function observableDataToJSON(data: ObservableData): MultiMediaJson {
+export async function observableDataToJSON(data: ObservableData): Promise<MultiMediaJson> {
     if (data instanceof Image) {
-        return data.toJSON();//return imageToJson(data);
+        return await data.toJSON();//return imageToJson(data);
     }
 
     if (typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean') {
@@ -53,9 +59,10 @@ export function observableDataToJSON(data: ObservableData): MultiMediaJson {
 
     if (Array.isArray(data)) {
         // Filter out undefined items first, then map and process the rest.
-        return data
+        return Promise.all(data
             .filter(item => item !== undefined)
-            .map(item => observableDataToJSON(item));
+            .map(item => observableDataToJSON(item))
+        );
     }
 
     if (typeof data === 'object') { // Known not to be null or array here
