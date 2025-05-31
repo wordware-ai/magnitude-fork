@@ -162,6 +162,14 @@ export function isGroundedLlm(llm: LLMClient) {
             if (model.includes(substr)) return true;
         }
     }
+    if (llm.provider === 'openai-generic') {
+        const model = llm.options.model;
+        // models known to be grounded
+        const include = ['molmo', 'ui-tars', 'qwen2.5-vl'];
+        for (const substr of include) {
+            if (model.toLowerCase().includes(substr)) return true;
+        }
+    }
     return false;
 }
 
