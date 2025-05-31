@@ -96,7 +96,12 @@ export class Image {
         
         // if (!metadata.width || !metadata.height)
 
-        return new Image(await this.img.resize(width, height));
+        return new Image(await this.img.resize({
+            width: width,
+            height: height,
+            fit: 'fill', // exact size, no cropping
+            kernel: sharp.kernel.lanczos3
+        }));
 
     }
 }

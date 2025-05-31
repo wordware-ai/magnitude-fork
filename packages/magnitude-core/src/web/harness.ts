@@ -9,20 +9,28 @@ import { DOMTransformer } from "./transformer";
 import { Image } from '@/memory/image';
 //import { StateComponent } from "@/facets";
 
+
+export interface WebHarnessOptions {
+    // Some LLM operate best on certain screen dims
+    virtualScreenDimensions?: { width: number, height: number }
+}
+
 export class WebHarness { // implements StateComponent
     /**
      * Executes web actions on a page
      * Not responsible for browser lifecycle
      */
     public readonly context: BrowserContext;
+    private options: WebHarnessOptions;
     private stability: PageStabilityAnalyzer;
     public readonly visualizer: ActionVisualizer;
     private transformer: DOMTransformer;
     private tabs: TabManager;
 
-    constructor(context: BrowserContext) {
+    constructor(context: BrowserContext, options: WebHarnessOptions = {}) {
         //this.page = page;
         this.context = context;
+        this.options = options;
         this.stability = new PageStabilityAnalyzer();
         this.visualizer = new ActionVisualizer();
         this.transformer = new DOMTransformer();
@@ -120,7 +128,22 @@ export class WebHarness { // implements StateComponent
         }
     }
 
+    // safer might be Coordinate interface/obj tied to certain screen space dims
+    transformCoordinates({ x, y }: { x: number, y: number }): { x: number, y: number } {
+        const virtual = this.options.virtualScreenDimensions;
+        if (!virtual) {
+            return { x, y };
+        }
+        const vp = this.page.viewportSize();
+        if (!vp) throw new Error("Could not get viewport dimensions to transform coordinates");
+        return {
+            x: x * (vp.width / virtual.width),
+            y: y * (vp.height / virtual.height),
+        };
+    }
+
     async click({ x, y }: { x: number, y: number }) {
+        ({ x, y } = this.transformCoordinates({ x, y }));
         // console.log("x:", x);
         // console.log("y:", y);
         await this.visualizer.visualizeAction(x, y);
@@ -142,6 +165,7 @@ export class WebHarness { // implements StateComponent
     }
     
     async scroll({ x, y, deltaX, deltaY }: { x: number, y: number, deltaX: number, deltaY: number }) {
+        ({ x, y } = this.transformCoordinates({ x, y }));
         await this.visualizer.visualizeAction(x, y);
         await this.page.mouse.move(x, y);
         await this.page.mouse.wheel(deltaX, deltaY);

@@ -20,6 +20,7 @@ export interface BrowserConnectorOptions {
     url?: string
     browserContextOptions?: BrowserContextOptions
     grounding?: GroundingClient
+    autoResize?: { width: number, height: number }
 }
 
 export interface BrowserConnectorStateData {
@@ -72,7 +73,9 @@ export class BrowserConnector implements AgentConnector {
             ...this.options.browserContextOptions
         });
 
-        this.harness = new WebHarness(this.context);
+        this.harness = new WebHarness(this.context, {
+            ...(this.options.autoResize ? { virtualScreenDimensions: this.options.autoResize } : {})
+        });
         await this.harness.start();
         this.logger.info("WebHarness started.");
 
@@ -128,7 +131,19 @@ export class BrowserConnector implements AgentConnector {
             this.harness.screenshot(),
             this.harness.retrieveTabState()
         ]);
-        return { screenshot, tabs };
+        //const resizedScreenshot = await screenshot.resize()
+        // if (this.options.autoResize) {
+        //     return { screenshot: await screenshot.resize(this.options.autoResize.width, this.options.autoResize.height), tabs: tabs };
+        // }
+        return { screenshot: await this.transformScreenshot(screenshot), tabs: tabs };
+    }
+
+    async transformScreenshot(screenshot: Image): Promise<Image> {
+        if (this.options.autoResize) {
+            return await screenshot.resize(this.options.autoResize.width, this.options.autoResize.height);
+        } else {
+            return screenshot;
+        }
     }
 
     public async getLastScreenshot(): Promise<Image> {
@@ -147,14 +162,14 @@ export class BrowserConnector implements AgentConnector {
                 observations.push({
                     source: `connector:${this.id}`,
                     timestamp: Date.now(),
-                    data: currentState.screenshot//Image.fromBase64(currentState.screenshot!.image)//, 'image/png')
+                    data: await this.transformScreenshot(currentState.screenshot)//Image.fromBase64(currentState.screenshot!.image)//, 'image/png')
                 });
             }
         } else {
             observations.push({
                 source: `connector:${this.id}`,
                 timestamp: Date.now(),
-                data: currentState.screenshot//Image.fromBase64(currentState.screenshot!.image)//, 'image/png')
+                data: await this.transformScreenshot(currentState.screenshot)//Image.fromBase64(currentState.screenshot!.image)//, 'image/png')
             });
         }
 
