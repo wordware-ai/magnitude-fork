@@ -1,8 +1,7 @@
-import { Screenshot } from "@/web/types";
 import { convertToBamlClientOptions } from "./util";
 // Import ModularMemoryContext instead of old MemoryContext
 import { b, BrowserExecutionContext, ModularMemoryContext, MemoryContext as OldMemoryContext } from "@/ai/baml_client"; 
-import { Image, Collector, ClientRegistry } from "@boundaryml/baml";
+import { Image as BamlImage, Collector, ClientRegistry } from "@boundaryml/baml";
 import { Action, ActionIntent, Intent } from "@/actions/types";
 import { TestStepDefinition } from "@/types";
 import { BamlAsyncClient } from "./baml_client/async_client";
@@ -15,6 +14,7 @@ import { ActionDefinition } from "@/actions";
 import TypeBuilder from "./baml_client/type_builder";
 import { z } from 'zod';
 import { convertActionDefinitionsToBaml } from "@/actions/util";
+import { Image } from '@/memory/image';
 
 interface MacroAgentConfig {
     client: LLMClient;
@@ -90,7 +90,7 @@ export class MacroAgent {
         }
     }
 
-    async evaluateCheck(screenshot: Screenshot, check: string, existingRecipe: Action[], tabState: TabState): Promise<boolean> {
+    async evaluateCheck(screenshot: Image, check: string, existingRecipe: Action[], tabState: TabState): Promise<boolean> {
         const stringifiedExistingRecipe = [];
         for (const action of existingRecipe) {
             stringifiedExistingRecipe.push(JSON.stringify(action, null, 4))
@@ -99,7 +99,7 @@ export class MacroAgent {
         const start = Date.now();
         const response = await this.baml.EvaluateCheck(
             {
-                screenshot: Image.fromBase64('image/png', screenshot.image),
+                screenshot: await screenshot.toBaml(),//Image.fromBase64('image/png', screenshot.image),
                 actionHistory: stringifiedExistingRecipe,
                 tabState: tabState
             },
@@ -109,7 +109,7 @@ export class MacroAgent {
         return response.passes;
     }
 
-    async classifyCheckFailure(screenshot: Screenshot, check: string, existingRecipe: Action[], tabState: TabState): Promise<BugDetectedFailure | MisalignmentFailure> {
+    async classifyCheckFailure(screenshot: Image, check: string, existingRecipe: Action[], tabState: TabState): Promise<BugDetectedFailure | MisalignmentFailure> {
         const stringifiedExistingRecipe = [];
         for (const action of existingRecipe) {
             stringifiedExistingRecipe.push(JSON.stringify(action, null, 4))
@@ -118,7 +118,7 @@ export class MacroAgent {
         const start = Date.now();
         const response = await this.baml.ClassifyCheckFailure(
             {
-                screenshot: Image.fromBase64('image/png', screenshot.image),
+                screenshot: await screenshot.toBaml(),//Image.fromBase64('image/png', screenshot.image),
                 actionHistory: stringifiedExistingRecipe,
                 tabState: tabState
             },

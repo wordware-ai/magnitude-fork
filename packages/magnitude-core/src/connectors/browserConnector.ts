@@ -20,7 +20,7 @@ export interface BrowserConnectorOptions {
     url?: string
     browserContextOptions?: BrowserContextOptions
     grounding?: GroundingClient
-    autoResize?: { width: number, height: number }
+    virtualScreenDimensions?: { width: number, height: number }
 }
 
 export interface BrowserConnectorStateData {
@@ -74,7 +74,7 @@ export class BrowserConnector implements AgentConnector {
         });
 
         this.harness = new WebHarness(this.context, {
-            ...(this.options.autoResize ? { virtualScreenDimensions: this.options.autoResize } : {})
+            ...(this.options.virtualScreenDimensions ? { virtualScreenDimensions: this.options.virtualScreenDimensions } : {})
         });
         await this.harness.start();
         this.logger.info("WebHarness started.");
@@ -139,8 +139,8 @@ export class BrowserConnector implements AgentConnector {
     }
 
     async transformScreenshot(screenshot: Image): Promise<Image> {
-        if (this.options.autoResize) {
-            return await screenshot.resize(this.options.autoResize.width, this.options.autoResize.height);
+        if (this.options.virtualScreenDimensions) {
+            return await screenshot.resize(this.options.virtualScreenDimensions.width, this.options.virtualScreenDimensions.height);
         } else {
             return screenshot;
         }

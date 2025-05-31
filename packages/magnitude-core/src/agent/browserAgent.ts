@@ -1,6 +1,7 @@
 import { BrowserContext, Page } from "playwright";
 import { Agent, AgentOptions } from ".";
 import { BrowserConnector, BrowserConnectorOptions } from "@/connectors/browserConnector";
+import { isClaude, isGroundedLlm, tryDeriveUIGroundedClients } from "@/ai/util";
 
 // export interface StartAgentWithWebOptions {
 //     agentBaseOptions?: Partial<AgentOptions>;
@@ -11,7 +12,30 @@ import { BrowserConnector, BrowserConnectorOptions } from "@/connectors/browserC
 export async function startBrowserAgent(
     options: AgentOptions & BrowserConnectorOptions //StartAgentWithWebOptions = {}
 ): Promise<BrowserAgent> {
-    const agent = new BrowserAgent({ agent: options, web: options });
+    //if (options.llm)
+    // TODO: if claude, use virtualScreenDimensions: { width: 1024, height: 768 }
+    
+    const { llm: envLlm, grounding: envGrounding } = tryDeriveUIGroundedClients();
+
+    const llm = options.llm ?? envLlm;
+    const grounding = (llm && isGroundedLlm(llm)) ? null : (options.grounding ?? envGrounding);//llm?.options?.model?.includes('claude') ? null : (options.grounding ?? envGrounding);
+    
+    if (!llm) {
+        throw new Error("No LLM configured or available from environment. Set environment variable ANTHROPIC_API_KEY and try again");
+    } else if (!isGroundedLlm(llm) && !grounding) {
+        throw new Error("Ungrounded LLM is configured without Moondream. Either use Anthropic (set ANTHROPIC_API_KEY) or provide a MOONDREAM_API_KEY");
+    }
+
+    let virtualScreenDimensions = null;
+    if (isClaude(llm)) {
+        // Claude grounding only really works on 1024x768 screenshots
+        virtualScreenDimensions = { width: 1024, height: 768 };
+    }
+
+    const agent = new BrowserAgent({
+        agent: {...options, llm: llm },
+        web: {...options, grounding: grounding ?? undefined, virtualScreenDimensions: virtualScreenDimensions ?? undefined }
+    });
     await agent.start();
     return agent;
 }

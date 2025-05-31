@@ -1,6 +1,4 @@
-import { Screenshot } from "@/web/types";
-import { type LLMClient } from '@/ai/types';
-import sharp from "sharp";
+import { GroundingClient, type LLMClient } from '@/ai/types';
 
 function cleanNestedObject(obj: object): object {
     // Remove null/undefined key values entirely
@@ -84,4 +82,87 @@ export function convertToBamlClientOptions(client: LLMClient): Record<string, an
         throw new Error(`Invalid provider: ${(client as any).provider}`)
     }
     return cleanNestedObject(options);
+}
+
+
+
+export function tryDeriveUIGroundedClients(): { llm: LLMClient | null, grounding: GroundingClient | null } {
+    let llm: LLMClient | null = null;
+    let grounding: GroundingClient | null = null;
+
+    // Best: Solo Grounded Claude
+    if (process.env.ANTHROPIC_API_KEY) {
+        llm = {
+            provider: 'anthropic',
+            options: {
+                // TODO: do more testing on best claude model for visuals
+                model: 'claude-sonnet-4-20250514',//'claude-3-7-sonnet-latest',
+                apiKey: process.env.ANTHROPIC_API_KEY
+            }
+        }
+        return { llm, grounding: null };
+    }
+
+    if (process.env.GOOGLE_API_KEY) {
+        // Google AI Studio
+        llm = {
+            provider: 'google-ai',
+            options: {
+                model: 'gemini-2.5-pro-preview-03-25',
+                apiKey: process.env.GOOGLE_API_KEY
+            }
+        }
+    }
+
+    if (process.env.OPENROUTER_API_KEY) {
+        llm = {
+            provider: 'openai-generic',
+            options: {
+                baseUrl: "https://openrouter.ai/api/v1",
+                model: 'google/gemini-2.5-pro-preview-03-25',
+                apiKey: process.env.OPENROUTER_API_KEY
+            }
+        }
+    }
+
+    if (process.env.OPENAI_API_KEY) {
+        llm = {
+            provider: 'openai',
+            options: {
+                model: 'gpt-4.1-2025-04-14',
+                apiKey: process.env.OPENAI_API_KEY
+            }
+        }
+    }
+
+    if (process.env.MOONDREAM_API_KEY) {
+        grounding = {
+            provider: 'moondream',
+            options: {
+                apiKey: process.env.MOONDREAM_API_KEY
+            }
+        }
+    }
+
+    return { llm , grounding };
+}
+
+export function isGroundedLlm(llm: LLMClient) {
+    if (llm.provider === 'anthropic' || llm.provider === 'aws-bedrock' || llm.provider === 'vertex-ai') {
+        const model = llm.options.model;
+        const include = ['claude-sonnet', 'claude-opus', 'claude-3-5', 'claude-3-7', 'claude-4'];
+        const exclude = ['claude-3-5-haiku'];
+        for (const substr of exclude) {
+            if (model.includes(substr)) return false;
+        }
+        for (const substr of include) {
+            if (model.includes(substr)) return true;
+        }
+    }
+    return false;
+}
+
+export function isClaude(llm: LLMClient) {
+    // same for now
+    return isGroundedLlm(llm);
 }
