@@ -55,24 +55,27 @@ export class BrowserConnector implements AgentConnector {
 
     async onStart(): Promise<void> {
         this.logger.info("Starting...");
-        let browserInstance = this.options.browser;
-        if (!browserInstance) {
-            browserInstance = await BrowserProvider.getBrowser();
-            this.browser = browserInstance;
-            this.logger.info("Using singleton browser provider.");
-        }
 
         const dpr = process.env.DEVICE_PIXEL_RATIO ?
             parseInt(process.env.DEVICE_PIXEL_RATIO) :
             process.platform === 'darwin' ? 2 : 1;
         
-        this.logger.info("Creating new browser context.");
-        this.context = await browserInstance.newContext({
-            viewport: { width: 1280, height: 720 },
+        const browserContextOptions: BrowserContextOptions = {
+            viewport: { width: 1024, height: 768 },
             deviceScaleFactor: dpr,
             ...this.options.browserContextOptions
-        });
-
+        };
+        
+        let browserInstance = this.options.browser;
+        
+        this.logger.info("Creating new browser context.");
+        if (browserInstance) {
+            this.context = await browserInstance.newContext()
+        } else {
+            this.context = await BrowserProvider.getInstance().newContext(browserContextOptions);
+            this.logger.info("Using singleton browser provider.");
+        }
+        
         this.harness = new WebHarness(this.context, {
             ...(this.options.virtualScreenDimensions ? { virtualScreenDimensions: this.options.virtualScreenDimensions } : {})
         });
