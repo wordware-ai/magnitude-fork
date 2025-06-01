@@ -162,18 +162,24 @@ export class BrowserConnector implements AgentConnector {
         if (this.previousState) {
             // TODO: screenshot should use Image class instead
             if ((await currentState.screenshot.toBase64()) !== (await this.previousState.screenshot.toBase64())) {
-                observations.push({
-                    source: `connector:${this.id}`,
-                    timestamp: Date.now(),
-                    data: await this.transformScreenshot(currentState.screenshot)//Image.fromBase64(currentState.screenshot!.image)//, 'image/png')
-                });
+                observations.push(
+                    Observation.fromConnector(this.id, await this.transformScreenshot(currentState.screenshot))
+                );
+                // observations.push({
+                //     source: `connector:${this.id}`,
+                //     timestamp: Date.now(),
+                //     data: await this.transformScreenshot(currentState.screenshot)//Image.fromBase64(currentState.screenshot!.image)//, 'image/png')
+                // });
             }
         } else {
-            observations.push({
-                source: `connector:${this.id}`,
-                timestamp: Date.now(),
-                data: await this.transformScreenshot(currentState.screenshot)//Image.fromBase64(currentState.screenshot!.image)//, 'image/png')
-            });
+            observations.push(
+                Observation.fromConnector(this.id, await this.transformScreenshot(currentState.screenshot))
+            );
+            // observations.push({
+            //     source: `connector:${this.id}`,
+            //     timestamp: Date.now(),
+            //     data: await this.transformScreenshot(currentState.screenshot)//Image.fromBase64(currentState.screenshot!.image)//, 'image/png')
+            // });
         }
 
         this.previousState = currentState;
@@ -198,7 +204,7 @@ export class BrowserConnector implements AgentConnector {
     //     return bamlRenderables;
     // }
 
-    async viewState(): Promise<ObservableData> {
+    async viewState(): Promise<Observation> {
         const state = await this.captureCurrentState();
         const currentTabs = state.tabs;
         let tabsString = "Open Tabs:\n";
@@ -213,11 +219,13 @@ export class BrowserConnector implements AgentConnector {
         //     )
         // };
 
+        
         const items = [
             state.screenshot,//Image.fromBase64(state.screenshot.image),//, 'image/png'),
             tabsString
         ]
-        return items;
+        return Observation.fromConnector(this.id, items);
+        //return items;
         // return Image.fromBase64(state.screenshot.image, 'image/png');
     }
 

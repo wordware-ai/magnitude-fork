@@ -144,11 +144,12 @@ export class Agent {
 
         // See if any observations from action return value need to be added to turn observations
         if (data) {
-            observations.push({
-                source: `action:${actionDefinition.name}`,
-                timestamp: Date.now(),
-                data: data
-            });
+            observations.push(Observation.fromAction(actionDefinition.name, data));
+            // observations.push({
+            //     source: `action:${actionDefinition.name}`,
+            //     timestamp: Date.now(),
+            //     data: data
+            // });
         }
 
         for (const connector of this.connectors) {
