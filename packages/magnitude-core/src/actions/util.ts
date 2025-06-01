@@ -326,7 +326,7 @@ function convertJsonSchemaToBaml(tb: TypeBuilder, jsonSchema: JsonSchema): Field
     return parser.parse(jsonSchema);
 }
 
-function convertZodToBaml(tb: TypeBuilder, schema: Schema) {
+export function convertZodToBaml(tb: TypeBuilder, schema: Schema) {
     const jsonSchema = zodToJsonSchema(schema) as JsonSchema;
     return convertJsonSchemaToBaml(tb, jsonSchema);
 }

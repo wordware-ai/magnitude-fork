@@ -3,6 +3,8 @@ import { Agent, AgentOptions } from ".";
 import { BrowserConnector, BrowserConnectorOptions } from "@/connectors/browserConnector";
 import { isClaude, isGroundedLlm, tryDeriveUIGroundedClients } from "@/ai/util";
 import { LLMClient } from "@/ai/types";
+import { Schema } from "zod";
+import z from "zod";
 
 // export interface StartAgentWithWebOptions {
 //     agentBaseOptions?: Partial<AgentOptions>;
@@ -64,7 +66,10 @@ export class BrowserAgent extends Agent {
         return this.require(BrowserConnector).getHarness().context;
     }
 
-    async extract() {
+    async extract<T extends Schema>(instructions: string, schema: T): Promise<z.infer<T>> {
         // TODO: Implement
+        const htmlContent = await this.page.content();
+        const screenshot = await this.require(BrowserConnector).getHarness().screenshot();
+        return await this.macro.extract(instructions, schema, screenshot, htmlContent);
     }
 }

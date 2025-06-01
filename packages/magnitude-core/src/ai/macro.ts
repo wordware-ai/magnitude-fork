@@ -12,8 +12,8 @@ import { LLMClient } from "@/ai/types";
 import { TabState } from "@/web/tabs";
 import { ActionDefinition } from "@/actions";
 import TypeBuilder from "./baml_client/type_builder";
-import { z } from 'zod';
-import { convertActionDefinitionsToBaml } from "@/actions/util";
+import { Schema, z } from 'zod';
+import { convertActionDefinitionsToBaml, convertZodToBaml } from "@/actions/util";
 import { Image } from '@/memory/image';
 
 interface MacroAgentConfig {
@@ -90,6 +90,31 @@ export class MacroAgent {
         }
     }
 
+    async extract<T extends Schema>(instructions: string, schema: T, screenshot: Image, domContent: string): Promise<z.infer<T>> {
+        const tb = new TypeBuilder();
+
+        if (schema instanceof z.ZodObject) {
+            // populate ExtractedData with schema KVs instead of wrapping in data key unnecessarily
+            for (const [key, fieldSchema] of Object.entries(schema.shape)) {
+                tb.ExtractedData.addProperty(key, convertZodToBaml(tb, fieldSchema as any));
+            }
+        } else {
+            // for array or primitive have to wrap data key
+            tb.ExtractedData.addProperty('data', convertZodToBaml(tb, schema));
+        }
+        // } else if (schema instanceof z.ZodArray) {
+
+        // }
+
+        const resp = await this.baml.ExtractData(instructions, await screenshot.toBaml(), domContent, { tb });
+
+        if (schema instanceof z.ZodObject) {
+            return resp;
+        } else {
+            return resp.data;
+        }
+    }
+
     async evaluateCheck(screenshot: Image, check: string, existingRecipe: Action[], tabState: TabState): Promise<boolean> {
         const stringifiedExistingRecipe = [];
         for (const action of existingRecipe) {
@@ -143,6 +168,8 @@ export class MacroAgent {
             }
         }
     }
+
+    
 
     // async diagnoseTargetNotFound(
     //     screenshot: Screenshot,
