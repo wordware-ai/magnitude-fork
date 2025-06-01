@@ -4,7 +4,7 @@ import { GroundingService } from "@/ai/grounding";
 import { MacroAgent } from "@/ai/macro";
 import { Page } from "playwright"; 
 import { WebHarness } from "@/web/harness"; 
-import { StepOptions } from "@/types";
+import { ActOptions } from "@/types";
 import { AgentEvents } from "../common/events";
 import logger from '../logger';
 import { AgentConnector } from '@/connectors';
@@ -19,6 +19,7 @@ import { AgentMemory } from "../memory";
 import { ActionDefinition } from "@/actions";
 import { ZodObject } from "zod";
 import { taskActions } from "@/actions/taskActions";
+import { traceAsync } from "@/ai/baml_client";
 
 export interface AgentOptions {
     llm?: LLMClient;
@@ -161,7 +162,13 @@ export class Agent {
         this.memory.recordTurn(action, observations);
     }
 
-    async act(description: string, options: StepOptions = {}): Promise<void> {
+    async act(description: string, options: ActOptions = {}): Promise<void> {
+        await (traceAsync('act', async (description: string, options: ActOptions) => {
+            await this._act(description, options);
+        })(description, options));
+    }
+
+    async _act(description: string, options: ActOptions = {}): Promise<void> {
         this.doneActing = false;
         logger.info(`Begin Step: ${description}`);
 

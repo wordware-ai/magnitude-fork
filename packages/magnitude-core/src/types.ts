@@ -43,6 +43,6 @@ export interface FailedTestCaseResult {
     failure: FailureDescriptor
 }
 
-export interface StepOptions {
+export interface ActOptions {
 	data?: string | Record<string, string>
 }
