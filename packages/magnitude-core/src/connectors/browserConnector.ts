@@ -159,28 +159,54 @@ export class BrowserConnector implements AgentConnector {
         const currentState = await this.captureCurrentState();
         const observations: Observation[] = [];
 
-        if (this.previousState) {
-            // TODO: screenshot should use Image class instead
-            if ((await currentState.screenshot.toBase64()) !== (await this.previousState.screenshot.toBase64())) {
-                observations.push(
-                    Observation.fromConnector(this.id, await this.transformScreenshot(currentState.screenshot))
-                );
-                // observations.push({
-                //     source: `connector:${this.id}`,
-                //     timestamp: Date.now(),
-                //     data: await this.transformScreenshot(currentState.screenshot)//Image.fromBase64(currentState.screenshot!.image)//, 'image/png')
-                // });
-            }
-        } else {
-            observations.push(
-                Observation.fromConnector(this.id, await this.transformScreenshot(currentState.screenshot))
-            );
-            // observations.push({
-            //     source: `connector:${this.id}`,
-            //     timestamp: Date.now(),
-            //     data: await this.transformScreenshot(currentState.screenshot)//Image.fromBase64(currentState.screenshot!.image)//, 'image/png')
-            // });
-        }
+        const currentTabs = currentState.tabs;
+        let tabInfo = "Open Tabs:\n";
+        currentTabs.tabs.forEach((tab, index) => {
+            tabInfo += `${index === currentTabs.activeTab ? '[ACTIVE] ' : ''}${tab.title} (${tab.url})\n`;
+        });
+
+        observations.push(
+            Observation.fromConnector(
+                this.id,
+                await this.transformScreenshot(currentState.screenshot),
+                { type: 'screenshot', limit: 3, dedupe: true }
+            )
+        );
+        observations.push(
+            Observation.fromConnector(
+                this.id,
+                tabInfo,
+                { type: 'tabinfo', limit: 1 }
+            )
+        );
+
+        // if (this.previousState) {
+        //     // TODO: screenshot should use Image class instead
+        //     if ((await currentState.screenshot.toBase64()) !== (await this.previousState.screenshot.toBase64())) {
+        //         observations.push(
+        //             Observation.fromConnector(
+        //                 this.id,
+        //                 await this.transformScreenshot(currentState.screenshot),
+        //                 { type: 'screenshot', limit: 3, dedupe: true }
+        //             )
+        //         );
+        //     }
+        // } else {
+        //     observations.push(
+        //         Observation.fromConnector(
+        //             this.id,
+        //             await this.transformScreenshot(currentState.screenshot),
+        //             { type: 'screenshot', limit: 3, dedupe: true }
+        //         )
+        //     );
+        //     observations.push(
+        //         Observation.fromConnector(
+        //             this.id,
+        //             tabInfo,
+        //             { type: 'tabinfo', limit: 1 }
+        //         )
+        //     );
+        // }
 
         this.previousState = currentState;
         return observations;
@@ -204,30 +230,30 @@ export class BrowserConnector implements AgentConnector {
     //     return bamlRenderables;
     // }
 
-    async viewState(): Promise<Observation> {
-        const state = await this.captureCurrentState();
-        const currentTabs = state.tabs;
-        let tabsString = "Open Tabs:\n";
-        currentTabs.tabs.forEach((tab, index) => {
-            tabsString += `${index === currentTabs.activeTab ? '[ACTIVE] ' : ''}${tab.title} (${tab.url})\n`;
-        });
-        // return {
-        //     screenshot: Image.fromBase64(state.screenshot.image, 'image/png'),
-        //     //tabs: tabsString
-        //     tabs: currentTabs.tabs.map(
-        //         (tab, index) => `Tab ${index}${index === currentTabs.activeTab ? ' [ACTIVE]' : ''}: ${tab.title} (${tab.url})\n`
-        //     )
-        // };
+    // async viewState(): Promise<Observation> {
+    //     const state = await this.captureCurrentState();
+    //     const currentTabs = state.tabs;
+    //     let tabsString = "Open Tabs:\n";
+    //     currentTabs.tabs.forEach((tab, index) => {
+    //         tabsString += `${index === currentTabs.activeTab ? '[ACTIVE] ' : ''}${tab.title} (${tab.url})\n`;
+    //     });
+    //     // return {
+    //     //     screenshot: Image.fromBase64(state.screenshot.image, 'image/png'),
+    //     //     //tabs: tabsString
+    //     //     tabs: currentTabs.tabs.map(
+    //     //         (tab, index) => `Tab ${index}${index === currentTabs.activeTab ? ' [ACTIVE]' : ''}: ${tab.title} (${tab.url})\n`
+    //     //     )
+    //     // };
 
         
-        const items = [
-            state.screenshot,//Image.fromBase64(state.screenshot.image),//, 'image/png'),
-            tabsString
-        ]
-        return Observation.fromConnector(this.id, items);
-        //return items;
-        // return Image.fromBase64(state.screenshot.image, 'image/png');
-    }
+    //     const items = [
+    //         state.screenshot,//Image.fromBase64(state.screenshot.image),//, 'image/png'),
+    //         tabsString
+    //     ]
+    //     return Observation.fromConnector(this.id, items);
+    //     //return items;
+    //     // return Image.fromBase64(state.screenshot.image, 'image/png');
+    // }
 
     async getInstructions(): Promise<void | string> {
         if (this.grounding) {

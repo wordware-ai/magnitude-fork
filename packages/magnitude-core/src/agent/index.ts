@@ -108,6 +108,10 @@ export class Agent {
         }
         this.events.emit('start');
         logger.info("Agent: All connectors started.");
+
+        logger.info("Making initial observations...");
+        await this._recordConnectorObservations();
+        logger.info("Initial observations recorded");
         // Initial observations are handled by the first getObservations call in exec
     }
 
@@ -144,7 +148,7 @@ export class Agent {
 
         // See if any observations from action return value need to be added to turn observations
         if (data) {
-            observations.push(Observation.fromAction(actionDefinition.name, data));
+            observations.push(Observation.fromActionResult(actionDefinition.name, data));
             // observations.push({
             //     source: `action:${actionDefinition.name}`,
             //     timestamp: Date.now(),
@@ -152,6 +156,7 @@ export class Agent {
             // });
         }
 
+        // TODO: use _recordConnectorObservations instead and replace recordTurn
         for (const connector of this.connectors) {
             try {
                 const connObservations = connector.collectObservations ? await connector.collectObservations() : [];
@@ -160,7 +165,21 @@ export class Agent {
                 logger.warn(`Agent: Error getting observations from connector ${connector.id}: ${error instanceof Error ? error.message : String(error)}`);
             }
         }
-        this.memory.recordTurn(action, observations);
+        this.memory.recordTurn(actionDefinition.name, action, observations);
+    }
+
+    private async _recordConnectorObservations() {
+        for (const connector of this.connectors) {
+            try {
+                const connObservations = connector.collectObservations ? await connector.collectObservations() : [];
+                //observations.push(...connObservations);
+                for (const obs of connObservations) {
+                    this.memory.recordObservation(obs);
+                }
+            } catch (error) {
+                logger.warn(`Agent: Error getting observations from connector ${connector.id}: ${error instanceof Error ? error.message : String(error)}`);
+            }
+        }
     }
 
     async act(description: string, options: ActOptions = {}): Promise<void> {

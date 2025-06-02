@@ -3,27 +3,35 @@
 // If not, you might need to define it or import it if it's in another baml file.
 // For now, we assume 'Image' is a known type to BAML.
 
-class BamlThought {
-  variant "thought"
-  timestamp string
-  message string
-}
+// class BamlThought {
+//   variant "thought"
+//   timestamp string
+//   message string
+// }
 
-class BamlTurn {
-  variant "turn"
-  timestamp string
-  action string 
-  content (string | image)[] // multimedia content "chunks"
-}
+// class BamlTurn {
+//   variant "turn"
+//   timestamp string
+//   action string 
+//   content (string | image)[] // multimedia content "chunks"
+// }
 
-class ConnectorState {
-  connector_id string
-  instructions string?
-  content (string | image)[]
+
+// class Observation {
+//     source string
+//     content (string | image)[] // multimedia content "chunks"
+// }
+
+class ConnectorInstructions {
+    connectorId string
+    instructions string
+    //content (string | image)[]
 }
 
 class ModularMemoryContext {
-  history (BamlThought | BamlTurn)[]
-  current_timestamp string
-  current_connector_states ConnectorState[]
+    //history (BamlThought | BamlTurn)[]
+    //observations Observation[]
+    observationContent (string | image)[] // complete rendered observation content as multimedia content "chunks"
+    //currentTimestamp string
+    connectorInstructions ConnectorInstructions[]
 }

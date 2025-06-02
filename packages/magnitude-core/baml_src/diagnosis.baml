@@ -44,34 +44,34 @@ template_string BaseMeta #"
 // this is a tricky prompt, but its not as critical to get right as others
 // it does become more important if we rely on classify as bug/misalign then correct minor misaligns only if not bug
 // ^ if we need this then we should think of a more isolated/logical prompt to detect misalignments
-function ClassifyCheckFailure (context: BrowserExecutionContext, check: string) -> BugFailureClassification | MisalignmentClassification {
-    client SonnetAnthropic
-    prompt #"
-        {{ _.role("system") }}
-        {{ BaseMeta() }}
+// function ClassifyCheckFailure (context: BrowserExecutionContext, check: string) -> BugFailureClassification | MisalignmentClassification {
+//     client SonnetAnthropic
+//     prompt #"
+//         {{ _.role("system") }}
+//         {{ BaseMeta() }}
 
-        The agent just marked a check as failed. Your job is to figure out why.
+//         The agent just marked a check as failed. Your job is to figure out why.
 
-        Either:
-        (1) The web application actually has a bug in it
-        or
-        (2) There's some misalignment between the test case and what is in the interface
+//         Either:
+//         (1) The web application actually has a bug in it
+//         or
+//         (2) There's some misalignment between the test case and what is in the interface
 
-        If there is a bug, please break it down in detail.
-        If it is a misalignment, please describe what you think happened.
+//         If there is a bug, please break it down in detail.
+//         If it is a misalignment, please describe what you think happened.
 
-        Use the provided history of actions the agent took as well as the most recent screenshot to help you identify what happened.
+//         Use the provided history of actions the agent took as well as the most recent screenshot to help you identify what happened.
 
-        {{ ctx.output_format }}
+//         {{ ctx.output_format }}
 
-        {{ _.role("user") }}
+//         {{ _.role("user") }}
 
-        The "check" that was marked as failed:
-        {{ check }}
+//         The "check" that was marked as failed:
+//         {{ check }}
 
-        {{ DescribeBrowserExecutionContext(context) }}
-    "#
-}
+//         {{ DescribeBrowserExecutionContext(context) }}
+//     "#
+// }
 
 // function DiagnoseTargetNotFound (screenshot: image, step: TestStep, target: string, previousActions: string[]) -> BugFailureClassification | MisalignmentClassification {
 //     client SonnetAnthropic
