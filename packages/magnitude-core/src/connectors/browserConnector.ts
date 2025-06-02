@@ -31,7 +31,6 @@ export interface BrowserConnectorStateData {
 export class BrowserConnector implements AgentConnector {
     public readonly id: string = "web";
     private harness!: WebHarness;
-    private previousState: BrowserConnectorStateData | undefined = undefined;
     private options: BrowserConnectorOptions;
     private browser?: Browser;
     private context!: BrowserContext;
@@ -162,7 +161,7 @@ export class BrowserConnector implements AgentConnector {
         const currentTabs = currentState.tabs;
         let tabInfo = "Open Tabs:\n";
         currentTabs.tabs.forEach((tab, index) => {
-            tabInfo += `${index === currentTabs.activeTab ? '[ACTIVE] ' : ''}${tab.title} (${tab.url})\n`;
+            tabInfo += `${index === currentTabs.activeTab ? '[ACTIVE] ' : ''}${tab.title} (${tab.url})`;
         });
 
         observations.push(
@@ -179,81 +178,8 @@ export class BrowserConnector implements AgentConnector {
                 { type: 'tabinfo', limit: 1 }
             )
         );
-
-        // if (this.previousState) {
-        //     // TODO: screenshot should use Image class instead
-        //     if ((await currentState.screenshot.toBase64()) !== (await this.previousState.screenshot.toBase64())) {
-        //         observations.push(
-        //             Observation.fromConnector(
-        //                 this.id,
-        //                 await this.transformScreenshot(currentState.screenshot),
-        //                 { type: 'screenshot', limit: 3, dedupe: true }
-        //             )
-        //         );
-        //     }
-        // } else {
-        //     observations.push(
-        //         Observation.fromConnector(
-        //             this.id,
-        //             await this.transformScreenshot(currentState.screenshot),
-        //             { type: 'screenshot', limit: 3, dedupe: true }
-        //         )
-        //     );
-        //     observations.push(
-        //         Observation.fromConnector(
-        //             this.id,
-        //             tabInfo,
-        //             { type: 'tabinfo', limit: 1 }
-        //         )
-        //     );
-        // }
-
-        this.previousState = currentState;
         return observations;
     }
-
-    // async renderCurrentStateToBaml(): Promise<BamlRenderable[]> {
-    //     const state = await this.captureCurrentState();
-    //     const bamlRenderables: BamlRenderable[] = [];
-
-    //     if (state.screenshot?.image) {
-    //         bamlRenderables.push(BamlImage.fromBase64('image/png', state.screenshot.image));
-    //     }
-    //     if (state.tabs) {
-    //         const currentTabs = state.tabs;
-    //         let tabsString = "Open Tabs:\n";
-    //         currentTabs.tabs.forEach((tab, index) => {
-    //             tabsString += `${index === currentTabs.activeTab ? '[ACTIVE] ' : ''}${tab.title} (${tab.url})\n`;
-    //         });
-    //         bamlRenderables.push(tabsString.trim());
-    //     }
-    //     return bamlRenderables;
-    // }
-
-    // async viewState(): Promise<Observation> {
-    //     const state = await this.captureCurrentState();
-    //     const currentTabs = state.tabs;
-    //     let tabsString = "Open Tabs:\n";
-    //     currentTabs.tabs.forEach((tab, index) => {
-    //         tabsString += `${index === currentTabs.activeTab ? '[ACTIVE] ' : ''}${tab.title} (${tab.url})\n`;
-    //     });
-    //     // return {
-    //     //     screenshot: Image.fromBase64(state.screenshot.image, 'image/png'),
-    //     //     //tabs: tabsString
-    //     //     tabs: currentTabs.tabs.map(
-    //     //         (tab, index) => `Tab ${index}${index === currentTabs.activeTab ? ' [ACTIVE]' : ''}: ${tab.title} (${tab.url})\n`
-    //     //     )
-    //     // };
-
-        
-    //     const items = [
-    //         state.screenshot,//Image.fromBase64(state.screenshot.image),//, 'image/png'),
-    //         tabsString
-    //     ]
-    //     return Observation.fromConnector(this.id, items);
-    //     //return items;
-    //     // return Image.fromBase64(state.screenshot.image, 'image/png');
-    // }
 
     async getInstructions(): Promise<void | string> {
         if (this.grounding) {
