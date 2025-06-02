@@ -40,9 +40,9 @@ export type MultiMediaObject = {
 
 export type MultiMediaJson = MultiMediaPrimitive | MultiMediaArray | MultiMediaObject;
 
-export async function observableDataToJSON(data: ObservableData): Promise<MultiMediaJson> {
+export async function observableDataToJson(data: ObservableData): Promise<MultiMediaJson> {
     if (data instanceof Image) {
-        return await data.toJSON();//return imageToJson(data);
+        return await data.toJson();//return imageToJson(data);
     }
 
     if (typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean') {
@@ -61,7 +61,7 @@ export async function observableDataToJSON(data: ObservableData): Promise<MultiM
         // Filter out undefined items first, then map and process the rest.
         return Promise.all(data
             .filter(item => item !== undefined)
-            .map(item => observableDataToJSON(item))
+            .map(item => observableDataToJson(item))
         );
     }
 
@@ -70,7 +70,7 @@ export async function observableDataToJSON(data: ObservableData): Promise<MultiM
         for (const key in data) {
             if (Object.prototype.hasOwnProperty.call(data, key)) {
                 const value = (data as ObservableDataObject)[key];
-                const processedValue = observableDataToJSON(value);
+                const processedValue = observableDataToJson(value);
 
                 // Only add the key to the new object if its processed value is not undefined
                 if (processedValue !== undefined) {

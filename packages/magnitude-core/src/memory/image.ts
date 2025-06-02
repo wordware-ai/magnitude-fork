@@ -42,7 +42,7 @@ export class Image {
     /**
      * Convert the image to a JSON representation
      */
-    async toJSON(): Promise<StoredMedia> {
+    async toJson(): Promise<StoredMedia> {
         // if (this.type === 'url') {
         //     return {
         //         type: 'media',
