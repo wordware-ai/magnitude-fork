@@ -177,6 +177,19 @@ export class WebHarness { // implements StateComponent
         await this.waitForStability();
     }
 
+    async newTab() {
+        await this.context.newPage();
+    }
+
+    async navigate(url: string) {
+        await this.goto(url);
+        await this.waitForStability();
+    }
+
+    async goBack() {
+        await this.page.goBack();
+    }
+
     async executeAction(action: WebAction) {
         if (action.variant === 'click') {
             await this.click(action);

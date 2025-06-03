@@ -64,6 +64,7 @@ function CreatePartialRecipe (context: ModularMemoryContext, task: string) -> Pa
         Plan out actions that should be executed in order to complete the task:
         <task>{{ task }}</task>
         
+        Execute the task serially.
         Plan out as many actions as possible, but stopping at the point where you will need to observe to plan further.
         </instructions>
 

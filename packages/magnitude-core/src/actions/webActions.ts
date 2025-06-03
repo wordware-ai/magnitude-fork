@@ -103,17 +103,64 @@ export const scrollCoordAction = createAction({
 
 // Grounding agnostic
 export const switchTabAction = createAction({
-    name: 'browser:tab',
+    name: 'browser:tab:switch',
     description: "Switch tabs",
     schema: z.object({
         index: z.number().int().describe("Index of tab to switch to"),
     }),
-    resolver: async ({ input: { index }, agent }: { input: { index: number }, agent: Agent }) => {
+    resolver: async ({ input: { index }, agent }) => {
         const webConnector = agent.require(BrowserConnector);
         const harness = webConnector.getHarness();
         await harness.switchTab({ index });
     }
 });
+
+export const newTabAction = createAction({
+    name: 'browser:tab:new',
+    description: "Open and switch to a new tab",
+    schema: z.object({}),
+    resolver: async ({ agent }) => {
+        const webConnector = agent.require(BrowserConnector);
+        const harness = webConnector.getHarness();
+        await harness.newTab();
+    }
+});
+
+export const navigateAction = createAction({
+    name: 'browser:nav',
+    description: "Navigate to a URL directly",
+    schema: z.object({
+        url: z.string().describe('URL to navigate to'),
+    }),
+    resolver: async ({ input: { url }, agent }) => {
+        const webConnector = agent.require(BrowserConnector);
+        const harness = webConnector.getHarness();
+        await harness.navigate(url);
+    }
+});
+
+export const goBackAction = createAction({
+    name: 'browser:nav:back',
+    description: "Go back",
+    schema: z.object({}),
+    resolver: async ({ agent }) => {
+        const webConnector = agent.require(BrowserConnector);
+        const harness = webConnector.getHarness();
+        await harness.goBack();
+    }
+});
+
+// gets overused currently if we include this
+export const waitAction = createAction({
+    name: 'wait',
+    description: "Wait for some time",
+    schema: z.object({
+        seconds: z.number()
+    }),
+    resolver: async ({ input: { seconds }, agent }) => {
+        await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+    }
+})
 
 // export const webActions = [
 //     clickTargetAction,
@@ -124,7 +171,10 @@ export const switchTabAction = createAction({
 
 
 export const agnosticWebActions = [
-    switchTabAction
+    //newTabAction,
+    switchTabAction,
+    navigateAction,
+    //waitAction,
 ] as const;
 
 export const coordWebActions = [
