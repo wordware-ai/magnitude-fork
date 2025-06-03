@@ -14,7 +14,7 @@ export class AgentMemory {
     //private options: Required<MemoryOptions>;
     //private history: StoredHistoryEntry[] = [];
 
-    // Custom instructions relating to this memory instance
+    // Custom instructions relating to this memory instance (e.g. agent-level and/or task-level instructions)
     public readonly instructions: string | null;
 
     private observations: Observation[] = [];

@@ -189,14 +189,36 @@ export class Agent {
         return this.latestTaskMemory;
     }
 
-    async act(description: string, options: ActOptions = {}): Promise<void> {
-        // await this._act(description, options);
-        await (traceAsync('act', async (description: string, options: ActOptions) => {
-            await this._act(description, options);
-        })(description, options));
+    async act(taskOrSteps: string | string[], options: ActOptions = {}): Promise<void> {
+        const instructions = [
+            ...(this.options.instructions ? [this.options.instructions] : []),
+            ...(options.instructions ? [options.instructions] : []),
+        ].join('\n');
+        const taskMemory = new AgentMemory(instructions === '' ? undefined : instructions);
+
+        if (Array.isArray(taskOrSteps)) {
+            const steps = taskOrSteps;
+
+            // trace overall task
+            await (traceAsync('multistep', async (steps: string[], options: ActOptions) => {
+                for (const step of steps) {
+                    await this._traceAct(step, taskMemory, options);
+                }
+            })(steps, options));
+        } else {
+            const task = taskOrSteps;
+            await this._traceAct(task, taskMemory, options);
+        }
     }
 
-    async _act(description: string, options: ActOptions = {}): Promise<void> {
+    async _traceAct(task: string, memory: AgentMemory, options: ActOptions = {}) {
+        // memory not serializable to trace so bake it
+        await (traceAsync('act', async (task: string, options: ActOptions) => {
+            await this._act(task, memory, options);
+        })(task, options));
+    }
+
+    async _act(description: string, memory: AgentMemory, options: ActOptions = {}): Promise<void> {
         this.doneActing = false;
         logger.info(`Act: ${description}`);
         this.events.emit('stepStart', description);
@@ -205,15 +227,12 @@ export class Agent {
 
         // Initialize task memory and record initial observations
         // Combine any agent-level and task-level instructions
-        const instructions = [
-            ...(this.options.instructions ? [this.options.instructions] : []),
-            ...(options.instructions ? [options.instructions] : []),
-        ].join('\n');
-        const taskMemory = new AgentMemory(instructions === '' ? undefined : instructions);
-        this.latestTaskMemory = taskMemory;
+        
+        this.latestTaskMemory = memory;
 
+        // record initial observations
         logger.info("Making initial observations...");
-        await this._recordConnectorObservations(taskMemory);
+        await this._recordConnectorObservations(memory);
         logger.info("Initial observations recorded");
 
         while (true) {
@@ -223,7 +242,7 @@ export class Agent {
             let reasoning: string;
             let actions: Action[];
             try {
-                const memoryContext = await taskMemory.buildContext(this.connectors);
+                const memoryContext = await memory.buildContext(this.connectors);
                 ({ reasoning, actions } = await this.macro.createPartialRecipe(
                     memoryContext, 
                     description,
@@ -247,11 +266,11 @@ export class Agent {
 
             logger.info({ reasoning, actions }, `Partial recipe created`);
 
-            taskMemory.recordThought(reasoning);
+            memory.recordThought(reasoning);
 
             // Execute partial recipe
             for (const action of actions) {
-                await this.exec(action, taskMemory);
+                await this.exec(action, memory);
 
                 // const postActionScreenshot = await this.screenshot();
                 // const actionDescriptor: ActionDescriptor = { ...action, screenshot: postActionScreenshot.image } as ActionDescriptor;
