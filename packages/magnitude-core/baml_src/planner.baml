@@ -66,10 +66,12 @@ function CreatePartialRecipe (context: ModularMemoryContext, task: string) -> Pa
         
         Execute the task serially.
         Plan out as many actions as possible, but stopping at the point where you will need to observe to plan further.
-        </instructions>
+        {%if context.instructions %}
 
+        {{ context.instructions }}
+        {%endif%}
+        </instructions>
         {{ DescribeConnectorInstructions(context) }}
-        
         {{ ctx.output_format }}
 
         {{ _.role("user") }}

@@ -3,8 +3,7 @@ import { ActionIntent, ClickIntent, TypeIntent, ScrollIntent, SwitchTabIntent, A
 import { GroundingService } from "@/ai/grounding";
 import { MacroAgent } from "@/ai/macro";
 import { Page } from "playwright"; 
-import { WebHarness } from "@/web/harness"; 
-import { ActOptions } from "@/types";
+import { WebHarness } from "@/web/harness";
 import { AgentEvents } from "../common/events";
 import logger from '../logger';
 import { AgentConnector } from '@/connectors';
@@ -25,8 +24,15 @@ export interface AgentOptions {
     llm?: LLMClient;
     connectors?: AgentConnector[];
     actions?: ActionDefinition<any>[]; // any additional actions not provided by connectors
+    instructions?: string | null; // additional agent-level system prompt instructions
     
     //executor?: GroundingClient;
+}
+
+export interface ActOptions {
+    instructions?: string // additional task-level system prompt instructions
+    // TODO: reimpl, or maybe for tc agent specifically
+	//data?: string | Record<string, string>
 }
 
 // Options for the startAgent helper function
@@ -41,7 +47,7 @@ const DEFAULT_CONFIG: Required<Omit<AgentOptions, 'actions'> & { actions: Action
             apiKey: process.env.GOOGLE_API_KEY || "YOUR_GOOGLE_API_KEY"
         }
     } as LLMClient,
-    
+    instructions: null,
 };
 
 export class Agent {
@@ -55,6 +61,8 @@ export class Agent {
     public readonly events: EventEmitter<AgentEvents>;
     //public readonly memory: AgentMemory;
     private doneActing: boolean;
+
+    private latestTaskMemory: AgentMemory | null = null;
 
     constructor(baseConfig: Partial<AgentOptions> = {}) {
         this.options = {
@@ -176,6 +184,11 @@ export class Agent {
         }
     }
 
+    get memory(): AgentMemory {
+        if (!this.latestTaskMemory) throw new Error("No memory available");
+        return this.latestTaskMemory;
+    }
+
     async act(description: string, options: ActOptions = {}): Promise<void> {
         // await this._act(description, options);
         await (traceAsync('act', async (description: string, options: ActOptions) => {
@@ -191,7 +204,13 @@ export class Agent {
         const testData = convertOptionsToTestData(options);
 
         // Initialize task memory and record initial observations
-        const taskMemory = new AgentMemory();
+        // Combine any agent-level and task-level instructions
+        const instructions = [
+            ...(this.options.instructions ? [this.options.instructions] : []),
+            ...(options.instructions ? [options.instructions] : []),
+        ].join('\n');
+        const taskMemory = new AgentMemory(instructions === '' ? undefined : instructions);
+        this.latestTaskMemory = taskMemory;
 
         logger.info("Making initial observations...");
         await this._recordConnectorObservations(taskMemory);
@@ -251,6 +270,7 @@ export class Agent {
 
         logger.info(`Done with step`);
         this.events.emit('stepSuccess');
+        //this.currentTaskMemory = null;
     }
 
     async queueDone() {

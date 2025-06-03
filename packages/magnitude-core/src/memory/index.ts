@@ -14,10 +14,14 @@ export class AgentMemory {
     //private options: Required<MemoryOptions>;
     //private history: StoredHistoryEntry[] = [];
 
+    // Custom instructions relating to this memory instance
+    public readonly instructions: string | null;
+
     private observations: Observation[] = [];
     //private tasks: { task: string, observations: Observation[] }[] = [];
 
-    constructor() {
+    constructor(instructions?: string) {
+        this.instructions = instructions ?? null;
     }
 
     // get observations(): Observation[] {
@@ -70,6 +74,7 @@ export class AgentMemory {
         }
 
         return {
+            instructions: this.instructions,
             observationContent: content,
             connectorInstructions: connectorInstructions
         };
