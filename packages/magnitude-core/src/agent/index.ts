@@ -53,7 +53,7 @@ export class Agent {
     public readonly macro: MacroAgent;
     //public readonly micro: GroundingService;
     public readonly events: EventEmitter<AgentEvents>;
-    public readonly memory: AgentMemory;
+    //public readonly memory: AgentMemory;
     private doneActing: boolean;
 
     constructor(baseConfig: Partial<AgentOptions> = {}) {
@@ -79,7 +79,7 @@ export class Agent {
         this.macro = new MacroAgent({ client: this.options.llm });
         //this.micro = new GroundingService({ client: this.config.executor });
         this.events = new EventEmitter<AgentEvents>();
-        this.memory = new AgentMemory();
+        //this.memory = new AgentMemory();
         this.doneActing = false;
     }
 
@@ -109,15 +109,19 @@ export class Agent {
         this.events.emit('start');
         logger.info("Agent: All connectors started.");
 
-        logger.info("Making initial observations...");
-        await this._recordConnectorObservations();
-        logger.info("Initial observations recorded");
+        // logger.info("Making initial observations...");
+        // await this._recordConnectorObservations();
+        // logger.info("Initial observations recorded");
         // Initial observations are handled by the first getObservations call in exec
     }
 
     // captureState is removed as state is now captured by connectors and surfaced via observations/renderCurrentStateToBaml
 
-    async exec(action: Action): Promise<void> {
+    async exec(action: Action, memory?: AgentMemory): Promise<void> {
+        /**
+         * Execute an action that belongs to this Agent's action space.
+         * Provide memory to record the action taken, its results, and any connector observations to that memory.
+         */
         let actionDefinition = this.actions.find(def => def.name === action.variant);
 
         if (!actionDefinition) {
@@ -144,37 +148,27 @@ export class Agent {
             { input: parsed.data, agent: this }
         );
 
-        let observations: Observation[] = [];
+        if (memory) {
+            // Record action taken
+            memory.recordObservation(Observation.fromActionTaken(actionDefinition.name, JSON.stringify(action)));
 
-        // See if any observations from action return value need to be added to turn observations
-        if (data) {
-            observations.push(Observation.fromActionResult(actionDefinition.name, data));
-            // observations.push({
-            //     source: `action:${actionDefinition.name}`,
-            //     timestamp: Date.now(),
-            //     data: data
-            // });
-        }
-
-        // TODO: use _recordConnectorObservations instead and replace recordTurn
-        for (const connector of this.connectors) {
-            try {
-                const connObservations = connector.collectObservations ? await connector.collectObservations() : [];
-                observations.push(...connObservations);
-            } catch (error) {
-                logger.warn(`Agent: Error getting observations from connector ${connector.id}: ${error instanceof Error ? error.message : String(error)}`);
+            // Record results of action
+            if (data) {
+                memory.recordObservation(Observation.fromActionResult(actionDefinition.name, data));
             }
+
+            // Collect and record observations from connectors
+            await this._recordConnectorObservations(memory);
         }
-        this.memory.recordTurn(actionDefinition.name, action, observations);
     }
 
-    private async _recordConnectorObservations() {
+    private async _recordConnectorObservations(memory: AgentMemory) {
         for (const connector of this.connectors) {
             try {
                 const connObservations = connector.collectObservations ? await connector.collectObservations() : [];
                 //observations.push(...connObservations);
                 for (const obs of connObservations) {
-                    this.memory.recordObservation(obs);
+                    memory.recordObservation(obs);
                 }
             } catch (error) {
                 logger.warn(`Agent: Error getting observations from connector ${connector.id}: ${error instanceof Error ? error.message : String(error)}`);
@@ -183,6 +177,7 @@ export class Agent {
     }
 
     async act(description: string, options: ActOptions = {}): Promise<void> {
+        // await this._act(description, options);
         await (traceAsync('act', async (description: string, options: ActOptions) => {
             await this._act(description, options);
         })(description, options));
@@ -190,11 +185,17 @@ export class Agent {
 
     async _act(description: string, options: ActOptions = {}): Promise<void> {
         this.doneActing = false;
-        logger.info(`Begin Step: ${description}`);
+        logger.info(`Act: ${description}`);
+        this.events.emit('stepStart', description);
 
         const testData = convertOptionsToTestData(options);
 
-        this.events.emit('stepStart', description);
+        // Initialize task memory and record initial observations
+        const taskMemory = new AgentMemory();
+
+        logger.info("Making initial observations...");
+        await this._recordConnectorObservations(taskMemory);
+        logger.info("Initial observations recorded");
 
         while (true) {
             // Removed direct screenshot/tabState access here; it's part of memoryContext via connectors
@@ -203,7 +204,7 @@ export class Agent {
             let reasoning: string;
             let actions: Action[];
             try {
-                const memoryContext = await this.memory.buildContext(this.connectors);
+                const memoryContext = await taskMemory.buildContext(this.connectors);
                 ({ reasoning, actions } = await this.macro.createPartialRecipe(
                     memoryContext, 
                     description,
@@ -227,11 +228,11 @@ export class Agent {
 
             logger.info({ reasoning, actions }, `Partial recipe created`);
 
-            this.memory.recordThought(reasoning);
+            taskMemory.recordThought(reasoning);
 
             // Execute partial recipe
             for (const action of actions) {
-                await this.exec(action);
+                await this.exec(action, taskMemory);
 
                 // const postActionScreenshot = await this.screenshot();
                 // const actionDescriptor: ActionDescriptor = { ...action, screenshot: postActionScreenshot.image } as ActionDescriptor;

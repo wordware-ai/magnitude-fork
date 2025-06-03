@@ -10,159 +10,53 @@ import { Observation, renderObservations } from './observation';
 import { BamlRenderable, observableDataToContext } from './context';
 import z from 'zod';
 
-
-// export const memoryOptionsSchema = z.object({
-//     trimming: z.object({
-//         images: z.object({
-//             dedupeAdjacent: z.boolean().default(true),
-//             limit: z.number().int().default(3)
-//         })
-//     })
-// });
-// export type MemoryOptions = z.infer<typeof memoryOptionsSchema>;
-
-export interface MemoryOptions {
-    // TODO: more general filtering config
-    dedupeAdjacentImages?: boolean
-    imageLimit?: number
-    // trimming?: {
-    //     images?: {
-    //         dedupeAdjacent?: boolean,
-    //         limit?: number
-    //     }
-    // }
-}
-
-// does this actually need to be distinct or can it be a type of observation?
-interface ThoughtEntry {
-    variant: 'thought';
-    timestamp: number;
-    content: string;
-}
-
-interface TurnEntry {
-    variant: 'turn';
-    timestamp: number;
-    action: Action;
-    observations: Observation[];
-}
-
-type StoredHistoryEntry = ThoughtEntry | TurnEntry;
-
 export class AgentMemory {
-    private options: Required<MemoryOptions>;
+    //private options: Required<MemoryOptions>;
     //private history: StoredHistoryEntry[] = [];
 
     private observations: Observation[] = [];
+    //private tasks: { task: string, observations: Observation[] }[] = [];
 
-    constructor(options: MemoryOptions = {}) {
-        // TODO: impl
-        this.options = {
-            dedupeAdjacentImages: options.dedupeAdjacentImages ?? true,
-            imageLimit: options.imageLimit ?? 3
-        };
+    constructor() {
     }
 
-    public recordThought(content: string, timestamp?: number): void {
+    // get observations(): Observation[] {
+    //     if (this.tasks.length === 0) {
+            
+    //     }
+    //     return this.tasks.at(-1).observations
+    // }
+
+    // public newTask(task: string): void {
+    //     // Mark start of task for a new isolated memory window
+    // }
+
+    public recordThought(content: string): void {
         this.observations.push(
             Observation.fromThought(content)
-        )
-        // this.history.push({
-        //     variant: 'thought',
-        //     timestamp: timestamp || Date.now(),
-        //     content
-        // });
-    }
-
-    public recordTurn(actionId: string, action: Action, observations: Observation[]): void {
-        // TODO: this and its usage could be cleaner now with obs refac
-        this.observations.push(
-            Observation.fromActionTaken(actionId, JSON.stringify(action)) // show actions taken as JSON string
         );
-        for (const obs of observations) {
-            this.observations.push(obs);
-        }
-        // this.history.push({
-        //     variant: 'turn',
-        //     timestamp: timestamp || Date.now(),
-        //     action,
-        //     observations
-        // });
     }
 
     public recordObservation(obs: Observation): void {
         this.observations.push(obs);
     }
 
-    // public async getLastScreenshot(): Promise<{ image: string, dimensions: { width: number, height: number } }> {
-    //     return { image: "", dimensions: { width: 0, height: 0 } };
-    // }
-
     public getLastThoughtMessage(): string | null {
         for (let i = this.observations.length - 1; i >= 0; i--) {
             const obs = this.observations[i];
+            // toString() is a little funky here, or the idea that thought might not just be text
             if (obs.source.startsWith('thought')) return obs.toString();
-            // if (entry.variant === 'thought') {
-            //     return entry.content;
-            // }
         }
         return null;
     }
 
     public async buildContext(activeConnectors: AgentConnector[]): Promise<ModularMemoryContext> {
-        // const historyObservations = this.history.filter(e => e.variant === 'turn').flatMap(e => e.observations);
-        // //const stateObservations = activeConnectors.flatMap(c => c.collectObservations())
-        // let stateObservations: Observation[] = [];
-        // for (const connector of activeConnectors) {
-        //     const observations = connector.collectObservations ? await connector.collectObservations() : [];
-        //     stateObservations = [...stateObservations, ...observations];
-        // }
-
-
-        // const processedHistory: (BamlThought | BamlTurn)[] = [];
-
-        // for (const entry of this.history) {
-        //     const formattedTime = new Date(entry.timestamp).toTimeString().split(' ')[0];
-
-        //     if (entry.variant === 'thought') {
-        //         processedHistory.push({
-        //             variant: 'thought',
-        //             timestamp: formattedTime,
-        //             message: entry.content
-        //         } as BamlThought);
-        //     } else if (entry.variant === 'turn') {
-        //         const renderables: BamlRenderable[] = [];
-        //         for (const observation of entry.observations) {
-        //             if (observation.source.startsWith('action')) {
-        //                 renderables.push('Result: ');
-        //             }
-        //             renderables.push(...(await observation.toContext()))
-        //             //renderables.push(...(await observableDataToContext(observation.data)));
-        //             renderables.push('\n'); // newline after each observation
-        //         }
-        //         processedHistory.push({
-        //             variant: 'turn',
-        //             timestamp: formattedTime,
-        //             action: JSON.stringify(entry.action),
-        //             content: renderables
-        //         } as BamlTurn);
-        //     }
-        // }
-
         const content = await renderObservations(this.observations);
 
         // TODO: doesn't really make sense for memory to be responsible for current state and instruction render logic
         const connectorInstructions: ConnectorInstructions[] = [];
 
         for (const connector of activeConnectors) {
-            let stateContent: BamlRenderable[] = [];
-            //let instructions: string | null = null;
-            // if (connector.viewState) {
-            //     const renderables = await (await connector.viewState()).toContext();
-            //     if (renderables && renderables.length > 0) {
-            //         stateContent = renderables;
-            //     }
-            // }
             if (connector.getInstructions) {
                 const instructions = await connector.getInstructions();
 
@@ -173,22 +67,11 @@ export class AgentMemory {
                     });
                 }
             }
-
-            // if (instr)
-            // connector_states_for_context.push({
-            //     connector_id: connector.id,
-            //     // content: stateContent,
-            //     // instructions: instructions
-            //     //content: stateContent,
-            //     //...(stateContent ? { content: stateContent } : {}),
-            //     ...(instructions ? { instructions: instructions } : {})
-            // });
         }
 
         return {
-            observationContent: content,//processedHistory,
-            //currentTimestamp: new Date().toTimeString().split(' ')[0],
+            observationContent: content,
             connectorInstructions: connectorInstructions
-        } as ModularMemoryContext;
+        };
     }
 }
