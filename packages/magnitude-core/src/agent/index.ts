@@ -24,13 +24,13 @@ export interface AgentOptions {
     llm?: LLMClient;
     connectors?: AgentConnector[];
     actions?: ActionDefinition<any>[]; // any additional actions not provided by connectors
-    instructions?: string | null; // additional agent-level system prompt instructions
+    prompt?: string | null; // additional agent-level system prompt instructions
     
     //executor?: GroundingClient;
 }
 
 export interface ActOptions {
-    instructions?: string // additional task-level system prompt instructions
+    prompt?: string // additional task-level system prompt instructions
     // TODO: reimpl, or maybe for tc agent specifically
 	//data?: string | Record<string, string>
 }
@@ -47,7 +47,7 @@ const DEFAULT_CONFIG: Required<Omit<AgentOptions, 'actions'> & { actions: Action
             apiKey: process.env.GOOGLE_API_KEY || "YOUR_GOOGLE_API_KEY"
         }
     } as LLMClient,
-    instructions: null,
+    prompt: null,
 };
 
 export class Agent {
@@ -191,8 +191,8 @@ export class Agent {
 
     async act(taskOrSteps: string | string[], options: ActOptions = {}): Promise<void> {
         const instructions = [
-            ...(this.options.instructions ? [this.options.instructions] : []),
-            ...(options.instructions ? [options.instructions] : []),
+            ...(this.options.prompt ? [this.options.prompt] : []),
+            ...(options.prompt ? [options.prompt] : []),
         ].join('\n');
         const taskMemory = new AgentMemory(instructions === '' ? undefined : instructions);
 
