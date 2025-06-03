@@ -2,7 +2,7 @@ import { Browser, BrowserContext, BrowserContextOptions, chromium, LaunchOptions
 
 const DEFAULT_BROWSER_OPTIONS: LaunchOptions = {
     headless: false,
-    args: ["--disable-gpu"],
+    args: ["--disable-gpu", "--disable-blink-features=AutomationControlled"],
 };
 
 export class BrowserProvider {
