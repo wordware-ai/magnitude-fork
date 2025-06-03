@@ -13,7 +13,7 @@ import { Observation } from '@/memory/observation';
 import { LLMClient, GroundingClient } from "@/ai/types";
 import EventEmitter from "eventemitter3";
 import { AgentError } from "./errors";
-import { ActionDescriptor, convertOptionsToTestData, FailureDescriptor, retryOnError } from "../common";
+import { ActionDescriptor, FailureDescriptor, retryOnError } from "../common";
 import { AgentMemory } from "../memory";
 import { ActionDefinition } from "@/actions";
 import { ZodObject } from "zod";
@@ -223,7 +223,7 @@ export class Agent {
         logger.info(`Act: ${description}`);
         this.events.emit('stepStart', description);
 
-        const testData = convertOptionsToTestData(options);
+        //const testData = convertOptionsToTestData(options);
 
         // Initialize task memory and record initial observations
         // Combine any agent-level and task-level instructions

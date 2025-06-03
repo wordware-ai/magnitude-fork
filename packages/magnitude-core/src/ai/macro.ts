@@ -1,6 +1,6 @@
 import { convertToBamlClientOptions } from "./util";
 // Import ModularMemoryContext instead of old MemoryContext
-import { b, BrowserExecutionContext, ModularMemoryContext, MemoryContext as OldMemoryContext } from "@/ai/baml_client"; 
+import { b, ModularMemoryContext } from "@/ai/baml_client"; 
 import { Image as BamlImage, Collector, ClientRegistry } from "@boundaryml/baml";
 import { Action, ActionIntent, Intent } from "@/actions/types";
 import { TestStepDefinition } from "@/types";
@@ -115,59 +115,59 @@ export class MacroAgent {
         }
     }
 
-    async evaluateCheck(screenshot: Image, check: string, existingRecipe: Action[], tabState: TabState): Promise<boolean> {
-        const stringifiedExistingRecipe = [];
-        for (const action of existingRecipe) {
-            stringifiedExistingRecipe.push(JSON.stringify(action, null, 4))
-        }
+    // async evaluateCheck(screenshot: Image, check: string, existingRecipe: Action[], tabState: TabState): Promise<boolean> {
+    //     const stringifiedExistingRecipe = [];
+    //     for (const action of existingRecipe) {
+    //         stringifiedExistingRecipe.push(JSON.stringify(action, null, 4))
+    //     }
 
-        const start = Date.now();
-        const response = await this.baml.EvaluateCheck(
-            {
-                screenshot: await screenshot.toBaml(),//Image.fromBase64('image/png', screenshot.image),
-                actionHistory: stringifiedExistingRecipe,
-                tabState: tabState
-            },
-            check
-        );
-        this.logger.trace(`evaluateCheck took ${Date.now()-start}ms`);
-        return response.passes;
-    }
+    //     const start = Date.now();
+    //     const response = await this.baml.EvaluateCheck(
+    //         {
+    //             screenshot: await screenshot.toBaml(),//Image.fromBase64('image/png', screenshot.image),
+    //             actionHistory: stringifiedExistingRecipe,
+    //             tabState: tabState
+    //         },
+    //         check
+    //     );
+    //     this.logger.trace(`evaluateCheck took ${Date.now()-start}ms`);
+    //     return response.passes;
+    // }
 
-    async classifyCheckFailure(screenshot: Image, check: string, existingRecipe: Action[], tabState: TabState): Promise<BugDetectedFailure | MisalignmentFailure> {
-        const stringifiedExistingRecipe = [];
-        for (const action of existingRecipe) {
-            stringifiedExistingRecipe.push(JSON.stringify(action, null, 4))
-        }
+    // async classifyCheckFailure(screenshot: Image, check: string, existingRecipe: Action[], tabState: TabState): Promise<BugDetectedFailure | MisalignmentFailure> {
+    //     const stringifiedExistingRecipe = [];
+    //     for (const action of existingRecipe) {
+    //         stringifiedExistingRecipe.push(JSON.stringify(action, null, 4))
+    //     }
 
-        const start = Date.now();
-        const response = await this.baml.ClassifyCheckFailure(
-            {
-                screenshot: await screenshot.toBaml(),//Image.fromBase64('image/png', screenshot.image),
-                actionHistory: stringifiedExistingRecipe,
-                tabState: tabState
-            },
-            check
-        );
-        this.logger.trace(`classifyCheckFailure took ${Date.now()-start}ms`);
-        //return response.check;
+    //     const start = Date.now();
+    //     const response = await this.baml.ClassifyCheckFailure(
+    //         {
+    //             screenshot: await screenshot.toBaml(),//Image.fromBase64('image/png', screenshot.image),
+    //             actionHistory: stringifiedExistingRecipe,
+    //             tabState: tabState
+    //         },
+    //         check
+    //     );
+    //     this.logger.trace(`classifyCheckFailure took ${Date.now()-start}ms`);
+    //     //return response.check;
 
-        if (response.classification === 'bug') {
-            return {
-                variant: 'bug',
-                title: response.title,
-                expectedResult: response.expectedResult,
-                actualResult: response.actualResult,
-                severity: response.severity
-            }
-        }
-        else {
-            return {
-                variant: 'misalignment',
-                message: response.message
-            }
-        }
-    }
+    //     if (response.classification === 'bug') {
+    //         return {
+    //             variant: 'bug',
+    //             title: response.title,
+    //             expectedResult: response.expectedResult,
+    //             actualResult: response.actualResult,
+    //             severity: response.severity
+    //         }
+    //     }
+    //     else {
+    //         return {
+    //             variant: 'misalignment',
+    //             message: response.message
+    //         }
+    //     }
+    // }
 
     
 

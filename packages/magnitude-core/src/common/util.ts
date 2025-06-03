@@ -1,7 +1,7 @@
 import { ActionIntent } from "@/actions/types";
 import { WebAction } from "@/web/types";
 import { ActionDescriptor } from "./actions";
-import { StepOptions, TestData } from "@/types";
+import { TestData } from "@/types";
 
 // export function describeAction(planAction: ActionIngredient, webAction: WebAction) {
 //     switch (planAction.variant) {
@@ -25,18 +25,18 @@ export function describeAction(action: ActionDescriptor) {
     }
 }
 
-export function convertOptionsToTestData(options: StepOptions): TestData {
-    if (!options.data) return {};
-    if (typeof options.data === 'string') {
-        return { other: options.data }
-    } else {
-        return { data: Object.entries(options.data).map(([k, v]) => ({
-            key: k,
-            value: v,
-            sensitive: false
-        }))}
-    }
-}
+// export function convertOptionsToTestData(options: StepOptions): TestData {
+//     if (!options.data) return {};
+//     if (typeof options.data === 'string') {
+//         return { other: options.data }
+//     } else {
+//         return { data: Object.entries(options.data).map(([k, v]) => ({
+//             key: k,
+//             value: v,
+//             sensitive: false
+//         }))}
+//     }
+// }
 
 export async function retryOnError<T>(
     fnToRetry: () => Promise<T>,
