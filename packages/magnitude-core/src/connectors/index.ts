@@ -18,4 +18,4 @@ export interface AgentConnector {
     getInstructions?(): Promise<void | string>;
 }
 
-export { BrowserConnector as WebInteractionConnector } from './browserConnector';
+//export { BrowserConnector, BrowserConnectorOptions } from './browserConnector';

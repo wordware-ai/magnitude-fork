@@ -63,7 +63,7 @@
     "@types/react": "^18.2.0",
     "pkgroll": "^2.10.0",
     "typescript": "~5.7.2",
-    "playwright": "^1.51.0"
+    "playwright": "npm:rebrowser-playwright@^1.52.0"
   },
   "dependencies": {
     "@paralleldrive/cuid2": "^2.2.2",

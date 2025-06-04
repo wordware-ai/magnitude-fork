@@ -1,5 +1,5 @@
 import { TestState } from './types';
-import { ActionDescriptor, ActionVariant, FailureDescriptor } from 'magnitude-core';
+import { ActionDescriptor, FailureDescriptor } from 'magnitude-core';
 import { ANSI_RESET, ANSI_GREEN, ANSI_BRIGHT_BLUE, ANSI_GRAY, ANSI_RED, BOX_CHARS_ROUNDED } from './constants';
 
 /**
@@ -125,7 +125,7 @@ export function describeAction(action: ActionDescriptor): string {
  * @param variant The action variant
  * @returns Plain character symbol
  */
-export function getActionSymbol(variant: ActionVariant): string {
+export function getActionSymbol(variant: string): string {
     // Returns plain char
     switch (variant) {
         case "load": return "↻";

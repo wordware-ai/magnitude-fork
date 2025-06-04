@@ -1,5 +1,5 @@
 import { ActionDefinition } from ".";
-import zodToJsonSchema from "zod-to-json-schema";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import TypeBuilder from "@/ai/baml_client/type_builder";
 import { FieldType, ClassBuilder, ClassPropertyBuilder, EnumBuilder, EnumValueBuilder } from "@boundaryml/baml/native";
 import { Schema, z, ZodObject, ZodSchema } from "zod";

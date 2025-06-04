@@ -1,7 +1,6 @@
 // Removed React import
 import logger from '@/logger';
-import { AgentError, TestCaseAgent, AgentStateTracker, Magnus } from 'magnitude-core';
-import type { AgentState, ExecutorClient, PlannerClient, FailureDescriptor, TestCaseAgentOptions, StepDescriptor } from 'magnitude-core';
+import { AgentError, GroundingClient, LLMClient } from 'magnitude-core';
 import { CategorizedTestCases, TestFunctionContext, TestRunnable } from '@/discovery/types';
 // Removed App import from '@/app'
 import { AllTestStates, TestState } from '@/term-app/types'; // Import types from term-app
@@ -9,6 +8,7 @@ import { getUniqueTestId } from '@/term-app/util'; // Import util from term-app
 import { Browser, BrowserContext, BrowserContextOptions, chromium, LaunchOptions, Page } from 'playwright';
 import { describeModel, sendTelemetry } from '../util';
 import { WorkerPool } from './workerPool';
+import { startTestCaseAgent, TestCaseAgent } from '@/agent';
 
 // Removed RerenderFunction type
 
@@ -20,8 +20,8 @@ type CleanupUIFunction = () => void;
 export interface TestRunnerConfig {
     workerCount: number;
     prettyDisplay: boolean;
-    planner: PlannerClient;
-    executor: ExecutorClient;
+    planner?: LLMClient;
+    executor?: GroundingClient;
     browserContextOptions: BrowserContextOptions;
     browserLaunchOptions: LaunchOptions;
     telemetry: boolean;
@@ -37,45 +37,45 @@ export interface TestRunnerConfig {
 // };
 
 export class TestRunner {
-    private config: Required<TestRunnerConfig>;
+    private config: TestRunnerConfig;
     private tests: CategorizedTestCases;
-    private testStates: AllTestStates;
-    private updateUI: UpdateUIFunction;
-    private cleanupUI: CleanupUIFunction;
+    // private testStates: AllTestStates;
+    // private updateUI: UpdateUIFunction;
+    // private cleanupUI: CleanupUIFunction;
 
     constructor(
         config: TestRunnerConfig,
         tests: CategorizedTestCases,
-        testStates: AllTestStates,
-        updateUI: UpdateUIFunction,
-        cleanupUI: CleanupUIFunction,
+        // testStates: AllTestStates,
+        // updateUI: UpdateUIFunction,
+        // cleanupUI: CleanupUIFunction,
     ) {
         this.config = config;
         //this.config = { ...DEFAULT_CONFIG, ...config };
         this.tests = tests;
-        this.testStates = testStates;
-        this.updateUI = updateUI;
-        this.cleanupUI = cleanupUI;
+        // this.testStates = testStates;
+        // this.updateUI = updateUI;
+        // this.cleanupUI = cleanupUI;
     }
 
-    private updateStateAndRender(testId: string, newState: Partial<TestState>) {
-        if (this.testStates[testId]) {
-            // Create a new state object for immutability
-            const nextTestStates = {
-                ...this.testStates,
-                [testId]: {
-                    ...this.testStates[testId],
-                    ...newState
-                }
-            };
-            // Update internal reference
-            this.testStates = nextTestStates;
-            // Call updateUI with the tests structure and the new states
-            this.updateUI(this.tests, nextTestStates);
-        } else {
-            logger.warn(`Attempted to update state for unknown testId: ${testId}`);
-        }
-    }
+    // private updateStateAndRender(testId: string, newState: Partial<TestState>) {
+    //     if (this.testStates[testId]) {
+    //         // Create a new state object for immutability
+    //         const nextTestStates = {
+    //             ...this.testStates,
+    //             [testId]: {
+    //                 ...this.testStates[testId],
+    //                 ...newState
+    //             }
+    //         };
+    //         // Update internal reference
+    //         this.testStates = nextTestStates;
+    //         // Call updateUI with the tests structure and the new states
+    //         this.updateUI(this.tests, nextTestStates);
+    //     } else {
+    //         logger.warn(`Attempted to update state for unknown testId: ${testId}`);
+    //     }
+    // }
 
     /**
      * Runs a single test case.
@@ -90,124 +90,139 @@ export class TestRunner {
      */
     private async runTest(browser: Browser, test: TestRunnable, testId: string, signal: AbortSignal): Promise<boolean> {
         // --- Cancellation Check ---
-        if (signal.aborted) {
-            this.updateStateAndRender(testId, { status: 'cancelled', failure: { variant: 'cancelled' } });
-            logger.debug(`Test ${testId} cancelled before starting.`);
-            return true; // Cancelled cleanly is not a failure
-        }
+        // if (signal.aborted) {
+        //     this.updateStateAndRender(testId, { status: 'cancelled', failure: { variant: 'cancelled' } });
+        //     logger.debug(`Test ${testId} cancelled before starting.`);
+        //     return true; // Cancelled cleanly is not a failure
+        // }
 
         const agent = new TestCaseAgent({
-            planner: this.config.planner,
-            executor: this.config.executor,
-            browserContextOptions: this.config.browserContextOptions,
-            signal: signal
+            // planner: this.config.planner,
+            // executor: this.config.executor,
+            // browserContextOptions: this.config.browserContextOptions,
+            // signal: signal
         });
-        const stateTracker = new AgentStateTracker(agent);
+        //const stateTracker = new AgentStateTracker(agent);
 
         let failed = false;
 
-        stateTracker.getEvents().on('update', (agentState: AgentState) => {
-            // Form combined test state
-            const testState = {
-                status: 'running' as ('pending' | 'running' | 'passed' | 'failed'),
-                ...agentState
-            };
-            this.updateStateAndRender(testId, testState);
-        });
+        // stateTracker.getEvents().on('update', (agentState: AgentState) => {
+        //     // Form combined test state
+        //     const testState = {
+        //         status: 'running' as ('pending' | 'running' | 'passed' | 'failed'),
+        //         ...agentState
+        //     };
+        //     this.updateStateAndRender(testId, testState);
+        // });
 
 
         try {
             // todo: maybe display errors for network start differently not as generic/unknown
-            await agent.start(browser, test.url);
+            //await agent.start(browser, test.url);
+            const agent = await startTestCaseAgent({
+                url: test.url,
+                llm: this.config.planner,
+                grounding: this.config.executor,
+                browserContextOptions: this.config.browserContextOptions
+            });
 
             const context: TestFunctionContext = {
-                ai: new Magnus(agent),
+                ai: agent,//new Magnus(agent),
                 get page(): Page {
-                    return agent.getPage();
+                    return agent.page;
                 },
                 get context(): BrowserContext {
-                    return agent.getContext();
+                    return agent.context;
                 }
             }
             await test.fn(context);
 
         } catch (err: unknown) {
             if (err instanceof AgentError) {
-                if (err.failure.variant === 'cancelled') {
-                    // Operation was cancelled by the signal via AgentError
-                    logger.debug(`Test ${testId} cancelled during agent operation`);
-                    this.updateStateAndRender(testId, { status: 'cancelled', failure: { variant: 'cancelled' }});
-                    return true;
-                } else {
-                    failed = true;
-                    this.updateStateAndRender(testId, {
-                        status: 'failed',
-                        failure: err.failure
-                    });
-                }
+                failed = true;
+                // this.updateStateAndRender(testId, {
+                //     status: 'failed',
+                //     failure: {
+                //         variant: err.options.variant,
+                //         message: err.message
+                //     }
+                // });
+                // if (err.failure.variant === 'cancelled') {
+                //     // Operation was cancelled by the signal via AgentError
+                //     logger.debug(`Test ${testId} cancelled during agent operation`);
+                //     this.updateStateAndRender(testId, { status: 'cancelled', failure: { variant: 'cancelled' }});
+                //     return true;
+                // } else {
+                //     failed = true;
+                //     this.updateStateAndRender(testId, {
+                //         status: 'failed',
+                //         failure: err.failure
+                //     });
+                // }
             } else {
                 failed = true;
-                this.updateStateAndRender(testId, {
-                    status: 'failed',
-                    failure: {
-                        variant: 'unknown',
-                        // Safely access message after checking if err is an Error instance
-                        message: err instanceof Error ? err.message : String(err)
-                    }
-                });
+                // this.updateStateAndRender(testId, {
+                //     status: 'failed',
+                //     failure: {
+                //         variant: 'unknown',
+                //         // Safely access message after checking if err is an Error instance
+                //         message: err instanceof Error ? err.message : String(err)
+                //     }
+                // });
             }
         }
 
-        if (stateTracker.getState().failure) {
-            // If agent failure, update UI with it
-            // If agent failure, update UI with it, including final steps/checks
-            failed = true;
-            const finalStateWithFailure = stateTracker.getState();
-            this.updateStateAndRender(testId, {
-                status: 'failed',
-                failure: finalStateWithFailure.failure,
-                stepsAndChecks: finalStateWithFailure.stepsAndChecks // Include final steps/checks
-            });
-        }
+        // if (stateTracker.getState().failure) {
+        //     // If agent failure, update UI with it
+        //     // If agent failure, update UI with it, including final steps/checks
+        //     failed = true;
+        //     const finalStateWithFailure = stateTracker.getState();
+        //     this.updateStateAndRender(testId, {
+        //         status: 'failed',
+        //         failure: finalStateWithFailure.failure,
+        //         stepsAndChecks: finalStateWithFailure.stepsAndChecks // Include final steps/checks
+        //     });
+        // }
 
         if (!failed) {
             // Test passed, update UI including final steps/checks
-            const finalStatePassed = stateTracker.getState();
-            this.updateStateAndRender(testId, {
-                status: 'passed',
-                stepsAndChecks: finalStatePassed.stepsAndChecks // Include final steps/checks
-            });
+            // const finalStatePassed = stateTracker.getState();
+            // this.updateStateAndRender(testId, {
+            //     status: 'passed',
+            //     stepsAndChecks: finalStatePassed.stepsAndChecks // Include final steps/checks
+            // });
+            console.log("tests passed");
         }
 
         try {
-            await agent.close();
+            await agent.stop();
         } catch (closeErr: unknown) {
-            logger.warn(`Error during agent.close for ${testId}: ${closeErr}`);
+            logger.warn(`Error during agent.stop for ${testId}: ${closeErr}`);
         }
 
         // Send basic telemetry
-        if (this.config.telemetry) {
-            const state = stateTracker.getState();
-            const numSteps = state.stepsAndChecks.filter(item => item.variant === 'step').length;
-            const numChecks = state.stepsAndChecks.filter(item => item.variant === 'check').length;
-            const actionCount = state.stepsAndChecks
-                .filter((item): item is StepDescriptor => item.variant === 'step')
-                .reduce((sum, step) => sum + step.actions.length, 0);
+        // if (this.config.telemetry) {
+        //     const state = stateTracker.getState();
+        //     const numSteps = state.stepsAndChecks.filter(item => item.variant === 'step').length;
+        //     const numChecks = state.stepsAndChecks.filter(item => item.variant === 'check').length;
+        //     const actionCount = state.stepsAndChecks
+        //         .filter((item): item is StepDescriptor => item.variant === 'step')
+        //         .reduce((sum, step) => sum + step.actions.length, 0);
 
-            await sendTelemetry({
-                startedAt: state.startedAt ?? Date.now(),
-                doneAt: Date.now(),
-                macroUsage: state.macroUsage,
-                microUsage: state.microUsage,
-                cached: state.cached ?? false,
-                testCase: {
-                    numChecks: numChecks,
-                    numSteps: numSteps,
-                },
-                actionCount: actionCount,
-                result: state.failure ? state.failure.variant : 'passed'
-            })
-        }
+        //     await sendTelemetry({
+        //         startedAt: state.startedAt ?? Date.now(),
+        //         doneAt: Date.now(),
+        //         macroUsage: state.macroUsage,
+        //         microUsage: state.microUsage,
+        //         cached: state.cached ?? false,
+        //         testCase: {
+        //             numChecks: numChecks,
+        //             numSteps: numSteps,
+        //         },
+        //         actionCount: actionCount,
+        //         result: state.failure ? state.failure.variant : 'passed'
+        //     })
+        // }
 
         return !failed;
     }
@@ -238,7 +253,7 @@ export class TestRunner {
                     return success;
                 } catch (err: unknown) {
                     logger.error(`Unhandled error during task execution wrapper for ${testId}:`, err);
-                    this.updateStateAndRender(testId, { status: 'failed', failure: { variant: 'unknown', message: `${err instanceof Error ? err.message : String(err)}` } });
+                    //this.updateStateAndRender(testId, { status: 'failed', failure: { variant: 'unknown', message: `${err instanceof Error ? err.message : String(err)}` } });
                     return false;
                 }
             };
@@ -256,10 +271,10 @@ export class TestRunner {
                 poolResult.results.forEach((result, index) => {
                     if (result === undefined) {
                         const { testId } = allTestItems[index];
-                        if (this.testStates[testId]?.status !== 'failed') {
-                             this.updateStateAndRender(testId, { status: 'cancelled' });
-                             logger.debug(`Test ${testId} marked as cancelled post-run due to abort.`);
-                        }
+                        // if (this.testStates[testId]?.status !== 'failed') {
+                        //      this.updateStateAndRender(testId, { status: 'cancelled' });
+                        //      logger.debug(`Test ${testId} marked as cancelled post-run due to abort.`);
+                        // }
                     }
                 });
             }
@@ -271,7 +286,7 @@ export class TestRunner {
             await browser.close();
             // No need to restore cursor visibility here, term-app handles it
             // process.stdout.write('\x1B[?25h');
-            this.cleanupUI(); // Call the cleanup function
+            //this.cleanupUI(); // Call the cleanup function
             process.exit(poolResult.completed ? 0 : 1);
         }
     }

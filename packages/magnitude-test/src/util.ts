@@ -1,9 +1,10 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import { PlannerClient, TestCaseDefinition } from "magnitude-core";
+//import { PlannerClient, TestCaseDefinition } from "magnitude-core";
 import { init } from '@paralleldrive/cuid2';
 import logger from './logger';
+import { LLMClient } from 'magnitude-core';
 
 const createId = init({ length: 12 });
 
@@ -127,64 +128,64 @@ export function addProtocolIfMissing(url: string): string {
     }
 }
 
-export function tryDeriveEnvironmentPlannerClient(): PlannerClient | null {
-    // Order by approximate model suitability as planner
+// export function tryDeriveEnvironmentPlannerClient(): PlannerClient | null {
+//     // Order by approximate model suitability as planner
 
-    // Best: Gemini 2.5 pro
-    if (process.env.GOOGLE_API_KEY) {
-        // Google AI Studio
-        return {
-            'provider': 'google-ai',
-            'options': {
-                model: 'gemini-2.5-pro-preview-03-25',
-                apiKey: process.env.GOOGLE_API_KEY
-            }
-        }
-    }
-    // Patching out until vertex AI authorization issues are resolved
-    // if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    //     // Google Vertex AI
-    //     return {
-    //         'provider': 'vertex-ai',
-    //         'options': {
-    //             location: 'us-central1',
-    //             model: 'gemini-2.5-pro-preview-03-25'
-    //         }
-    //     }
-    // }
-    if (process.env.OPENROUTER_API_KEY) {
-        return {
-            'provider': 'openai-generic',
-            'options': {
-                baseUrl: "https://openrouter.ai/api/v1",
-                model: 'google/gemini-2.5-pro-preview-03-25',
-                apiKey: process.env.OPENROUTER_API_KEY
-            }
-        }
-    }
-    // Good
-    if (process.env.ANTHROPIC_API_KEY) {
-        return {
-            'provider': 'anthropic',
-            'options': {
-                model: 'claude-3-7-sonnet-latest',
-                apiKey: process.env.ANTHROPIC_API_KEY
-            }
-        }
-    }
-    // Ok
-    if (process.env.OPENAI_API_KEY) {
-        return {
-            'provider': 'openai',
-            'options': {
-                model: 'gpt-4.1-2025-04-14',
-                apiKey: process.env.OPENAI_API_KEY
-            }
-        }
-    }
+//     // Best: Gemini 2.5 pro
+//     if (process.env.GOOGLE_API_KEY) {
+//         // Google AI Studio
+//         return {
+//             'provider': 'google-ai',
+//             'options': {
+//                 model: 'gemini-2.5-pro-preview-03-25',
+//                 apiKey: process.env.GOOGLE_API_KEY
+//             }
+//         }
+//     }
+//     // Patching out until vertex AI authorization issues are resolved
+//     // if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+//     //     // Google Vertex AI
+//     //     return {
+//     //         'provider': 'vertex-ai',
+//     //         'options': {
+//     //             location: 'us-central1',
+//     //             model: 'gemini-2.5-pro-preview-03-25'
+//     //         }
+//     //     }
+//     // }
+//     if (process.env.OPENROUTER_API_KEY) {
+//         return {
+//             'provider': 'openai-generic',
+//             'options': {
+//                 baseUrl: "https://openrouter.ai/api/v1",
+//                 model: 'google/gemini-2.5-pro-preview-03-25',
+//                 apiKey: process.env.OPENROUTER_API_KEY
+//             }
+//         }
+//     }
+//     // Good
+//     if (process.env.ANTHROPIC_API_KEY) {
+//         return {
+//             'provider': 'anthropic',
+//             'options': {
+//                 model: 'claude-3-7-sonnet-latest',
+//                 apiKey: process.env.ANTHROPIC_API_KEY
+//             }
+//         }
+//     }
+//     // Ok
+//     if (process.env.OPENAI_API_KEY) {
+//         return {
+//             'provider': 'openai',
+//             'options': {
+//                 model: 'gpt-4.1-2025-04-14',
+//                 apiKey: process.env.OPENAI_API_KEY
+//             }
+//         }
+//     }
 
-    return null;
-}
+//     return null;
+// }
 
 export function getMachineId(): string {
     // Define storage location
@@ -210,7 +211,7 @@ export function getMachineId(): string {
     }
 }
 
-export function describeModel(client: PlannerClient) {
+export function describeModel(client: LLMClient) {
     if ('model' in client.options) {
         return `${client.provider}:${client.options.model}`;
     } else {
