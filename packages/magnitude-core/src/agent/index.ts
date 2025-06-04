@@ -298,15 +298,8 @@ export class Agent {
 
     async query<T extends z.Schema>(query: string, schema: T): Promise<z.infer<T>> {
         const memoryContext = await this.memory.buildContext(this.connectors);
-        //const screenshot = await this.require(BrowserConnector).getHarness().screenshot();
         return await this.macro.query(memoryContext, query, schema);
     }
-
-    // async check(description: string): Promise<boolean> {
-    //     const memoryContext = await this.memory.buildContext(this.connectors);
-    //     //const screenshot = await this.require(BrowserConnector).getHarness().screenshot();
-    //     return await this.macro.evaluateCheck(memoryContext, description);
-    // }
 
     async queueDone() {
         this.doneActing = true;
