@@ -160,6 +160,8 @@ export class Agent {
             { input: parsed.data, agent: this }
         );
 
+        this.events.emit('action', action);
+
         if (memory) {
             // Record action taken
             memory.recordObservation(Observation.fromActionTaken(actionDefinition.name, JSON.stringify(action)));
@@ -225,7 +227,7 @@ export class Agent {
     async _act(description: string, memory: AgentMemory, options: ActOptions = {}): Promise<void> {
         this.doneActing = false;
         logger.info(`Act: ${description}`);
-        this.events.emit('stepStart', description);
+        //this.events.emit('stepStart', description);
 
         //const testData = convertOptionsToTestData(options);
 
@@ -292,7 +294,7 @@ export class Agent {
         }
 
         logger.info(`Done with step`);
-        this.events.emit('stepSuccess');
+        //this.events.emit('stepSuccess');
         //this.currentTaskMemory = null;
     }
 
@@ -319,6 +321,7 @@ export class Agent {
                 logger.warn(`Agent: Error stopping connector ${connector.id}: ${error instanceof Error ? error.message : String(error)}`);
             }
         }
+        this.events.emit('stop');
         logger.info("Agent: All connectors stopped.");
         logger.info("Agent: Stopped successfully.");
     }
