@@ -50,4 +50,9 @@ export class BrowserAgent extends Agent {
         const screenshot = await this.require(BrowserConnector).getHarness().screenshot();
         return await this.macro.extract(instructions, schema, screenshot, htmlContent);
     }
+
+    // async check(description: string): Promise<boolean> {
+    //     //const screenshot = await this.require(BrowserConnector).getHarness().screenshot();
+    //     return await this.macro.check(description, screenshot);
+    // }
 }

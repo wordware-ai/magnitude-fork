@@ -19,6 +19,7 @@ import { ActionDefinition } from "@/actions";
 import { ZodObject } from "zod";
 import { taskActions } from "@/actions/taskActions";
 import { traceAsync } from "@/ai/baml_client";
+import z from "zod";
 
 export interface AgentOptions {
     llm?: LLMClient;
@@ -62,7 +63,7 @@ export class Agent {
     //public readonly memory: AgentMemory;
     private doneActing: boolean;
 
-    private latestTaskMemory: AgentMemory | null = null;
+    private latestTaskMemory: AgentMemory;// | null = null;
 
     constructor(baseConfig: Partial<AgentOptions> = {}) {
         this.options = {
@@ -89,6 +90,9 @@ export class Agent {
         this.events = new EventEmitter<AgentEvents>();
         //this.memory = new AgentMemory();
         this.doneActing = false;
+
+        // Empty memory will get replaced on first act(), but this prevents errors from having undefined memory
+        this.latestTaskMemory = new AgentMemory();
     }
 
     public getConnector<C extends AgentConnector>(
@@ -185,7 +189,7 @@ export class Agent {
     }
 
     get memory(): AgentMemory {
-        if (!this.latestTaskMemory) throw new Error("No memory available");
+        //if (!this.latestTaskMemory) throw new Error("No memory available");
         return this.latestTaskMemory;
     }
 
@@ -291,6 +295,18 @@ export class Agent {
         this.events.emit('stepSuccess');
         //this.currentTaskMemory = null;
     }
+
+    async query<T extends z.Schema>(query: string, schema: T): Promise<z.infer<T>> {
+        const memoryContext = await this.memory.buildContext(this.connectors);
+        //const screenshot = await this.require(BrowserConnector).getHarness().screenshot();
+        return await this.macro.query(memoryContext, query, schema);
+    }
+
+    // async check(description: string): Promise<boolean> {
+    //     const memoryContext = await this.memory.buildContext(this.connectors);
+    //     //const screenshot = await this.require(BrowserConnector).getHarness().screenshot();
+    //     return await this.macro.evaluateCheck(memoryContext, description);
+    // }
 
     async queueDone() {
         this.doneActing = true;

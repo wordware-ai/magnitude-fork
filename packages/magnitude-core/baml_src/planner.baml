@@ -46,45 +46,77 @@ template_string HybridMeta #"
     </meta>
 "#
 
-template_string DescribeConnectorInstructions(context: ModularMemoryContext) #"
-    {% for conn in context.connectorInstructions %}
+template_string DescribeConnectorInstructions(memory: ModularMemoryContext) #"
+    {% for conn in memory.connectorInstructions %}
     <{{ conn.connectorId }}>
     {{- conn.instructions -}}
     </{{ conn.connectorId }}>
     {% endfor %}
 "#
 
+template_string InstructionsWithContext(memory: ModularMemoryContext, instructions: string) #"
+    {{ _.role("system") }}
+    <instructions>
+    {{ instructions }}
+    {%if memory.instructions %}
+
+    {{ memory.instructions }}
+    {%endif%}
+    </instructions>
+    {{ DescribeConnectorInstructions(memory) }}
+    {{ ctx.output_format }}
+
+    {{ _.role("user") }}
+
+    {{ RenderContent(memory.observationContent) }}
+"# 
+
+template_string TaskInstructions(task: string) #"
+    Plan out actions that should be executed in order to complete the task:
+    <task>{{ task }}</task>
+
+    Execute the task serially.
+
+    Plan out as many actions as possible, but stopping at the point where you will need to observe to plan further.
+"#
 
 // TODO: connector system instructions
-function CreatePartialRecipe (context: ModularMemoryContext, task: string) -> PartialRecipe {
+function CreatePartialRecipe (memory: ModularMemoryContext, task: string) -> PartialRecipe {
     client GeminiPro
     prompt #"
-        {{ _.role("system") }}
-        <instructions>
-        Plan out actions that should be executed in order to complete the task:
-        <task>{{ task }}</task>
-        
-        Execute the task serially.
-        Plan out as many actions as possible, but stopping at the point where you will need to observe to plan further.
-        {%if context.instructions %}
-
-        {{ context.instructions }}
-        {%endif%}
-        </instructions>
-        {{ DescribeConnectorInstructions(context) }}
-        {{ ctx.output_format }}
-
-        {{ _.role("user") }}
-
-        {{ RenderContent(context.observationContent) }}
+        {{ InstructionsWithContext(memory, TaskInstructions(task)) }}
     "# 
 }
 
-class EvaluatedCheck {
-    reasoning string
-    passes bool
+// class EvaluatedCheck {
+//     reasoning string
+//     passes bool
+// }
+class QueryResponse {
+    @@dynamic
 }
 
+function QueryMemory(memory: ModularMemoryContext, query: string) -> QueryResponse {
+    client GeminiPro
+    prompt #"
+        {{ InstructionsWithContext(memory, query) }}
+    "#
+}
+
+
+// template_string CheckInstructions(check: string) #"
+//     Given the actions of an LLM agent executing a test case, and a screenshot taken afterwards, evaluate whether the provided check "passes" i.e. holds true or not.
+
+//     Check to evaluate:
+//     <check>{{ check }}</check>
+// "#
+
+// function EvaluateCheck (context: ModularMemoryContext, check: string) -> EvaluatedCheck {
+//     client GeminiPro
+//     prompt #"
+//         {{ InstructionsWithContext(context, CheckInstructions(check)) }}
+//     "#
+// }
 
 // Moondream struggles to handle converted check, this is a bypass to use big model to evaluate check directly
 // function EvaluateCheck (context: BrowserExecutionContext, check: string) -> EvaluatedCheck {

@@ -35,6 +35,10 @@ export class AgentMemory {
     //     // Mark start of task for a new isolated memory window
     // }
 
+    public isEmpty(): boolean {
+        return this.observations.length === 0;
+    }
+
     public recordThought(content: string): void {
         this.observations.push(
             Observation.fromThought(content)

@@ -114,25 +114,33 @@ export class MacroAgent {
             return resp.data;
         }
     }
+    // ^ extract could prob be a subset of query w trimmed mem
 
-    // async evaluateCheck(screenshot: Image, check: string, existingRecipe: Action[], tabState: TabState): Promise<boolean> {
-    //     const stringifiedExistingRecipe = [];
-    //     for (const action of existingRecipe) {
-    //         stringifiedExistingRecipe.push(JSON.stringify(action, null, 4))
-    //     }
+    async query<T extends Schema>(context: ModularMemoryContext, query: string, schema: T): Promise<z.infer<T>> {
+        const tb = new TypeBuilder();
 
-    //     const start = Date.now();
-    //     const response = await this.baml.EvaluateCheck(
-    //         {
-    //             screenshot: await screenshot.toBaml(),//Image.fromBase64('image/png', screenshot.image),
-    //             actionHistory: stringifiedExistingRecipe,
-    //             tabState: tabState
-    //         },
-    //         check
-    //     );
-    //     this.logger.trace(`evaluateCheck took ${Date.now()-start}ms`);
-    //     return response.passes;
-    // }
+        if (schema instanceof z.ZodObject) {
+            // populate ExtractedData with schema KVs instead of wrapping in data key unnecessarily
+            for (const [key, fieldSchema] of Object.entries(schema.shape)) {
+                tb.QueryResponse.addProperty(key, convertZodToBaml(tb, fieldSchema as any));
+            }
+        } else {
+            // for array or primitive have to wrap data key
+            tb.QueryResponse.addProperty('data', convertZodToBaml(tb, schema));
+        }
+
+        const resp = await this.baml.QueryMemory(
+            context,
+            query,
+            { tb }
+        );
+        
+        if (schema instanceof z.ZodObject) {
+            return resp;
+        } else {
+            return resp.data;
+        }
+    }
 
     // async classifyCheckFailure(screenshot: Image, check: string, existingRecipe: Action[], tabState: TabState): Promise<BugDetectedFailure | MisalignmentFailure> {
     //     const stringifiedExistingRecipe = [];
