@@ -1,4 +1,6 @@
 import { GroundingClient, type LLMClient } from '@/ai/types';
+import { Agent, AgentOptions } from "@/agent";
+import { BrowserConnector, BrowserConnectorOptions } from "@/connectors/browserConnector";
 
 function cleanNestedObject(obj: object): object {
     // Remove null/undefined key values entirely
@@ -165,7 +167,7 @@ export function isGroundedLlm(llm: LLMClient) {
     if (llm.provider === 'openai-generic') {
         const model = llm.options.model;
         // models known to be grounded
-        const include = ['molmo', 'ui-tars', 'qwen2.5-vl'];
+        const include = ['molmo', 'ui-tars', 'qwen2.5-vl', 'holo1', 'jedi'];
         for (const substr of include) {
             if (model.toLowerCase().includes(substr)) return true;
         }
@@ -176,4 +178,40 @@ export function isGroundedLlm(llm: LLMClient) {
 export function isClaude(llm: LLMClient) {
     // same for now
     return isGroundedLlm(llm);
+}
+
+const DEFAULT_BROWSER_AGENT_TEMP = 0.2;
+
+export function buildDefaultBrowserAgentOptions(
+    { agentOptions, browserOptions }: { agentOptions: AgentOptions, browserOptions: BrowserConnectorOptions }
+): { agentOptions: AgentOptions, browserOptions: BrowserConnectorOptions } {
+    /**
+     * Given any provided options for agent or browser connector, fill out additional key fields using environment,
+     * or any model-specific constraints (e.g. Claude needing 1024x768 virtual screen space)
+     */
+    const { llm: envLlm, grounding: envGrounding } = tryDeriveUIGroundedClients();
+    
+    let llm: LLMClient | null = agentOptions.llm ?? envLlm;
+    const grounding = (llm && isGroundedLlm(llm)) ? null : (browserOptions.grounding ?? envGrounding);//llm?.options?.model?.includes('claude') ? null : (options.grounding ?? envGrounding);
+    
+    if (!llm) {
+        throw new Error("No LLM configured or available from environment. Set environment variable ANTHROPIC_API_KEY and try again");
+    } else if (!isGroundedLlm(llm) && !grounding) {
+        throw new Error("Ungrounded LLM is configured without Moondream. Either use Anthropic (set ANTHROPIC_API_KEY) or provide a MOONDREAM_API_KEY");
+    }
+
+    // Set reasonable temp if not provided
+    let llmOptions: LLMClient['options'] = { temperature: DEFAULT_BROWSER_AGENT_TEMP, ...(llm?.options ?? {}) };
+    llm = {...llm, options: llmOptions as any }
+
+    let virtualScreenDimensions = null;
+    if (isClaude(llm)) {
+        // Claude grounding only really works on 1024x768 screenshots
+        virtualScreenDimensions = { width: 1024, height: 768 };
+    }
+
+    return {
+        agentOptions: {...agentOptions, llm: llm },
+        browserOptions: {...browserOptions, grounding: grounding ?? undefined, virtualScreenDimensions: virtualScreenDimensions ?? undefined }
+    };
 }
