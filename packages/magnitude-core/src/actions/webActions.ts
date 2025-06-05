@@ -104,7 +104,7 @@ export const scrollCoordAction = createAction({
 // Grounding agnostic
 export const switchTabAction = createAction({
     name: 'browser:tab:switch',
-    description: "Switch tabs",
+    description: "Switch to a tab that is already open",
     schema: z.object({
         index: z.number().int().describe("Index of tab to switch to"),
     }),
@@ -171,7 +171,7 @@ export const waitAction = createAction({
 
 
 export const agnosticWebActions = [
-    //newTabAction,
+    newTabAction,
     switchTabAction,
     navigateAction,
     //waitAction,

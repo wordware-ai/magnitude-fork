@@ -179,6 +179,8 @@ export class WebHarness { // implements StateComponent
 
     async newTab() {
         await this.context.newPage();
+        // Reasonable default and less confusing than white about:blank page
+        await this.navigate("https://google.com");
     }
 
     async navigate(url: string) {
