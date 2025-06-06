@@ -1,4 +1,3 @@
-import { CategorizedTestCases } from '@/discovery/types';
 import termkit from 'terminal-kit';
 import { AllTestStates, TestState } from './types';
 
@@ -9,10 +8,10 @@ import { AllTestStates, TestState } from './types';
  * @param title - The title of the test case.
  * @returns A unique string identifier.
  */
-export function getUniqueTestId(filepath: string, groupName: string | null, title: string): string {
-    const groupPart = groupName ? `[${groupName}]` : '__ungrouped__';
-    return `${filepath}::${groupPart}::${title}`;
-}
+// export function getUniqueTestId(filepath: string, groupName: string | null, title: string): string {
+//     const groupPart = groupName ? `[${groupName}]` : '__ungrouped__';
+//     return `${filepath}::${groupPart}::${title}`;
+// }
 
 /**
  * Formats a duration in milliseconds into a human-readable string (e.g., "1.23s", "456ms").

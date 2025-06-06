@@ -42,13 +42,13 @@ export interface TestFunctionContext {
 export type TestFunction = (context: TestFunctionContext) => Promise<void>;
 export type TestGroupFunction = () => void;
 
-export interface TestRunnable {
-    fn: TestFunction
-    title: string
-    url: string
-}
+// export interface TestRunnable {
+//     fn: TestFunction
+//     title: string
+//     url: string
+// }
 
-export type CategorizedTestRunnable = TestRunnable & { file: string, group: string | null };
+//export type CategorizedTestRunnable = TestRunnable & { file: string, group: string | null };
 
 export interface TestGroup {
     name: string;
@@ -70,5 +70,17 @@ export interface TestDeclaration {
 }
 
 // Map from filepath to grouped and ungrouped test cases
-export type CategorizedTestCases = Record<string, { ungrouped: TestRunnable[], groups: Record<string, TestRunnable[]>}>;
+//export type CategorizedTestCases = Record<string, { ungrouped: TestRunnable[], groups: Record<string, TestRunnable[]>}>;
 //export type CategorizedTestCases = Record<string, { ungrouped: TestCaseBuilder[], groups: Record<string, TestCaseBuilder[]>}>;
+
+export interface RegisteredTest {
+    // unique id
+    id: string,
+    // defined test
+    fn: TestFunction,
+    title: string,
+    url: string,
+    // meta
+    filepath: string,
+    group?: string,
+}

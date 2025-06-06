@@ -19,7 +19,7 @@ import { execSync } from 'child_process';
 // Removed React import
 // Removed App import
 // Removed render import
-import { TestRunner } from './runner/testRunner'; // Import the new executor
+import { TestSuiteRunner } from './runner/testSuiteRunner'; // Import the new executor
 //import { initializeTestStates } from './term-app/util';
 //import { initializeUI, updateUI, cleanupUI } from '@/term-app'; // Import term-app functions
 import { startWebServers, stopWebServers } from './webServer';
@@ -265,7 +265,7 @@ program
         // for (const [filename, tests] of Object.entries(registry.getRegisteredTestCases())) {
         //     console.log("file:", filename);
         //     console.log("tests:", tests);
-        const categorizedTests = registry.getRegisteredTestCases();
+        const tests = registry.getRegisteredTests();
 
         // --- Initialize State using utility ---
         //const testStates = initializeTestStates(categorizedTests);
@@ -279,7 +279,7 @@ program
         //     initializeUI(describeModel(config.planner), categorizedTests, testStates, renderSettings);
         // }
 
-        const executor = new TestRunner(
+        const executor = new TestSuiteRunner(
             {
                 workerCount: workerCount,
                 // prettyDisplay might not be relevant for term-app, or handled differently.
@@ -291,7 +291,7 @@ program
                 browserLaunchOptions: config.browser?.launchOptions ?? {},
                 telemetry: config.telemetry ?? true
             },
-            categorizedTests,
+            tests,
             // testStates, // Pass the shared state object
             // showUI ? updateUI : ()=>{},   // Pass the update function from term-app
             // showUI ? cleanupUI : ()=>{},  // Pass the cleanup function from term-app
