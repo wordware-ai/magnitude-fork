@@ -16,7 +16,10 @@ export interface CheckDescriptor {
 }
 
 // Used to pass up to UI and render stuff, for logging, etc.
+export type TestStatus = 'pending' | 'running' | 'passed' | 'failed' | 'cancelled';
+
 export interface TestState {
+    status: TestStatus; // Added status property
     startedAt?: number,
 	doneAt?: number,
     //cached?: boolean,
@@ -71,6 +74,7 @@ export class TestStateTracker {
     constructor(agent: TestCaseAgent) {
         this.agent = agent;
         this.state = {
+            status: 'pending', // Initialize status
             stepsAndChecks: [],
             macroUsage: { provider: 'foo', model: 'bar', inputTokens: 0, outputTokens: 0, numCalls: 0 }, //agent.getMacro().getInfo(),
             microUsage: { provider: 'foo', numCalls: 0 } //agent.getMicro().getInfo()
@@ -116,6 +120,7 @@ export class TestStateTracker {
 
     onStart() {
         this.state.startedAt = Date.now();
+        this.state.status = 'running'; // Set status to running
         this.events.emit('stateChanged', this.state);
     }
 
@@ -172,6 +177,8 @@ export class TestStateTracker {
             throw new Error('Step success without preceding step');
         }
         this.lastStepOrCheck.status = 'passed';
+        // Note: Overall test status is not 'passed' yet, only this step.
+        // TestRunner will set final test status.
         // Update any LLM metrics
         // this.state.macroUsage = this.agent.getMacro().getInfo();
         // this.state.microUsage = this.agent.getMicro().getInfo();
@@ -216,7 +223,9 @@ export class TestStateTracker {
         if (!this.lastStepOrCheck || this.lastStepOrCheck.variant !== 'check') {
             throw new Error('Check success reported without preceding check');
         }
-        this.lastStepOrCheck.status = 'passed';
+        this.lastStepOrCheck.status = passed ? 'passed' : 'failed'; // Reflect check outcome
+        // Note: Overall test status is not 'passed/failed' yet, only this check.
+        // TestRunner will set final test status.
         // Update any LLM metrics
         // this.state.macroUsage = this.agent.getMacro().getInfo();
         // this.state.microUsage = this.agent.getMicro().getInfo();

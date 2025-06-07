@@ -3,7 +3,7 @@ import logger from '@/logger';
 import { AgentError, GroundingClient, LLMClient } from 'magnitude-core';
 import { RegisteredTest, TestFunctionContext } from '@/discovery/types';
 // Removed App import from '@/app'
-import { AllTestStates, TestState } from '@/term-app/types'; // Import types from term-app
+import { AllTestStates } from '@/term-app/types'; // Import types from term-app
 //import { getUniqueTestId } from '@/term-app/util'; // Import util from term-app
 import { Browser, BrowserContext, BrowserContextOptions, chromium, LaunchOptions, Page } from 'playwright';
 import { describeModel, sendTelemetry } from '../util';

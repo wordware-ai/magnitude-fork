@@ -1,5 +1,4 @@
 import termkit from 'terminal-kit';
-import { AllTestStates, TestState } from './types';
 
 /**
  * Generates a unique identifier for a test case.

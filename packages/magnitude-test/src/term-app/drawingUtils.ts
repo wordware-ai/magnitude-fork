@@ -1,6 +1,6 @@
-import { TestState } from './types';
 import { ActionDescriptor, FailureDescriptor } from 'magnitude-core';
 import { ANSI_RESET, ANSI_GREEN, ANSI_BRIGHT_BLUE, ANSI_GRAY, ANSI_RED, BOX_CHARS_ROUNDED } from './constants';
+import { TestState } from '@/runner/state';
 
 /**
  * Calculate the visible length of a string, accounting for ANSI escape codes.

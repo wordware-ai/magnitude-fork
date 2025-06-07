@@ -15,7 +15,7 @@
     },
     "packages/magnitude-core": {
       "name": "magnitude-core",
-      "version": "0.1.4",
+      "version": "0.2.0-beta.0",
       "bin": {
         "magnus": "dist/cli.js",
       },
@@ -66,7 +66,7 @@
         "esbuild": "^0.25.1",
         "glob": "^11.0.1",
         "log-update": "^6.1.0",
-        "magnitude-core": "0.1.4",
+        "magnitude-core": "0.2.0-beta.0",
         "pino": "^9.6.0",
         "playwright": "^1.51.0",
         "zod": "^3.24.2",

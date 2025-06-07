@@ -50,11 +50,10 @@ export class TermAppRenderer implements TestRenderer {
         const initialTestStates: AllTestStates = {}; // Use direct import
         for (const test of this.initialTests) {
             initialTestStates[test.id] = {
-                // Default pending state structure
+                status: 'pending', // Add initial status
                 stepsAndChecks: [],
                 macroUsage: { provider: '', model: '', inputTokens: 0, outputTokens: 0, numCalls: 0 },
                 microUsage: { provider: '', numCalls: 0 },
-                // status: 'pending', // This will be part of TestState from runner
             };
         }
         uiState.setCurrentTestStates(initialTestStates);
@@ -87,15 +86,16 @@ export class TermAppRenderer implements TestRenderer {
                     // Assuming TestState from runner will have a 'status' field
                     // For now, we need to check if the state itself implies running
                     // This part will be more robust once TestState includes status directly
-                    // For this shell, let's assume if not doneAt, it might be running
-                    const liveState = state as TestState; // Cast to full TestState
-                    if (!liveState.doneAt && liveState.startedAt) { // Approximation of 'running'
+                    // Now we can use the explicit status
+                    const liveState = state as TestState; // Cast to full TestState from runner/state
+                    if (liveState.status === 'running') {
                         runningTestsExist = true;
-                        if (!liveState.startedAt) { // Should not happen if logic is correct
-                            // state.startedAt = Date.now(); // This would be set by onTestStateUpdated
-                            // uiState.updateElapsedTime(testId, 0);
+                        // Ensure startedAt is set if running, though TestStateTracker should handle this
+                        if (liveState.startedAt) {
+                             uiState.updateElapsedTime(testId, Date.now() - liveState.startedAt);
                         } else {
-                            uiState.updateElapsedTime(testId, Date.now() - liveState.startedAt);
+                            // This case should ideally not happen if TestState is correctly managed
+                            // uiState.updateElapsedTime(testId, 0); 
                         }
                     }
                 });

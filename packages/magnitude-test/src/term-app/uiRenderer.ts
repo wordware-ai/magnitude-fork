@@ -80,17 +80,8 @@ export function generateTestString(test: RegisteredTest, state: RunnerTestState,
     const stepContentWidth = Math.max(1, availableWidth - stepIndent - 2);
     const actionContentWidth = Math.max(1, availableWidth - actionIndent - 2);
     
-    // Determine status from TestState (which should now include it or be inferred)
-    // For now, assuming state has a status-like property or can be inferred for styling
-    let currentStatus: 'pending' | 'running' | 'passed' | 'failed' | 'cancelled' = 'pending';
-    if (state.failure) {
-        currentStatus = 'failed';
-    } else if (state.doneAt) {
-        currentStatus = 'passed';
-    } else if (state.startedAt) {
-        currentStatus = 'running';
-    }
-    // TODO: Handle 'cancelled' status if it's set directly on TestState
+    // Use the explicit status from RunnerTestState
+    const currentStatus = state.status;
 
     const statusCharPlain = currentStatus === 'running' ? spinnerChars[spinnerFrame] : getTestStatusIndicatorChar(currentStatus);
     const statusStyled = styleAnsi(currentStatus, statusCharPlain, 'test');
@@ -263,18 +254,8 @@ export function generateSummaryString(boxHeight: number): string[] {
 
     Object.entries(currentTestStates).forEach(([testId, state]) => {
         statusCounts.total++;
-        // Infer status for counting
-        let currentStatus: 'pending' | 'running' | 'passed' | 'failed' | 'cancelled' = 'pending';
-        if (state.failure) {
-            currentStatus = 'failed';
-        } else if (state.doneAt) {
-            currentStatus = 'passed';
-        } else if (state.startedAt) {
-            currentStatus = 'running';
-        }
-        // TODO: How is 'cancelled' status determined from RunnerTestState? Assume for now it might be part of failure or a specific flag.
-        // For now, only count based on failure, doneAt, startedAt.
-        statusCounts[currentStatus]++;
+        // Use the explicit status from RunnerTestState
+        statusCounts[state.status]++;
 
         if (state.macroUsage) { // Check if macroUsage exists
             totalInputTokens += state.macroUsage.inputTokens;

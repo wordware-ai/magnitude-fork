@@ -100,17 +100,41 @@ export class TestRunner {
             if (err instanceof Error) {
                 failure = { message: err.message };
             } else {
-                failure = { message: `Error: ${err}` };
+                failure = { message: String(err) }; // Ensure string conversion
+            }
+            // Get the current state, add failure, and set status to 'failed'
+            const finalStateFailed = { 
+                ...tracker.getState(), 
+                failure: failure, 
+                status: 'failed' as const, // Explicitly set status
+                doneAt: Date.now() // Mark done time on failure too
+            };
+            this.events.emit('stateChanged', finalStateFailed);
+            
+            // Clean up agent even on failure
+            try {
+                await agent.stop();
+            } catch (stopErr) {
+                // Log agent stop error, but primary failure is more important
+                console.error("Error stopping agent after test failure:", stopErr);
             }
 
-            this.events.emit('stateChanged', { ...tracker.getState(), failure: failure });
             return {
                 passed: false,
                 failure: failure
-            }
+            };
         }
 
+        // If no error, test passed
         await agent.stop();
+        
+        // Get the current state and set status to 'passed'
+        const finalStatePassed = { 
+            ...tracker.getState(), 
+            status: 'passed' as const, // Explicitly set status
+            doneAt: Date.now() // Mark done time
+        };
+        this.events.emit('stateChanged', finalStatePassed);
 
         return { passed: true };
     }
