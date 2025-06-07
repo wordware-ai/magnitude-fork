@@ -76,8 +76,8 @@ export class TestStateTracker {
         this.state = {
             status: 'pending', // Initialize status
             stepsAndChecks: [],
-            macroUsage: { provider: 'foo', model: 'bar', inputTokens: 0, outputTokens: 0, numCalls: 0 }, //agent.getMacro().getInfo(),
-            microUsage: { provider: 'foo', numCalls: 0 } //agent.getMicro().getInfo()
+            macroUsage: { provider: 'example', model: 'example', inputTokens: 0, outputTokens: 0, numCalls: 0 }, //agent.getMacro().getInfo(),
+            microUsage: { provider: 'example', numCalls: 0 } //agent.getMicro().getInfo()
         }
         this.agent.events.on('start', this.onStart, this);
         this.agent.events.on('stop', this.onStop, this);

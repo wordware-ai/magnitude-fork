@@ -82,8 +82,8 @@ export class TestSuiteRunner {
                 grounding: this.config.executor,
                 browserContextOptions: this.config.browserContextOptions
             });
-            //runner.events.on('stateChanged', (state) => console.log(state));
-            //runner.events.on('fail', () => anyTestFailed = true);
+
+
             runner.events.on('stateChanged', (state) => this.config.renderer.onTestStateUpdated(test, state));
 
             const result = await runner.run();

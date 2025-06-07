@@ -357,6 +357,13 @@ export function redraw() {
     if (isFirstDraw) { // Still useful to track if it's the very first render pass
         setIsFirstDraw(false);
     }
+
+    // If the rendering process has finished (stop() was called),
+    // then this redraw is the final one, so call logUpdate.done().
+    if (isFinished) {
+        logUpdate.done();
+        process.stderr.write('\n'); // Ensure prompt is on a new line after final output
+    }
 }
 
 /**
