@@ -3,12 +3,28 @@
 // Goal is not to expose internals but provide all necessary info in events
 
 import { Action } from "@/actions/types";
+import { LLMClient } from "@/ai/types";
 
 export interface AgentEvents {
     'start': () => void;
-    // Emitted after any action is taken during act()
-    'action': (action: Action) => void;
     'stop': () => void;
+
+    'actStarted': (task: string) => void;
+    'actDone': (task: string) => void;
+    
+    'actionStarted': (action: Action) => void;
+    'actionDone': (action: Action) => void;
+
+    'tokensUsed': (tokenUsage: { llm: LLMClient, inputTokens: number, outputTokens: number }) => void;
+
+    //[key: string]: (...args: any[]) => void;
+    
+
+
+    // 'start': () => void;
+    // // Emitted after any action is taken during act()
+    // 'action': (action: Action) => void;
+    // 'stop': () => void;
 
     // 'start': () => void;
 

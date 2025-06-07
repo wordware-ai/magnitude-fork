@@ -1,0 +1,262 @@
+import { TestCaseAgent } from "@/agent"
+import { Action } from "magnitude-core"
+import EventEmitter from "eventemitter3";
+
+export interface StepDescriptor {
+    variant: 'step',
+    description: string,
+    actions: Action[]
+    status: 'pending' | 'running' | 'passed' | 'failed' | 'cancelled'
+}
+
+export interface CheckDescriptor {
+    variant: 'check',
+    description: string,
+    status: 'pending' | 'running' | 'passed' | 'failed' | 'cancelled'
+}
+
+// Used to pass up to UI and render stuff, for logging, etc.
+export interface TestState {
+    startedAt?: number,
+	doneAt?: number,
+    //cached?: boolean,
+    stepsAndChecks: (StepDescriptor | CheckDescriptor)[],
+    //actionCount: number,
+	macroUsage: {
+		provider: string,
+		model: string,
+		inputTokens: number,
+		outputTokens: number,
+		numCalls: number
+	}
+	microUsage: {
+		provider: string,
+		numCalls: number
+	},
+    // Not known here since throw higher up
+    //failure?: TestFailure
+}
+
+export type TestResult = {
+    passed: true
+} | {
+    passed: false
+    failure: TestFailure
+}
+
+export interface TestFailure {
+    message: string
+}
+
+export interface TestCaseEvents {
+    'stateChanged': (state: TestState) => void
+}
+
+
+export class TestStateTracker {
+    /**
+     * Watches agent events and uses that to construct and update a test state
+     */
+    // Handles a lot of state tracking but not result/failure/done because the agent itself
+    // doesn't know when done, that's known when the test fn finishes.
+    private agent: TestCaseAgent;
+    private state: TestState;
+    // ref to last step, handy for attaching actions to it
+    // private lastStep: StepDescriptor | null = null;
+    // private lastCheck: CheckDescriptor | null = null;
+
+    private lastStepOrCheck: StepDescriptor | CheckDescriptor | null = null;
+    public readonly events: EventEmitter<TestCaseEvents>;
+
+    constructor(agent: TestCaseAgent) {
+        this.agent = agent;
+        this.state = {
+            stepsAndChecks: [],
+            macroUsage: { provider: 'foo', model: 'bar', inputTokens: 0, outputTokens: 0, numCalls: 0 }, //agent.getMacro().getInfo(),
+            microUsage: { provider: 'foo', numCalls: 0 } //agent.getMicro().getInfo()
+        }
+        this.agent.events.on('start', this.onStart, this);
+        this.agent.events.on('stop', this.onStop, this);
+
+        this.agent.events.on('actStarted', this.onActStarted, this);
+        this.agent.events.on('actDone', this.onActDone, this);
+
+        this.agent.events.on('actionStarted', this.onActionStarted, this);
+        this.agent.events.on('actionDone', this.onActionDone, this);
+
+        this.agent.events.on('tokensUsed', this.onTokensUsed, this);
+
+        this.agent.checkEvents.on('checkStarted', this.onCheckStarted, this);
+        this.agent.checkEvents.on('checkDone', this.onCheckDone, this);
+
+        
+
+        // this.agent.events.on('action', this.onAction, this);
+        // this.agent.events.on('stepStart', this.onStepStart, this);
+        // this.agent.events.on('checkStart', this.onCheckStart, this);
+        // this.agent.events.on('stepSuccess', this.onStepSuccess, this);
+        // this.agent.events.on('checkSuccess', this.onCheckSuccess, this);
+        // this.agent.events.on('fail', this.onFail, this);
+        
+        // For forwarding state updates
+        this.events = new EventEmitter();
+    }
+
+    // getEvents() {
+    //     return this.events;
+    // }
+
+    getState() {
+        return this.state;
+    }
+
+    // propagateState() {
+    //     this.events.emit('update', this.state);
+    // }
+
+    onStart() {
+        this.state.startedAt = Date.now();
+        this.events.emit('stateChanged', this.state);
+    }
+
+    onStop() {
+        this.state.doneAt = Date.now();
+        this.events.emit('stateChanged', this.state);
+    }
+
+    onTokensUsed(tokenUsage: any) {
+
+    }
+
+    onActionStarted(action: Action) {
+        // TODO: maybe allow detatched actions (e.g. synthetic load at beginning, or manual low-level actions)
+        if (!this.lastStepOrCheck || this.lastStepOrCheck.variant !== 'step') {
+            throw new Error('Action reported without preceding step');
+        }
+        this.lastStepOrCheck.actions.push(action);
+        this.events.emit('stateChanged', this.state);
+    }
+
+    onActionDone(action: Action) {
+        // TODO: maybe allow detatched actions (e.g. synthetic load at beginning, or manual low-level actions)
+        // if (!this.lastStepOrCheck || this.lastStepOrCheck.variant !== 'step') {
+        //     throw new Error('Action reported without preceding step');
+        // }
+        // this.lastStepOrCheck.actions.push(action);
+        // this.events.emit('update', this.state);
+    }
+
+    // onAction(action: ActionDescriptor) {
+    //     // TODO: maybe allow detatched actions (e.g. synthetic load at beginning, or manual low-level actions)
+    //     if (!this.lastStepOrCheck || this.lastStepOrCheck.variant !== 'step') {
+    //         throw new Error('Action reported without preceding step');
+    //     }
+    //     this.lastStepOrCheck.actions.push(action);
+    //     this.events.emit('update', this.state);
+    // }
+
+    onActStarted(task: string) {
+        const stepDescriptor: StepDescriptor = {
+            variant: 'step',
+            description: task,
+            actions: [],
+            status: 'running'
+        };
+        this.state.stepsAndChecks.push(stepDescriptor);
+        this.lastStepOrCheck = stepDescriptor;
+        this.events.emit('stateChanged', this.state);
+    }
+
+    onActDone(task: string) {
+        if (!this.lastStepOrCheck || this.lastStepOrCheck.variant !== 'step') {
+            throw new Error('Step success without preceding step');
+        }
+        this.lastStepOrCheck.status = 'passed';
+        // Update any LLM metrics
+        // this.state.macroUsage = this.agent.getMacro().getInfo();
+        // this.state.microUsage = this.agent.getMicro().getInfo();
+        this.events.emit('stateChanged', this.state);
+    }
+
+    // onStepStart(description: string) {
+    //     const stepDescriptor: StepDescriptor = {
+    //         variant: 'step',
+    //         description: description,
+    //         actions: [],
+    //         status: 'running'
+    //     };
+    //     this.state.stepsAndChecks.push(stepDescriptor);
+    //     this.lastStepOrCheck = stepDescriptor;
+    //     this.events.emit('update', this.state);
+    // }
+
+    // onStepSuccess() {
+    //     if (!this.lastStepOrCheck || this.lastStepOrCheck.variant !== 'step') {
+    //         throw new Error('Step success without preceding step');
+    //     }
+    //     this.lastStepOrCheck.status = 'passed';
+    //     // Update any LLM metrics
+    //     this.state.macroUsage = this.agent.getMacro().getInfo();
+    //     this.state.microUsage = this.agent.getMicro().getInfo();
+    //     this.events.emit('update', this.state);
+    // }
+
+    onCheckStarted(check: string) {
+        const checkDescriptor: CheckDescriptor = {
+            variant: 'check',
+            description: check,
+            status: 'running'
+        };
+        this.state.stepsAndChecks.push(checkDescriptor);
+        this.lastStepOrCheck = checkDescriptor;
+        this.events.emit('stateChanged', this.state);
+    }
+
+    onCheckDone(check: string, passed: boolean) {
+        if (!this.lastStepOrCheck || this.lastStepOrCheck.variant !== 'check') {
+            throw new Error('Check success reported without preceding check');
+        }
+        this.lastStepOrCheck.status = 'passed';
+        // Update any LLM metrics
+        // this.state.macroUsage = this.agent.getMacro().getInfo();
+        // this.state.microUsage = this.agent.getMicro().getInfo();
+        this.events.emit('stateChanged', this.state);
+    }
+
+    // onCheckStart(description: string) {
+    //     const checkDescriptor: CheckDescriptor = {
+    //         variant: 'check',
+    //         description: description,
+    //         status: 'running'
+    //     };
+    //     this.state.stepsAndChecks.push(checkDescriptor);
+    //     this.lastStepOrCheck = checkDescriptor;
+    //     this.events.emit('update', this.state);
+    // }
+
+    // onCheckSuccess() {
+    //     if (!this.lastStepOrCheck || this.lastStepOrCheck.variant !== 'check') {
+    //         throw new Error('Check success reported without preceding check');
+    //     }
+    //     this.lastStepOrCheck.status = 'passed';
+    //     // Update any LLM metrics
+    //     this.state.macroUsage = this.agent.getMacro().getInfo();
+    //     this.state.microUsage = this.agent.getMicro().getInfo();
+    //     this.events.emit('update', this.state);
+    // }
+
+    // onFail(failure: FailureDescriptor) {
+    //     // if (!this.lastStepOrCheck) {
+    //     //     throw new Error('Failure reported without preceding step or check');
+    //     // }
+    //     if (this.lastStepOrCheck) {
+    //         if (failure.variant === 'cancelled') {
+    //             this.lastStepOrCheck.status = 'cancelled';
+    //         } else {
+    //             this.lastStepOrCheck.status = 'failed';
+    //         }
+    //     }
+    //     this.state.failure = failure;
+    //     this.events.emit('update', this.state);
+    // }
+}

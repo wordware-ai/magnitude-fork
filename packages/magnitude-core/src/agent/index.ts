@@ -59,7 +59,11 @@ export class Agent {
 
     public readonly macro: MacroAgent;
     //public readonly micro: GroundingService;
-    public readonly events: EventEmitter<AgentEvents>;
+    //public readonly events: EventEmitter<AgentEvents>;
+
+    //protected readonly _emitter: EventEmitter<AgentEvents>;
+    public readonly events: EventEmitter<AgentEvents & {}>;
+    
     //public readonly memory: AgentMemory;
     private doneActing: boolean;
 
@@ -88,6 +92,9 @@ export class Agent {
         this.macro = new MacroAgent({ client: this.options.llm });
         //this.micro = new GroundingService({ client: this.config.executor });
         this.events = new EventEmitter<AgentEvents>();
+        //const emitter = new EventEmitter<AgentEvents>();
+        //this._emitter = emitter;
+        //this.events = emitter; 
         //this.memory = new AgentMemory();
         this.doneActing = false;
 
@@ -155,12 +162,14 @@ export class Agent {
         if (!parsed.success) {
             throw new AgentError(`Generated action '${action.variant}' violates input schema: ${parsed.error.message}`, { adaptable: true });
         }
+
+        this.events.emit('actionStarted', action);
         
         const data = await actionDefinition.resolver(
             { input: parsed.data, agent: this }
         );
 
-        this.events.emit('action', action);
+        this.events.emit('actionDone', action);
 
         if (memory) {
             // Record action taken
@@ -205,6 +214,8 @@ export class Agent {
         if (Array.isArray(taskOrSteps)) {
             const steps = taskOrSteps;
 
+            this.events.emit('actStarted', steps.join(', '));
+
             // trace overall task
             await (traceAsync('multistep', async (steps: string[], options: ActOptions) => {
                 for (const step of steps) {
@@ -213,6 +224,9 @@ export class Agent {
             })(steps, options));
         } else {
             const task = taskOrSteps;
+
+            this.events.emit('actStarted', task);
+
             await this._traceAct(task, taskMemory, options);
         }
     }
