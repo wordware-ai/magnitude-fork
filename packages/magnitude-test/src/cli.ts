@@ -19,9 +19,10 @@ import { execSync } from 'child_process';
 // Removed React import
 // Removed App import
 // Removed render import
-import { TestSuiteRunner } from './runner/testSuiteRunner'; // Import the new executor
+import { TestSuiteRunner, TestSuiteRunnerConfig } from './runner/testSuiteRunner'; // Import the new executor and config
+import { TermAppRenderer } from '@/term-app'; // Import TermAppRenderer
 //import { initializeTestStates } from './term-app/util';
-//import { initializeUI, updateUI, cleanupUI } from '@/term-app'; // Import term-app functions
+// Removed import { initializeUI, updateUI, cleanupUI } from '@/term-app';
 import { startWebServers, stopWebServers } from './webServer';
 import chalk from 'chalk';
 
@@ -268,43 +269,58 @@ program
         const tests = registry.getRegisteredTests();
 
         // --- Initialize State using utility ---
-        //const testStates = initializeTestStates(categorizedTests);
+        //const testStates = initializeTestStates(categorizedTests); // Old state init
 
         const showUI = !options.debug && !options.plain;
+        let termAppRenderer: TermAppRenderer | null = null;
+        const modelDescription = config.planner ? describeModel(config.planner) : 'Unknown Model';
 
-        // if (showUI) {
-        //     const renderSettings = {
-        //         showActions: config.display?.showActions ?? true
-        //     };
-        //     initializeUI(describeModel(config.planner), categorizedTests, testStates, renderSettings);
-        // }
+        if (showUI) {
+            termAppRenderer = new TermAppRenderer(config, tests, modelDescription);
+        }
 
-        const executor = new TestSuiteRunner(
-            {
-                workerCount: workerCount,
-                renderer: { onTestStateUpdated: (test, state) => console.log(test, state) },// dummy
-                // prettyDisplay might not be relevant for term-app, or handled differently.
-                // Keeping it for now, but TestRunner might need adjustment.
-                //prettyDisplay: !(options.plain || options.debug),
-                planner: config.planner,
-                executor: config.executor,
-                browserContextOptions: config.browser?.contextOptions ?? {},
-                browserLaunchOptions: config.browser?.launchOptions ?? {},
-                telemetry: config.telemetry ?? true
+        const runnerConfig: TestSuiteRunnerConfig = {
+            workerCount: workerCount,
+            renderer: termAppRenderer || { // Use TermAppRenderer or a dummy for plain/debug
+                onTestStateUpdated: (test, state) => {
+                    // Simple console output for plain/debug mode
+                    logger.info(`Test: ${test.title} (${test.id})`);
+                    logger.info(`  Status: ${state.failure ? 'failed' : (state.doneAt ? 'passed' : (state.startedAt ? 'running' : 'pending'))}`);
+                    if (state.failure) {
+                        logger.error(`  Failure: ${state.failure.message}`);
+                    }
+                }
             },
-            tests,
-            // testStates, // Pass the shared state object
-            // showUI ? updateUI : ()=>{},   // Pass the update function from term-app
-            // showUI ? cleanupUI : ()=>{},  // Pass the cleanup function from term-app
-            //config as Required<MagnitudeConfig> // This seems commented out
-        );
+            planner: config.planner,
+            executor: config.executor,
+            browserContextOptions: config.browser?.contextOptions ?? {},
+            browserLaunchOptions: config.browser?.launchOptions ?? {},
+            telemetry: config.telemetry ?? true
+        };
+
+        const testSuiteRunner = new TestSuiteRunner(runnerConfig, tests);
 
         // --- Start Execution ---
-        // Start the execution process - executor handles its own lifecycle including exit
-        executor.runTests();
+        if (termAppRenderer && termAppRenderer.start) {
+            termAppRenderer.start();
+        }
 
-        // No need for waitUntilExit() or try/catch/finally here anymore,
-        // as the executor manages the process lifecycle and cleanup.
+        try {
+            await testSuiteRunner.runTests();
+            // TODO: Determine exit code based on test results if not handled by TestSuiteRunner
+        } catch (error) {
+            logger.error("Test suite execution failed:", error);
+            // process.exit(1); // Consider exiting based on error
+        } finally {
+            if (termAppRenderer && termAppRenderer.stop) {
+                termAppRenderer.stop();
+            }
+            // stopWebServers is handled by process.on('exit') and SIGINT
+            // The process will exit naturally after this, or TestSuiteRunner might exit.
+            // If TestSuiteRunner doesn't exit, and we need to based on results:
+            // const allPassed = ... (check results from TestSuiteRunner if it returns them)
+            // process.exit(allPassed ? 0 : 1);
+        }
     });
 
 program

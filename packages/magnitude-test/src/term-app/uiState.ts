@@ -1,8 +1,10 @@
-import { CategorizedTestCases } from '@/discovery/types';
+import { RegisteredTest } from '@/discovery/types'; // Changed import
 import { AllTestStates } from './types';
-import { MAX_APP_WIDTH, spinnerChars } from './constants';
+import { MAX_APP_WIDTH, spinnerChars as localSpinnerChars } from './constants'; // Import and alias
 
 // --- UI State ---
+// Export spinnerChars so TermAppRenderer can access it via uiState.spinnerChars
+export const spinnerChars = localSpinnerChars;
 
 export interface RenderSettings {
     showActions: boolean;
@@ -13,7 +15,7 @@ export let redrawScheduled = false;
 export let renderSettings: RenderSettings = { showActions: true };
 export let timerInterval: NodeJS.Timeout | null = null;
 export let currentTestStates: AllTestStates = {};
-export let currentTests: CategorizedTestCases = {};
+export let allRegisteredTests: RegisteredTest[] = []; // Changed from currentTests
 export let currentModel = '';
 export let elapsedTimes: { [testId: string]: number } = {};
 export let isFinished = false;
@@ -32,7 +34,7 @@ export function resetState() {
     renderSettings = { showActions: true }; // Reset render settings
     timerInterval = null;
     currentTestStates = {};
-    currentTests = {};
+    allRegisteredTests = []; // Changed from currentTests
     currentModel = '';
     elapsedTimes = {};
     isFinished = false;
@@ -93,10 +95,10 @@ export function setCurrentModel(model: string) {
 }
 
 /**
- * Sets the currentTests
+ * Sets the allRegisteredTests
  */
-export function setCurrentTests(tests: CategorizedTestCases) {
-    currentTests = tests;
+export function setAllRegisteredTests(tests: RegisteredTest[]) { // Changed signature
+    allRegisteredTests = tests;
 }
 
 /**

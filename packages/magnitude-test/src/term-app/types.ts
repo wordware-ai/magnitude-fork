@@ -1,27 +1,15 @@
-//import { AgentState } from "magnitude-core";
+// This file might become obsolete or significantly changed.
+// For now, let's ensure AllTestStates uses the correct TestState from the runner.
+import { TestState as RunnerTestState } from '@/runner/state';
 
-export interface AgentState {
-    // startedAt?: number,
-    // cached?: boolean,
-    // stepsAndChecks: (StepDescriptor | CheckDescriptor)[],
-	// macroUsage: {
-	// 	provider: string,
-	// 	model: string,
-	// 	inputTokens: number,
-	// 	outputTokens: number,
-	// 	numCalls: number
-	// }
-	// microUsage: {
-	// 	provider: string,
-	// 	numCalls: number
-	// },
-    //failure?: FailureDescriptor
-}
+// The local TestState and AgentState might not be needed anymore if
+// all state comes directly from RunnerTestState.
+// export interface AgentState {
+//     // ... (original content)
+// }
 
-export type TestState = {
-    status: 'pending' | 'running' | 'passed' | 'failed' | 'cancelled';
-    //startTime?: number;
-    //error?: Error;
-} & AgentState;
+// export type TestState = {
+//     status: 'pending' | 'running' | 'passed' | 'failed' | 'cancelled';
+// } & AgentState;
 
-export type AllTestStates = Record<string, TestState>;
+export type AllTestStates = Record<string, RunnerTestState>;
