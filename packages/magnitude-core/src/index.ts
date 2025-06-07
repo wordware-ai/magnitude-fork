@@ -17,5 +17,6 @@ export * from "@/actions/types";
 export * from '@/common';
 export { buildDefaultBrowserAgentOptions } from "@/ai/util";
 export { logger } from './logger';
+//export { ModelUsage } from '@/ai/modelHarness';
 
 setLogLevel('OFF');

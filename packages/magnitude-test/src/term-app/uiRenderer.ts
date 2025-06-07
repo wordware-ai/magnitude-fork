@@ -196,9 +196,9 @@ export function generateSummaryString(): string[] {
     Object.entries(currentTestStates).forEach(([testId, state]) => {
         statusCounts.total++;
         statusCounts[state.status]++;
-        if (state.macroUsage) {
-            totalInputTokens += state.macroUsage.inputTokens;
-            totalOutputTokens += state.macroUsage.outputTokens;
+        if (state.modelUsage.length > 0) {
+            totalInputTokens += state.modelUsage[0].inputTokens;
+            totalOutputTokens += state.modelUsage[0].outputTokens;
         }
         if (state.failure) {
             const context = testContextMap.get(testId);

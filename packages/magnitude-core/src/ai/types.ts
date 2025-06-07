@@ -90,3 +90,12 @@ export interface MoondreamClient {
         apiKey?: string
     }
 }
+
+// incremental usage report
+export interface ModelUsage {
+    llm: LLMClient,
+    inputTokens: number,
+    outputTokens: number,
+    inputCost?: number,
+    outputCost?: number,
+}

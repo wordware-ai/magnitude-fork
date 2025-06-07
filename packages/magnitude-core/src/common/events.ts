@@ -3,6 +3,7 @@
 // Goal is not to expose internals but provide all necessary info in events
 
 import { Action } from "@/actions/types";
+import { ModelUsage } from "@/ai/types";
 import { LLMClient } from "@/ai/types";
 
 export interface AgentEvents {
@@ -15,7 +16,8 @@ export interface AgentEvents {
     'actionStarted': (action: Action) => void;
     'actionDone': (action: Action) => void;
 
-    'tokensUsed': (tokenUsage: { llm: LLMClient, inputTokens: number, outputTokens: number }) => void;
+    'tokensUsed': (usage: ModelUsage) => void;
+    //'tokensUsed': (tokenUsage: { llm: LLMClient, inputTokens: number, outputTokens: number }) => void;
 
     //[key: string]: (...args: any[]) => void;
     

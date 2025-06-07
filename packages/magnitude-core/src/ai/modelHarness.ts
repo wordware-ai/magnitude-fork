@@ -8,60 +8,83 @@ import { BamlAsyncClient } from "./baml_client/async_client";
 import logger from "@/logger";
 import { Logger } from 'pino';
 import { BugDetectedFailure, MisalignmentFailure } from "@/common";
-import { LLMClient } from "@/ai/types";
+import { LLMClient, ModelUsage } from "@/ai/types";
 import { TabState } from "@/web/tabs";
 import { ActionDefinition } from "@/actions";
 import TypeBuilder from "./baml_client/type_builder";
 import { Schema, z } from 'zod';
 import { convertActionDefinitionsToBaml, convertZodToBaml } from "@/actions/util";
 import { Image } from '@/memory/image';
+import EventEmitter from "eventemitter3";
 
-interface MacroAgentConfig {
-    client: LLMClient;
+interface ModelHarnessOptions {
+    llm: LLMClient;
 }
 
-const DEFAULT_CONFIG = {}
+// export interface ModelUsage {
+//     provider: string,
+//     model: string,
+//     inputTokens: number,
+//     outputTokens: number,
+//     numCalls: number
+// }
 
-export interface MacroAgentInfo {
-    provider: string,
-    model: string,
-    inputTokens: number,
-    outputTokens: number,
-    numCalls: number
+export interface ModelHarnessEvents {
+    'tokensUsed': (usage: ModelUsage) => {}
 }
 
-export class MacroAgent {
+export class ModelHarness {
     /**
      * Strong reasoning agent for high level strategy and planning.
      */
-    private config: MacroAgentConfig;
+    public readonly events: EventEmitter<ModelHarnessEvents> = new EventEmitter();
+    private options: ModelHarnessOptions;
     private collector: Collector;
     private cr: ClientRegistry;
     private baml: BamlAsyncClient;
     private logger: Logger;
+    private prevTotalInputTokens: number = 0;
+    private prevTotalOutputTokens: number = 0;
 
-    constructor(config: { client: LLMClient } & Partial<MacroAgentConfig>) {
-        this.config = {...DEFAULT_CONFIG, ...config};
+    constructor(options: { llm: LLMClient } & Partial<ModelHarnessOptions>) {
+        this.options = options;
+        //this.llm = options.llm
         this.collector = new Collector("macro");
         this.cr = new ClientRegistry();
-        const client = this.config.client;
-        let options = convertToBamlClientOptions(this.config.client);
-        this.cr.addLlmClient('Macro', client.provider, options, 'DefaultRetryPolicy');
+        const client = this.options.llm;
+        let bamlClientOptions = convertToBamlClientOptions(this.options.llm);
+        this.cr.addLlmClient('Macro', client.provider, bamlClientOptions, 'DefaultRetryPolicy');
         this.cr.setPrimary('Macro');
 
         this.baml = b.withOptions({ collector: this.collector, clientRegistry: this.cr });
-        this.logger = logger.child({ name: 'magnus.planner' });
+        this.logger = logger.child({ name: 'llm' });
     }
 
-    getInfo(): MacroAgentInfo {
-        return {
-            provider: this.config.client.provider,
-            model: 'model' in this.config.client.options ?
-                this.config.client.options.model : 'unknown',
-            inputTokens: this.collector.usage.inputTokens ?? 0,
-            outputTokens: this.collector.usage.outputTokens ?? 0,
-            numCalls: this.collector.logs.length
-        }
+    // getInfo(): ModelUsage {
+    //     return {
+    //         provider: this.options.client.provider,
+    //         model: 'model' in this.options.client.options ?
+    //             this.options.client.options.model : 'unknown',
+    //         inputTokens: this.collector.usage.inputTokens ?? 0,
+    //         outputTokens: this.collector.usage.outputTokens ?? 0,
+    //         numCalls: this.collector.logs.length
+    //     }
+    // }
+
+    reportUsage(): void {
+        // Get tokens used since last call to reportUsage
+        const inputTokens = (this.collector.usage.inputTokens ?? 0) - this.prevTotalInputTokens;
+        const outputTokens = (this.collector.usage.outputTokens ?? 0) - this.prevTotalOutputTokens;
+
+        const usage: ModelUsage = {
+            llm: this.options.llm,
+            inputTokens: inputTokens,
+            outputTokens: outputTokens
+        };
+        this.events.emit('tokensUsed', usage);
+
+        this.prevTotalInputTokens = inputTokens;
+        this.prevTotalOutputTokens = outputTokens;
     }
 
     async createPartialRecipe<T>(
@@ -84,6 +107,7 @@ export class MacroAgent {
         this.logger.trace(`createPartialRecipe took ${Date.now()-start}ms`);
         // BAML does not carry over action type to @@dynamic of PartialRecipe, so forced cast necssary
         //return response as unknown as { actions: z.infer<ActionDefinition<T>['schema']>[] };//, finished: boolean };
+        this.reportUsage();
         return {
             reasoning: response.reasoning,//(response.observations ? response.observations + " " : "") + response.meta_reasoning + " " + response.reasoning,
             actions: response.actions// as z.infer<ActionDefinition<T>['schema']>[]
@@ -107,6 +131,7 @@ export class MacroAgent {
         // }
 
         const resp = await this.baml.ExtractData(instructions, await screenshot.toBaml(), domContent, { tb });
+        this.reportUsage();
 
         if (schema instanceof z.ZodObject) {
             return resp;
@@ -134,6 +159,7 @@ export class MacroAgent {
             query,
             { tb }
         );
+        this.reportUsage();
         
         if (schema instanceof z.ZodObject) {
             return resp;

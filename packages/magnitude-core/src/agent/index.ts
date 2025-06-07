@@ -1,7 +1,7 @@
 import { WebAction, ClickWebAction, TypeWebAction, ScrollWebAction, SwitchTabWebAction } from "@/web/types";
 import { ActionIntent, ClickIntent, TypeIntent, ScrollIntent, SwitchTabIntent, Action } from "@/actions/types";
 import { GroundingService } from "@/ai/grounding";
-import { MacroAgent } from "@/ai/macro";
+import { ModelHarness } from "@/ai/modelHarness";
 import { Page } from "playwright"; 
 import { WebHarness } from "@/web/harness";
 import { AgentEvents } from "../common/events";
@@ -57,12 +57,12 @@ export class Agent {
     private connectors: AgentConnector[];
     private actions: ActionDefinition<any>[]; // actions from connectors + any other additional ones configured
 
-    public readonly macro: MacroAgent;
+    public readonly model: ModelHarness;
     //public readonly micro: GroundingService;
     //public readonly events: EventEmitter<AgentEvents>;
 
     //protected readonly _emitter: EventEmitter<AgentEvents>;
-    public readonly events: EventEmitter<AgentEvents & {}>;
+    public readonly events: EventEmitter<AgentEvents> = new EventEmitter();
     
     //public readonly memory: AgentMemory;
     private doneActing: boolean;
@@ -89,13 +89,8 @@ export class Agent {
         // TODO: maybe error instead, or automatically differentiate them?
         //this.options.actions = Array.from(new Map(aggregatedActions.map(actDef => [actDef.name, actDef])).values());
         
-        this.macro = new MacroAgent({ client: this.options.llm });
-        //this.micro = new GroundingService({ client: this.config.executor });
-        this.events = new EventEmitter<AgentEvents>();
-        //const emitter = new EventEmitter<AgentEvents>();
-        //this._emitter = emitter;
-        //this.events = emitter; 
-        //this.memory = new AgentMemory();
+        this.model = new ModelHarness({ llm: this.options.llm });
+        this.model.events.on('tokensUsed', (usage) => this.events.emit('tokensUsed', usage), this);
         this.doneActing = false;
 
         // Empty memory will get replaced on first act(), but this prevents errors from having undefined memory
@@ -266,7 +261,7 @@ export class Agent {
             let actions: Action[];
             try {
                 const memoryContext = await memory.buildContext(this.connectors);
-                ({ reasoning, actions } = await this.macro.createPartialRecipe(
+                ({ reasoning, actions } = await this.model.createPartialRecipe(
                     memoryContext, 
                     description,
                     this.actions 
@@ -317,7 +312,7 @@ export class Agent {
 
     async query<T extends z.Schema>(query: string, schema: T): Promise<z.infer<T>> {
         const memoryContext = await this.memory.buildContext(this.connectors);
-        return await this.macro.query(memoryContext, query, schema);
+        return await this.model.query(memoryContext, query, schema);
     }
 
     async queueDone() {

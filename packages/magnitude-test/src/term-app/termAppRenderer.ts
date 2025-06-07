@@ -52,8 +52,9 @@ export class TermAppRenderer implements TestRenderer {
             initialTestStates[test.id] = {
                 status: 'pending', // Add initial status
                 stepsAndChecks: [],
-                macroUsage: { provider: '', model: '', inputTokens: 0, outputTokens: 0, numCalls: 0 },
-                microUsage: { provider: '', numCalls: 0 },
+                modelUsage: [],
+                // macroUsage: { provider: '', model: '', inputTokens: 0, outputTokens: 0, numCalls: 0 },
+                // microUsage: { provider: '', numCalls: 0 },
             };
         }
         uiState.setCurrentTestStates(initialTestStates);

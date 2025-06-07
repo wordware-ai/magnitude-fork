@@ -1,5 +1,5 @@
 import { TestCaseAgent } from "@/agent"
-import { Action } from "magnitude-core"
+import { Action, LLMClient, ModelUsage } from "magnitude-core"
 import EventEmitter from "eventemitter3";
 
 export interface StepDescriptor {
@@ -25,17 +25,23 @@ export interface TestState {
     //cached?: boolean,
     stepsAndChecks: (StepDescriptor | CheckDescriptor)[],
     //actionCount: number,
-	macroUsage: {
-		provider: string,
-		model: string,
-		inputTokens: number,
-		outputTokens: number,
-		numCalls: number
-	}
-	microUsage: {
-		provider: string,
-		numCalls: number
-	},
+    modelUsage: {
+        llm: LLMClient,
+        inputTokens: number,
+        outputTokens: number,
+        numCalls: number
+    }[],
+	// macroUsage: {
+	// 	provider: string,
+	// 	model: string,
+	// 	inputTokens: number,
+	// 	outputTokens: number,
+	// 	numCalls: number
+	// }
+	// microUsage: {
+	// 	provider: string,
+	// 	numCalls: number
+	// },
     // Not known here since throw higher up
     failure?: TestFailure
 }
@@ -76,8 +82,9 @@ export class TestStateTracker {
         this.state = {
             status: 'pending', // Initialize status
             stepsAndChecks: [],
-            macroUsage: { provider: 'example', model: 'example', inputTokens: 0, outputTokens: 0, numCalls: 0 }, //agent.getMacro().getInfo(),
-            microUsage: { provider: 'example', numCalls: 0 } //agent.getMicro().getInfo()
+            modelUsage: [],
+            // macroUsage: { provider: 'example', model: 'example', inputTokens: 0, outputTokens: 0, numCalls: 0 }, //agent.getMacro().getInfo(),
+            // microUsage: { provider: 'example', numCalls: 0 } //agent.getMicro().getInfo()
         }
         this.agent.events.on('start', this.onStart, this);
         this.agent.events.on('stop', this.onStop, this);
@@ -129,8 +136,24 @@ export class TestStateTracker {
         this.events.emit('stateChanged', this.state);
     }
 
-    onTokensUsed(tokenUsage: any) {
-
+    onTokensUsed(modelUsage: ModelUsage) {
+        const modelHash = JSON.stringify(modelUsage.llm);
+        let exists = false;
+        for (const usage of this.state.modelUsage) {
+            const compare = JSON.stringify(usage.llm);
+            if (modelHash === compare) {
+                // merge with existing usage
+                exists = true;
+                usage.inputTokens += modelUsage.inputTokens;
+                usage.outputTokens += modelUsage.outputTokens;
+                usage.numCalls += 1;
+            }
+        }
+        if (!exists) {
+            this.state.modelUsage.push({ ...modelUsage, numCalls: 1 })
+        }
+        // console.log('usage:', modelUsage);
+        // console.log('total:', this.state.modelUsage);
     }
 
     onActionStarted(action: Action) {
