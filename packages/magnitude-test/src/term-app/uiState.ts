@@ -10,7 +10,7 @@ export interface RenderSettings {
     showActions: boolean;
 }
 
-export let currentWidth = Math.min(process.stdout.columns || MAX_APP_WIDTH, MAX_APP_WIDTH);
+// currentWidth removed as it's no longer used for layout
 export let redrawScheduled = false;
 export let renderSettings: RenderSettings = { showActions: true };
 export let timerInterval: NodeJS.Timeout | null = null;
@@ -22,14 +22,14 @@ export let isFinished = false;
 export let spinnerFrame = 0;
 export let lastOutputLineCount = 0; // Track lines for stability
 export let isFirstDraw = true; // Flag to handle the first redraw specially
-export let resizeTimeout: NodeJS.Timeout | null = null; // For debouncing resize events
-export let isResizing = false; // Flag to track resize state
+// resizeTimeout removed
+// isResizing removed
 
 /**
  * Resets all UI state to initial values
  */
 export function resetState() {
-    currentWidth = Math.min(process.stdout.columns || MAX_APP_WIDTH, MAX_APP_WIDTH);
+    // currentWidth reset removed
     redrawScheduled = false;
     renderSettings = { showActions: true }; // Reset render settings
     timerInterval = null;
@@ -41,8 +41,8 @@ export function resetState() {
     spinnerFrame = 0;
     lastOutputLineCount = 0;
     isFirstDraw = true;
-    resizeTimeout = null;
-    isResizing = false;
+    // resizeTimeout reset removed
+    // isResizing reset removed
 }
 
 /**
@@ -66,26 +66,9 @@ export function setIsFirstDraw(value: boolean) {
     isFirstDraw = value;
 }
 
-/**
- * Sets the currentWidth
- */
-export function setCurrentWidth(width: number) {
-    currentWidth = width;
-}
-
-/**
- * Sets the isResizing flag
- */
-export function setIsResizing(value: boolean) {
-    isResizing = value;
-}
-
-/**
- * Sets the resizeTimeout
- */
-export function setResizeTimeout(timeout: NodeJS.Timeout | null) {
-    resizeTimeout = timeout;
-}
+// setCurrentWidth removed
+// setIsResizing removed
+// setResizeTimeout removed
 
 /**
  * Sets the currentModel

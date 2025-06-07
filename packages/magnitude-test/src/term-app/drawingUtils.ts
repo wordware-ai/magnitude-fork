@@ -1,5 +1,5 @@
 import { ActionDescriptor, FailureDescriptor } from 'magnitude-core';
-import { ANSI_RESET, ANSI_GREEN, ANSI_BRIGHT_BLUE, ANSI_GRAY, ANSI_RED, BOX_CHARS_ROUNDED } from './constants';
+import { ANSI_RESET, ANSI_GREEN, ANSI_BRIGHT_BLUE, ANSI_GRAY, ANSI_RED } from './constants';
 import { TestState } from '@/runner/state';
 
 /**
@@ -14,94 +14,9 @@ export const str = (s: string): number => {
     return s.replace(ansiRegex, '').length;
 };
 
-/**
- * Create a box as an array of strings using ANSI codes and specified characters.
- * @param width Width of the box
- * @param height Height of the box
- * @param colorCode ANSI color code for the box
- * @param boxChars Box drawing characters to use
- * @returns Array of strings representing the box
- */
-export function createBoxAnsi(width: number, height: number, colorCode: string, boxChars = BOX_CHARS_ROUNDED): string[] {
-    if (height < 2 || width < 2) return [];
-    const lines: string[] = [];
-    const horizontal = boxChars.horizontal.repeat(width - 2);
-    const topBorder = `${boxChars.topLeft}${horizontal}${boxChars.topRight}`;
-    const bottomBorder = `${boxChars.bottomLeft}${horizontal}${boxChars.bottomRight}`;
-
-    lines.push(`${colorCode}${topBorder}${ANSI_RESET}`);
-
-    for (let i = 1; i < height - 1; i++) {
-        lines.push(`${colorCode}${boxChars.vertical}${' '.repeat(width - 2)}${boxChars.vertical}${ANSI_RESET}`);
-    }
-
-    lines.push(`${colorCode}${bottomBorder}${ANSI_RESET}`);
-    return lines;
-}
-
-/**
- * Insert a content line into a box at the specified position.
- * @param lines Array of strings representing the box
- * @param contentLine Content to insert
- * @param lineIndex Index of the line to modify
- * @param startX Starting X position for the content
- * @param boxWidth Total width of the box
- */
-export function insertLineIntoBoxAnsi(lines: string[], contentLine: string, lineIndex: number, startX: number, boxWidth: number) {
-    if (lineIndex <= 0 || lineIndex >= lines.length - 1) return; // Only insert into content lines
-
-    const targetLine = lines[lineIndex];
-    const boxColorMatch = targetLine.match(/^\x1b\[[0-9;]*m/); // Get the box's color code
-    const boxColor = boxColorMatch ? boxColorMatch[0] : '';
-
-    const contentAreaWidth = boxWidth - 2;
-    const availableSpace = contentAreaWidth - startX;
-
-    if (availableSpace > 0) {
-        // Basic ANSI-aware truncation
-        let truncatedContent = '';
-        let currentVisibleLength = 0;
-        const ansiRegex = /\x1b\[[0-9;]*m/g;
-        let lastIndex = 0;
-        let match;
-        while ((match = ansiRegex.exec(contentLine)) !== null) {
-            const textPart = contentLine.substring(lastIndex, match.index);
-            const partLen = str(textPart);
-            if (currentVisibleLength + partLen <= availableSpace) {
-                truncatedContent += textPart + match[0];
-                currentVisibleLength += partLen;
-            } else {
-                const remainingSpace = availableSpace - currentVisibleLength;
-                truncatedContent += textPart.slice(0, remainingSpace) + match[0];
-                currentVisibleLength = availableSpace;
-                break;
-            }
-            lastIndex = ansiRegex.lastIndex;
-        }
-        if (currentVisibleLength < availableSpace) {
-            const textPart = contentLine.substring(lastIndex);
-            const partLen = str(textPart);
-            if (currentVisibleLength + partLen <= availableSpace) {
-                truncatedContent += textPart;
-                currentVisibleLength += partLen;
-            } else {
-                const remainingSpace = availableSpace - currentVisibleLength;
-                truncatedContent += textPart.slice(0, remainingSpace);
-                currentVisibleLength = availableSpace;
-            }
-        }
-        // Ensure content ends with reset if it had styles
-        if (truncatedContent.includes('\x1b[') && !truncatedContent.endsWith(ANSI_RESET)) {
-            truncatedContent += ANSI_RESET;
-        }
-
-        const paddingLeft = ' '.repeat(startX);
-        const paddingRight = ' '.repeat(availableSpace - currentVisibleLength);
-
-        // Reconstruct the line with box color preserved
-        lines[lineIndex] = `${boxColor}${BOX_CHARS_ROUNDED.vertical}${ANSI_RESET}${paddingLeft}${truncatedContent}${paddingRight}${boxColor}${BOX_CHARS_ROUNDED.vertical}${ANSI_RESET}`;
-    }
-}
+// Box drawing functions removed as per user request to remove borders.
+// createBoxAnsi was here
+// insertLineIntoBoxAnsi was here
 
 /**
  * Format a description of an action.

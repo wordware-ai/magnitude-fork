@@ -7,7 +7,7 @@ import { scheduleRedraw, redraw } from './uiRenderer';
 // Import other necessary types and functions from term-app/index, term-app/util etc. as needed
 // For now, let's assume logUpdate might be used directly or indirectly
 import logUpdate from 'log-update';
-import { MAX_APP_WIDTH } from "./constants";
+// import { MAX_APP_WIDTH } from "./constants"; // No longer used
 
 // Functions that might be moved or adapted from term-app/index.ts
 // For now, keep them here or ensure they are imported if they remain in index.ts
@@ -19,8 +19,7 @@ export class TermAppRenderer implements TestRenderer {
     private initialTests: RegisteredTest[];
     private modelName: string;
 
-    // To manage resize and SIGINT listeners
-    private resizeListener: (() => void) | null = null;
+    // To manage SIGINT listener
     private sigintListener: (() => void) | null = null;
 
     constructor(config: MagnitudeConfig, initialTests: RegisteredTest[], modelName: string) {
@@ -37,6 +36,7 @@ export class TermAppRenderer implements TestRenderer {
     }
 
     public start(): void {
+        process.stdout.write('\n'); // Ensure output starts on a new line
         uiState.resetState(); // Reset all UI state
 
         // Re-apply initial settings after reset
@@ -59,16 +59,13 @@ export class TermAppRenderer implements TestRenderer {
         uiState.setCurrentTestStates(initialTestStates);
         uiState.setElapsedTimes({}); // Clear elapsed times
 
-        // Ensure the cursor is on a new line and clear screen (from original initializeUI)
-        process.stdout.write('\n');
-        logUpdate.clear();
-        process.stdout.write('\x1b[2J\x1b[H'); // Clear screen and move cursor to home
+        // process.stdout.write('\n'); // Removed unnecessary newline
+        // logUpdate.clear(); // Removed screen clearing
+        // process.stdout.write('\x1b[2J\x1b[H'); // Removed screen clearing
 
         // Setup event listeners
-        this.resizeListener = this.onResize.bind(this);
         this.sigintListener = this.handleExitKeyPress.bind(this);
 
-        process.stdout.on('resize', this.resizeListener);
         process.on('SIGINT', this.sigintListener);
         
         // Start the timer interval (adapted from original initializeUI)
@@ -99,7 +96,7 @@ export class TermAppRenderer implements TestRenderer {
                         }
                     }
                 });
-                if (runningTestsExist) {
+                if (runningTestsExist && !uiState.redrawScheduled) { // Only schedule if not already scheduled
                     scheduleRedraw(); // Direct call
                 }
             }, 100);
@@ -119,16 +116,12 @@ export class TermAppRenderer implements TestRenderer {
         }
 
         // Remove event listeners
-        if (this.resizeListener) {
-            process.stdout.removeListener('resize', this.resizeListener);
-            this.resizeListener = null;
-        }
         if (this.sigintListener) {
             process.removeListener('SIGINT', this.sigintListener);
             this.sigintListener = null;
         }
 
-        redraw(); // Perform one final draw - Direct call
+        // redraw(); // Perform one final draw - Direct call - REMOVED to prevent double printing
         logUpdate.done();    // Persist final frame
         process.stderr.write('\n'); // Ensure prompt is clear
         // DO NOT call process.exit() here
@@ -163,22 +156,7 @@ export class TermAppRenderer implements TestRenderer {
         scheduleRedraw(); // Direct call
     }
 
-    // Adapted from term-app/index.ts
-    private onResize(): void {
-        uiState.setIsResizing(true);
-        if (uiState.resizeTimeout) {
-            clearTimeout(uiState.resizeTimeout);
-        }
-        uiState.setResizeTimeout(setTimeout(() => {
-            const newWidth = Math.min(process.stdout.columns || MAX_APP_WIDTH, MAX_APP_WIDTH);
-            if (newWidth !== uiState.currentWidth) {
-                uiState.setCurrentWidth(newWidth);
-                scheduleRedraw(); // Direct call
-            }
-            uiState.setIsResizing(false);
-            uiState.setResizeTimeout(null);
-        }, 100));
-    }
+    // onResize method removed as per user request.
 
     // Adapted from term-app/index.ts
     private handleExitKeyPress(): void {
