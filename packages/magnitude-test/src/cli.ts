@@ -282,9 +282,10 @@ program
         const executor = new TestSuiteRunner(
             {
                 workerCount: workerCount,
+                renderer: { onTestStateUpdated: (test, state) => console.log(test, state) },// dummy
                 // prettyDisplay might not be relevant for term-app, or handled differently.
                 // Keeping it for now, but TestRunner might need adjustment.
-                prettyDisplay: !(options.plain || options.debug),
+                //prettyDisplay: !(options.plain || options.debug),
                 planner: config.planner,
                 executor: config.executor,
                 browserContextOptions: config.browser?.contextOptions ?? {},
