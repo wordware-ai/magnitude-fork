@@ -23,6 +23,8 @@ import {
 } from './uiState';
 import { knownCostMap } from '@/util';
 
+const UI_LEFT_PADDING = '  ';
+
 /**
  * Generate the title bar portion of the UI
  * @returns Array of strings with ANSI codes representing the title bar
@@ -31,7 +33,7 @@ export function generateTitleBarString(): string[] {
     const titleText = `${ANSI_BRIGHT_BLUE}${ANSI_BOLD}Magnitude v${VERSION}${ANSI_RESET}`;
     const modelText = `${ANSI_GRAY}${currentModel}${ANSI_RESET}`;
     // Simple single line for title bar, no complex padding or width calculations
-    return [`${titleText}  ${modelText}`];
+    return [`${UI_LEFT_PADDING}${titleText}  ${modelText}`];
 }
 
 /**
@@ -45,7 +47,7 @@ export function generateFailureString(failure: TestFailure, indent: number): str
     const addLine = (text: string, styleCode = ANSI_RED, bold = false) => {
         const fullStyleCode = `${styleCode}${bold ? ANSI_BOLD : ''}`;
         // No wrapping, text is a single line
-        output.push(' '.repeat(indent) + prefixAnsi + `${fullStyleCode}${text}${ANSI_RESET}`);
+        output.push(UI_LEFT_PADDING + ' '.repeat(indent) + prefixAnsi + `${fullStyleCode}${text}${ANSI_RESET}`);
     };
     
     if (failure && failure.message) {
@@ -71,7 +73,7 @@ export function generateTestString(test: RegisteredTest, state: RunnerTestState,
     const timerText = currentStatus !== 'pending' ? `${ANSI_GRAY} [${formatDuration(elapsedTimes[testId] ?? 0)}]${ANSI_RESET}` : '';
     
     // No wrapping for title
-    output.push(' '.repeat(indent) + `${statusStyled} ${test.title}${timerText}`);
+    output.push(UI_LEFT_PADDING + ' '.repeat(indent) + `${statusStyled} ${test.title}${timerText}`);
 
     if (state.stepsAndChecks && state.stepsAndChecks.length > 0) {
         state.stepsAndChecks.forEach((item: RunnerStepDescriptor | RunnerCheckDescriptor) => {
@@ -91,14 +93,14 @@ export function generateTestString(test: RegisteredTest, state: RunnerTestState,
 
             const styledChar = styleAnsi(item.status, itemCharPlain, itemStyleType);
             // No wrapping for description
-            output.push(' '.repeat(stepIndent) + `${styledChar} ${itemDesc}`);
+            output.push(UI_LEFT_PADDING + ' '.repeat(stepIndent) + `${styledChar} ${itemDesc}`);
 
             if (renderSettings.showActions && item.variant === 'step' && (item as RunnerStepDescriptor).actions.length > 0) {
                 (item as RunnerStepDescriptor).actions.forEach((action: Action) => {
                     const actionSymbol = `${ANSI_GRAY}▶${ANSI_RESET}`; 
                     const actionDesc = JSON.stringify(action);
                     // No wrapping for action description
-                    output.push(' '.repeat(actionIndent) + `${actionSymbol} ${ANSI_GRAY}${actionDesc}${ANSI_RESET}`);
+                    output.push(UI_LEFT_PADDING + ' '.repeat(actionIndent) + `${actionSymbol} ${ANSI_GRAY}${actionDesc}${ANSI_RESET}`);
                 });
             }
         });
@@ -145,7 +147,7 @@ export function generateTestListString(): string[] {
 
     for (const [filepath, { ungrouped, groups }] of Object.entries(groupedDisplayTests)) {
         const fileHeader = `${ANSI_BRIGHT_BLUE}${ANSI_BOLD}☰ ${filepath}${ANSI_RESET}`;
-        output.push(' '.repeat(fileIndent) + fileHeader);
+        output.push(UI_LEFT_PADDING + ' '.repeat(fileIndent) + fileHeader);
 
         if (ungrouped.length > 0) {
             for (const test of ungrouped) {
@@ -160,7 +162,7 @@ export function generateTestListString(): string[] {
         if (Object.entries(groups).length > 0) {
             for (const [groupName, groupTests] of Object.entries(groups)) {
                 const groupHeader = `${ANSI_BRIGHT_BLUE}${ANSI_BOLD}↳ ${groupName}${ANSI_RESET}`;
-                output.push(' '.repeat(groupIndent) + groupHeader);
+                output.push(UI_LEFT_PADDING + ' '.repeat(groupIndent) + groupHeader);
 
                 for (const test of groupTests) {
                     const state = currentTestStates[test.id];
@@ -171,7 +173,7 @@ export function generateTestListString(): string[] {
                 }
             }
         }
-        output.push(''); // Blank line between files/main groups
+        output.push(UI_LEFT_PADDING); // Blank line between files/main groups
     }
     return output;
 }
@@ -226,16 +228,16 @@ export function generateSummaryString(): string[] {
     }
     let tokenText = `${ANSI_GRAY}tokens: ${totalInputTokens} in, ${totalOutputTokens} out${costDescription}${ANSI_RESET}`;
     
-    output.push(statusLine.trimEnd() + (statusLine && tokenText ? '  ' : '') + tokenText.trimStart());
+    output.push(UI_LEFT_PADDING + statusLine.trimEnd() + (statusLine && tokenText ? '  ' : '') + tokenText.trimStart());
 
     if (hasFailures) {
-        output.push(`${ANSI_DIM}Failures:${ANSI_RESET}`);
+        output.push(UI_LEFT_PADDING + `${ANSI_DIM}Failures:${ANSI_RESET}`);
         for (const { filepath, groupName, testTitle, failure } of failuresWithContext) {
             const contextString = `${ANSI_DIM}${filepath}${groupName ? ` > ${groupName}` : ''} > ${testTitle}${ANSI_RESET}`;
-            output.push('  ' + contextString); // Indent context
-            const failureLines = generateFailureString(failure, 4); // Indent failure message further
+            output.push(UI_LEFT_PADDING + UI_LEFT_PADDING + contextString); // Indent context further with prepended spaces
+            const failureLines = generateFailureString(failure, 4); // generateFailureString already adds padding
             output.push(...failureLines);
-            output.push(''); // Blank line after each failure
+            output.push(UI_LEFT_PADDING); // Blank line after each failure with prepended spaces
         }
     }
     return output;
@@ -335,17 +337,17 @@ export function redraw() {
     const outputLines: string[] = [];
     // outputLines.push(''); // Initial blank line for spacing from prompt - REMOVED
 
-    outputLines.push(...generateTitleBarString());
-    outputLines.push(''); // Blank line after title bar
+    outputLines.push(...generateTitleBarString()); // generateTitleBarString now adds padding
+    outputLines.push(UI_LEFT_PADDING); // Blank line after title bar with padding
 
     if (testListLineCount > 0) {
-        outputLines.push(...generateTestListString());
-        // generateTestListString already adds a blank line at the end of each file section
+        outputLines.push(...generateTestListString()); // generateTestListString now adds padding
+        // generateTestListString already adds a blank line (now with padding) at the end of each file section
     }
 
     if (summaryLineCount > 0) {
-        if (testListLineCount > 0) outputLines.push(''); // Blank line before summary if test list was also shown
-        outputLines.push(...generateSummaryString());
+        if (testListLineCount > 0) outputLines.push(UI_LEFT_PADDING); // Blank line before summary if test list was also shown, with padding
+        outputLines.push(...generateSummaryString()); // generateSummaryString now adds padding
     }
 
     const frameContent = outputLines.join('\n');

@@ -92,6 +92,8 @@ export class TestSuiteRunner {
                 process.exit(1);
             }
         }
+
+        await browser.close();
         //return !anyTestFailed;
     }
 
