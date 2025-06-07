@@ -15,7 +15,7 @@ import { TestState, TestResult, TestStateTracker, TestFailure } from "./state";
 // prob just track some state in test runner and emit it
 // for proc iso / ICP we can find a way to send these over stdio pipes
 export interface TestRunnerEvents {
-    'stateChanged': (state: TestState & { failure?: TestFailure }) => {}
+    'stateChanged': (state: TestState) => {}
     // 'pass': () => {}
     // 'fail': () => {}
 }

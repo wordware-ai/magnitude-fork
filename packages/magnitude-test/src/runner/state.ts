@@ -34,7 +34,7 @@ export interface TestState {
 		numCalls: number
 	},
     // Not known here since throw higher up
-    //failure?: TestFailure
+    failure?: TestFailure
 }
 
 export type TestResult = {
