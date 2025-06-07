@@ -222,12 +222,15 @@ export class Agent {
                     await this._traceAct(step, taskMemory, options);
                 }
             })(steps, options));
+
+            this.events.emit('actDone', steps.join(', '));
         } else {
             const task = taskOrSteps;
 
             this.events.emit('actStarted', task);
 
             await this._traceAct(task, taskMemory, options);
+            this.events.emit('actDone', task);
         }
     }
 
