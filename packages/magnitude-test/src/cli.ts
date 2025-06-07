@@ -273,10 +273,9 @@ program
 
         const showUI = !options.debug && !options.plain;
         let termAppRenderer: TermAppRenderer | null = null;
-        const modelDescription = config.planner ? describeModel(config.planner) : 'Unknown Model';
-
+        
         if (showUI) {
-            termAppRenderer = new TermAppRenderer(config, tests, modelDescription);
+            termAppRenderer = new TermAppRenderer(config, tests);
         }
 
         const runnerConfig: TestSuiteRunnerConfig = {

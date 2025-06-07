@@ -4,6 +4,7 @@ import { TestState } from "@/runner/state";
 import { AllTestStates } from "./types"; // Import AllTestStates directly
 import * as uiState from './uiState';
 import { scheduleRedraw, redraw } from './uiRenderer';
+import { describeModel } from '@/util'; // Import describeModel
 // Import other necessary types and functions from term-app/index, term-app/util etc. as needed
 // For now, let's assume logUpdate might be used directly or indirectly
 import logUpdate from 'log-update';
@@ -17,21 +18,20 @@ import logUpdate from 'log-update';
 export class TermAppRenderer implements TestRenderer {
     private magnitudeConfig: MagnitudeConfig;
     private initialTests: RegisteredTest[];
-    private modelName: string;
+    private firstModelReportedInUI = false; // New flag
 
     // To manage SIGINT listener
     private sigintListener: (() => void) | null = null;
 
-    constructor(config: MagnitudeConfig, initialTests: RegisteredTest[], modelName: string) {
+    constructor(config: MagnitudeConfig, initialTests: RegisteredTest[]) {
         this.magnitudeConfig = config;
         this.initialTests = [...initialTests]; // Store a copy
-        this.modelName = modelName;
 
         // Initial setup based on config, if needed immediately
         if (this.magnitudeConfig.display?.showActions !== undefined) {
             uiState.setRenderSettings({ showActions: this.magnitudeConfig.display.showActions });
         }
-        uiState.setCurrentModel(this.modelName);
+        uiState.setCurrentModel(""); // Set to blank
         // uiState.setAllRegisteredTests will be called in start() after resetState()
     }
 
@@ -43,7 +43,8 @@ export class TermAppRenderer implements TestRenderer {
         if (this.magnitudeConfig.display?.showActions !== undefined) {
             uiState.setRenderSettings({ showActions: this.magnitudeConfig.display.showActions });
         }
-        uiState.setCurrentModel(this.modelName);
+        // uiState.setCurrentModel(""); // No longer needed here, resetState handles it.
+        this.firstModelReportedInUI = false; // Reset flag on start
         uiState.setAllRegisteredTests(this.initialTests); // Set the tests
 
         // Initialize currentTestStates for all tests to 'pending'
@@ -135,14 +136,32 @@ export class TermAppRenderer implements TestRenderer {
         // Merge new state into existing state for the test
         // Ensure startedAt is preserved if already set and newState doesn't have it
         const existingState = currentStates[testId] || {};
-        const updatedTestState = { 
-            ...existingState, 
+        const updatedTestState = {
+            ...existingState,
             ...newState,
             startedAt: newState.startedAt || existingState.startedAt,
          };
         currentStates[testId] = updatedTestState;
         
         uiState.setCurrentTestStates(currentStates);
+
+        // New logic to detect and set the first model for the UI
+        if (!this.firstModelReportedInUI &&
+            newState.modelUsage &&
+            newState.modelUsage.length > 0) {
+            
+            const firstModelEntry = newState.modelUsage[0];
+            let modelNameToReport: string | undefined = undefined;
+
+            if (firstModelEntry && firstModelEntry.llm) {
+                modelNameToReport = describeModel(firstModelEntry.llm);
+            }
+
+            if (modelNameToReport) {
+                uiState.setCurrentModel(modelNameToReport);
+                this.firstModelReportedInUI = true;
+            }
+        }
 
         // Handle startedAt and elapsedTimes
         if (updatedTestState.startedAt && !updatedTestState.doneAt) { // Test is running or just started
