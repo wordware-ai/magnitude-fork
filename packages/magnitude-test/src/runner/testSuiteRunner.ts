@@ -1,15 +1,16 @@
 // Removed React import
 import logger from '@/logger';
-import { AgentError, GroundingClient, LLMClient } from 'magnitude-core';
+import { GroundingClient, LLMClient } from 'magnitude-core';
 import { RegisteredTest, TestFunctionContext } from '@/discovery/types';
 // Removed App import from '@/app'
-import { AllTestStates } from '@/term-app/types'; // Import types from term-app
+// import { AllTestStates } from '@/term-app/types'; // Not directly used
 //import { getUniqueTestId } from '@/term-app/util'; // Import util from term-app
-import { Browser, BrowserContext, BrowserContextOptions, chromium, LaunchOptions, Page } from 'playwright';
+import { Browser, BrowserContextOptions, chromium, LaunchOptions } from 'playwright';
 import { describeModel, sendTelemetry } from '../util';
-import { WorkerPool } from './workerPool';
+import { WorkerPool, WorkerPoolResult } from './workerPool';
 import { startTestCaseAgent, TestCaseAgent } from '@/agent';
 import { TestRunner } from './testRunner';
+import { TestResult, TestFailure } from './state';
 import { TestRenderer } from '@/renderer';
 
 // Removed RerenderFunction type
@@ -62,39 +63,55 @@ export class TestSuiteRunner {
     }
 
     async runTests(): Promise<void> {
-        const browser = await chromium.launch({ headless: false, args: ['--disable-gpu'], ...this.config.browserLaunchOptions });
+        const browser = await chromium.launch({ 
+            headless: false, // Consider making this configurable via this.config
+            args: ['--disable-gpu'], 
+            ...this.config.browserLaunchOptions 
+        });
 
-        const tests = this.tests;
+        const workerPool = new WorkerPool(this.config.workerCount);
+        const testsToRun: RegisteredTest[] = this.tests;
 
-        // const runners: { id: string, runner: TestRunner } = this.tests.map(test => ({
-        //     id: test.id,
-        //     runner: new TestRunner(browser, test)
-        // }));
+        const taskFunctions = testsToRun.map((test) => {
+            return async (signal: AbortSignal): Promise<TestResult> => {
+                const runner = new TestRunner(test, {
+                    browser: browser,
+                    llm: this.config.planner,
+                    grounding: this.config.executor,
+                    browserContextOptions: this.config.browserContextOptions,
+                });
 
-        const runners: { id: string, runner: TestRunner }[] = [];
+                runner.events.on('stateChanged', (state) => {
+                    this.config.renderer.onTestStateUpdated(test, state);
+                });
+                
+                return await runner.run();
+            };
+        });
 
-        //let anyTestFailed = false;
+        let overallSuccess = true;
+        try {
+            const poolResult: WorkerPoolResult<TestResult> = await workerPool.runTasks<TestResult>(
+                taskFunctions,
+                (taskOutcome: TestResult) => !taskOutcome.passed 
+            );
 
-        for (const test of tests) {
-            const runner = new TestRunner(test, {
-                browser: browser,
-                llm: this.config.planner,
-                grounding: this.config.executor,
-                browserContextOptions: this.config.browserContextOptions
-            });
-
-
-            runner.events.on('stateChanged', (state) => this.config.renderer.onTestStateUpdated(test, state));
-
-            const result = await runner.run();
-            if (!result.passed) {
-                console.error(result.failure.message);
-                process.exit(1);
+            for (const result of poolResult.results) {
+                if (result === undefined || !result.passed) {
+                    overallSuccess = false;
+                    break;
+                }
             }
-        }
+            if (!poolResult.completed) { // If pool aborted for any reason (incl. a task failure)
+                overallSuccess = false;
+            }
 
-        await browser.close();
-        //return !anyTestFailed;
+        } catch (error) {
+            overallSuccess = false;
+        } finally {
+            await browser.close();
+            process.exit(overallSuccess ? 0 : 1);
+        }
     }
 
     // async runTestsOld(): Promise<void> {
