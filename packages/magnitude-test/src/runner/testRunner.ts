@@ -1,4 +1,4 @@
-import { RegisteredTest, TestFunctionContext } from "@/discovery/types";
+import { RegisteredTest } from "@/discovery/types";
 import { Browser, BrowserContext, BrowserContextOptions, Page } from "playwright";
 import EventEmitter from "eventemitter3";
 import { startTestCaseAgent, TestCaseAgent } from "@/agent";
@@ -85,18 +85,18 @@ export class TestRunner {
         tracker.events.on('stateChanged', (state) => this.events.emit('stateChanged', state), this);
         await agent.start();
 
-        const context: TestFunctionContext = {
-            ai: agent,//new Magnus(agent),
-            get page(): Page {
-                return agent.page;
-            },
-            get context(): BrowserContext {
-                return agent.context;
-            }
-        }
+        // const context: TestFunctionContext = {
+        //     ai: agent,//new Magnus(agent),
+        //     get page(): Page {
+        //         return agent.page;
+        //     },
+        //     get context(): BrowserContext {
+        //         return agent.context;
+        //     }
+        // }
 
         try {
-            await this.test.fn(context);
+            await this.test.fn(agent);
         } catch (err: unknown) {
             let failure: TestFailure;
             if (err instanceof Error) {

@@ -1,7 +1,7 @@
 // Removed React import
 import logger from '@/logger';
 import { GroundingClient, LLMClient } from 'magnitude-core';
-import { RegisteredTest, TestFunctionContext } from '@/discovery/types';
+import { RegisteredTest } from '@/discovery/types';
 // Removed App import from '@/app'
 // import { AllTestStates } from '@/term-app/types'; // Not directly used
 //import { getUniqueTestId } from '@/term-app/util'; // Import util from term-app

@@ -31,15 +31,16 @@ export type MagnitudeConfig = {
     }
 }
 
-export interface TestFunctionContext {
-    ai: TestCaseAgent;
-    get page(): Page;
-    get context(): BrowserContext;
-    //page: Page;
-    //context: Context;
-}
+// export interface TestFunctionContext {
+//     ai: TestCaseAgent;
+//     get page(): Page;
+//     get context(): BrowserContext;
+//     //page: Page;
+//     //context: Context;
+// }
 
-export type TestFunction = (context: TestFunctionContext) => Promise<void>;
+//export type TestFunction = (context: TestFunctionContext) => Promise<void>;
+export type TestFunction = (agent: TestCaseAgent) => Promise<void>;
 export type TestGroupFunction = () => void;
 
 // export interface TestRunnable {

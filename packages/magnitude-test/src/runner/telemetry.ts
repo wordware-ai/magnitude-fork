@@ -35,6 +35,7 @@ export interface TelemetryPayload {
     failure?: TestFailure
 };
 
+// For reference
 export interface V1TelemetryPayload {
 	version: string,
 	userId: string,
@@ -61,13 +62,8 @@ export interface V1TelemetryPayload {
 };
 
 
-
-// export type TelemetryPayload = TestState & {
-
-// }
-
-export async function sendTelemetry(state: TestState) {//(payload: Omit<TelemetryPayload, 'version' | 'userId'>) {
-    // const fullPayload: TelemetryPayload = {
+export async function sendTelemetry(state: TestState) {
+    // const fullPayload: V1TelemetryPayload = {
     //     version: '0.1',
     //     userId: getMachineId(),
     //     ...payload
@@ -116,30 +112,21 @@ export async function sendTelemetry(state: TestState) {//(payload: Omit<Telemetr
         // if (!resp.ok) {
         //     logger.warn(`Failed to send telemetry (status ${resp.status})`);
         // }
-        //console.log("sending telemetry for", userId);
         posthog.capture({
-            distinctId: userId,//'test-id',
+            distinctId: userId,
             event: 'test-run',
             properties: {
                 ...payload
             },
             groups: {
+                // TODO: derive from git hash
                 codebase: 'example'
-                //git: 'example-hash'
             }
         });
-        //client.capture({ distinctId: 'foo', event: 'bar' });
-        //client.capture({ distinctId: 'test-id', event: 'test-event' });
-        //await client.flush();
-        //console.log("sending telemetry for", userId);
-        //client.capture({ distinctId: 'test-id', event: 'test-event' });
-        //posthog.capture({ distinctId: 'test-id', event: 'test-event-3' });
-        //console.log("captured, now flushing...");
         // does NOT wait for HTTP request to fully finish so still need client.shutdown somewhere
         //await posthog.flush();
         // shutdown waits for http request to actually finish. ideally would do this per suite instead?
         await posthog.shutdown();
-        //console.log("flush completed!");
     } catch (error) {
         logger.warn(`Failed to send telemetry (may have timed out): ${(error as Error).message}`);
     }
