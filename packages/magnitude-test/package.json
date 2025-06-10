@@ -76,6 +76,7 @@
     "magnitude-core": "0.2.0-beta.0",
     "pino": "^9.6.0",
     "playwright": "^1.51.0",
+    "posthog-node": "^4.18.0",
     "zod": "^3.24.2"
   }
 }

@@ -4,6 +4,7 @@ import EventEmitter from "eventemitter3";
 import { startTestCaseAgent, TestCaseAgent } from "@/agent";
 import { Action, buildDefaultBrowserAgentOptions, GroundingClient, LLMClient } from "magnitude-core";
 import { TestState, TestResult, TestStateTracker, TestFailure } from "./state";
+import { sendTelemetry } from "./telemetry";
 
 
 
@@ -26,7 +27,8 @@ export interface TestRunnerOptions {
     browser: Browser,
     llm?: LLMClient,
     grounding?: GroundingClient
-    browserContextOptions?: BrowserContextOptions
+    browserContextOptions?: BrowserContextOptions,
+    telemetry: boolean
 }
 
 export class TestRunner {
@@ -106,35 +108,33 @@ export class TestRunner {
             const finalStateFailed = { 
                 ...tracker.getState(), 
                 failure: failure, 
-                status: 'failed' as const, // Explicitly set status
-                doneAt: Date.now() // Mark done time on failure too
+                status: 'failed' as const,
+                doneAt: Date.now()
             };
             this.events.emit('stateChanged', finalStateFailed);
-            
-            // Clean up agent even on failure
-            try {
-                await agent.stop();
-            } catch (stopErr) {
-                // Log agent stop error, but primary failure is more important
-                console.error("Error stopping agent after test failure:", stopErr);
-            }
+
+            await agent.stop();
+
+            if (this.options.telemetry) await sendTelemetry(finalStateFailed);
 
             return {
                 passed: false,
                 failure: failure
             };
         }
-
-        // If no error, test passed
+        
         await agent.stop();
         
+        // If no error, test passed
         // Get the current state and set status to 'passed'
         const finalStatePassed = { 
             ...tracker.getState(), 
-            status: 'passed' as const, // Explicitly set status
-            doneAt: Date.now() // Mark done time
+            status: 'passed' as const,
+            doneAt: Date.now()
         };
         this.events.emit('stateChanged', finalStatePassed);
+
+        if (this.options.telemetry) await sendTelemetry(finalStatePassed);
 
         return { passed: true };
     }

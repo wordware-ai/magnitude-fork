@@ -77,7 +77,10 @@ export class ModelHarness {
         const outputTokens = (this.collector.usage.outputTokens ?? 0) - this.prevTotalOutputTokens;
 
         const usage: ModelUsage = {
-            llm: this.options.llm,
+            llm: {
+                provider: this.options.llm.provider,
+                model: (this.options.llm.options as any).model ?? 'unknown'
+            },//this.options.llm,
             inputTokens: inputTokens,
             outputTokens: outputTokens
         };

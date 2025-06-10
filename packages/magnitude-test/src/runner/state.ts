@@ -1,5 +1,5 @@
 import { TestCaseAgent } from "@/agent"
-import { Action, LLMClient, ModelUsage } from "magnitude-core"
+import { Action, LLMClient, LLMClientIdentifier, ModelUsage } from "magnitude-core"
 import EventEmitter from "eventemitter3";
 
 export interface StepDescriptor {
@@ -26,7 +26,7 @@ export interface TestState {
     stepsAndChecks: (StepDescriptor | CheckDescriptor)[],
     //actionCount: number,
     modelUsage: {
-        llm: LLMClient,
+        llm: LLMClientIdentifier,
         inputTokens: number,
         outputTokens: number,
         numCalls: number

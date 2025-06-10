@@ -4,9 +4,9 @@ import * as os from 'node:os';
 //import { PlannerClient, TestCaseDefinition } from "magnitude-core";
 import { init } from '@paralleldrive/cuid2';
 import logger from './logger';
-import { LLMClient } from 'magnitude-core';
+import { LLMClient, LLMClientIdentifier } from 'magnitude-core';
 
-const createId = init({ length: 12 });
+
 
 const IPV4_IN_IPV6_PREFIX = '::f{4}:';
 
@@ -187,79 +187,13 @@ export function addProtocolIfMissing(url: string): string {
 //     return null;
 // }
 
-export function getMachineId(): string {
-    // Define storage location
-    const dir = path.join(os.homedir(), '.magnitude');
-    const filePath = path.join(dir, 'user.json');
 
-    try {
-        // Read existing ID if available
-        if (fs.existsSync(filePath)) {
-            const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-            if (data.id) return data.id;
-        }
 
-        // Generate new ID if needed
-        //console.log(`generating new ID in ${filePath}`)
-        fs.mkdirSync(dir, { recursive: true });
-        const id = createId();
-        fs.writeFileSync(filePath, JSON.stringify({ id }));
-        return id;
-    } catch {
-        // Fallback to temporary ID if storage fails
-        return createId();
-    }
-}
-
-export function describeModel(client: LLMClient) {
-    if ('model' in client.options) {
-        return `${client.provider}:${client.options.model}`;
+export function describeModel(client: LLMClientIdentifier) {
+    if (client.model !== 'unknown') {
+        return `${client.provider}:${client.model}`;
     } else {
         return `${client.provider}`;
-    }
-}
-
-export interface TelemetryPayload {
-	version: string, // telemetry payload version will prob be nice in the future
-	userId: string, // anon cuid2 stored on local machines
-	startedAt: number, // timestamp
-	doneAt: number, // timestamp
-	cached: boolean, // whether used a cached recipe
-	testCase: {
-		numSteps: number, // total num steps
-		numChecks: number // total num checks
-	},
-	actionCount: number, // number of web actions taken
-	macroUsage: {
-		provider: string,
-		model: string,
-		inputTokens: number,
-		outputTokens: number,
-		numCalls: number
-	}
-	microUsage: {
-		provider: string,
-		numCalls: number
-	},
-	result: string//'passed' | 'bug' | 'misalignment'
-};
-
-export async function sendTelemetry(payload: Omit<TelemetryPayload, 'version' | 'userId'>) {
-    const fullPayload: TelemetryPayload = {
-        version: '0.1',
-        userId: getMachineId(),
-        ...payload
-    }
-    const jsonString = JSON.stringify(fullPayload);
-    const encodedData = btoa(jsonString);
-    const telemetryUrl = "https://telemetry.magnitude.run/functions/v1/telemetry?data=" + encodedData;
-    try {
-        const resp = await fetch(telemetryUrl, { signal: AbortSignal.timeout(3000) });
-        if (!resp.ok) {
-            logger.warn(`Failed to send telemetry (status ${resp.status})`);
-        }
-    } catch (error) {
-        logger.warn(`Failed to send telemetry (may have timed out): ${(error as Error).message}`);
     }
 }
 

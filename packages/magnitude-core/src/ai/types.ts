@@ -91,9 +91,15 @@ export interface MoondreamClient {
     }
 }
 
+export interface LLMClientIdentifier {
+    provider: string,
+    model: string,
+    //temperature: number
+}
+
 // incremental usage report
 export interface ModelUsage {
-    llm: LLMClient,
+    llm: LLMClientIdentifier,
     inputTokens: number,
     outputTokens: number,
     inputCost?: number,
