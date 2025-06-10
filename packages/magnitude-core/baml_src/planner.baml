@@ -73,7 +73,9 @@ template_string InstructionsWithContext(memory: ModularMemoryContext, instructio
 
 template_string TaskInstructions(task: string) #"
     Plan out actions that should be executed in order to complete the task:
-    <task>{{ task }}</task>
+    <task>
+    {{ task }}
+    </task>
 
     Execute the task serially.
 

@@ -20,6 +20,7 @@ const createId = cuid2.init({ length: 12 });
 export interface TelemetryPayload {
 	telemetryVersion: string, // telemetry payload version will prob be nice in the future
     packageVersion: string,
+    codebase?: string, // unique value derived from git hash if available
 	startedAt: number, // timestamp
 	doneAt: number, // timestamp
     numSteps: number,
@@ -119,7 +120,7 @@ export async function sendTelemetry(state: TestState) {
                 ...payload
             },
             groups: {
-                // TODO: derive from git hash
+                // TODO: derive from git hash (also put it payload too)
                 codebase: 'example'
             }
         });

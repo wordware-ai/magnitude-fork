@@ -33,7 +33,7 @@ export interface AgentOptions {
 export interface ActOptions {
     prompt?: string // additional task-level system prompt instructions
     // TODO: reimpl, or maybe for tc agent specifically
-	//data?: string | Record<string, string>
+	data?: string | Record<string, string>
 }
 
 // Options for the startAgent helper function
@@ -239,6 +239,18 @@ export class Agent {
     async _act(description: string, memory: AgentMemory, options: ActOptions = {}): Promise<void> {
         this.doneActing = false;
         logger.info(`Act: ${description}`);
+
+        // for now simply add data to task
+        if (options.data) {
+            //description += "\nUse the following data where appropriate:\n";
+            description += "\n<data>\n";
+            if (typeof options.data === 'string') {
+                description += options.data;
+            } else {
+                description += Object.entries(options.data).map(([k, v]) => `${k}: ${v}`).join("\n");
+            }
+            description += "\n</data>";
+        }
         //this.events.emit('stepStart', description);
 
         //const testData = convertOptionsToTestData(options);
