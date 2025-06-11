@@ -56,7 +56,7 @@ This will create a basic tests directory `tests/magnitude` with:
 
 **3. Configure an LLM**
 
-The easiest way to set up an LLM for Magnitude is to set the `ANTHROPIC_API_KEY` environment variable. Sonnet 4 will be used by default. See [Compatible LLMS](#compatible-llms) for more details.
+The easiest way to set up an LLM for Magnitude is to set the `ANTHROPIC_API_KEY` environment variable. Claude Sonnet 4 will be used by default. See [docs](https://docs.magnitude.run/customizing/compatible-llms) for more details.
 
 🚀 Now you're ready to run tests!
 
@@ -92,12 +92,6 @@ test('can log in and create company', async (agent) => {
 Act, checks, and data are all natural language. Think of it like you're describing how to test a particular flow to a co-worker - what steps they need to take, what they should check for, and what test data to use.
 
 For more information on how to build test cases see <a href="https://docs.magnitude.run/core-concepts/building-test-cases" target="_blank">our docs.</a>
-
-## Compatible LLMs
-
-Magnitude requires a **grounded** LLM - one that knows the precise coordinates of elements on a screen. Only a few meet this requirement. We recommend Anthropic's Sonnet 4. To use Sonnet, simply set `ANTHROPIC_API_KEY` in your environment.
-
-Another strong grounded model that happens to be open source is `qwen2.5-vl-72b-instruct`. It is available through inference providers such as [OpenRouter](https://openrouter.ai/qwen/qwen2.5-vl-72b-instruct). If `ANTHROPIC_API_KEY` is not set but`OPENROUTER_API_KEY` is available, qwen2.5-vl-72b will automatically be used.
 
 ## Integrating with CI/CD
 You can run Magnitude tests in CI anywhere that you could run Playwright tests, just include LLM client credentials. For instructions on running tests cases on GitHub actions, see [here](https://docs.magnitude.run/integrations/github-actions).

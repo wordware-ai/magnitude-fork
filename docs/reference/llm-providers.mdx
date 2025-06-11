@@ -1,18 +1,15 @@
 ---
-title: LLM Configuration
+title: LLM Providers
 description: "Instructions for configuring LLMs with different providers"
 ---
 
-Magnitude requires configuring two language models:
-1. **"Planner"** model (any good multi-modal LLM)
-2. **"Executor"** model (currently only Moondream is supported)
+You can specify which LLM to use in `magnitude.config.ts`. If no LLM is configured and `ANTHROPIC_API_KEY` is available, Magnitude will use Claude Sonnet 4 automatically.
 
 
-For the **planner** model, we currently support Google Vertex AI, Anthropic, AWS Bedrock, OpenAI, and OpenAI-compatible providers.
-
-<Info>While many providers are supported, we would strongly suggest using Gemini 2.5 pro (via Vertex AI or OpenAI-compatible) or Claude Sonnet 3.7 (via Anthropic or Bedrock) for the planner.</Info>
+<Warning>While a variety of LLM providers are supported, many of them do NOT have any visually grounded model. See [Compatible LLMs](/customizing/compatible-llms) for details.</Warning>
 
 <Info>Magnitude uses [BAML](https://docs.boundaryml.com/ref/llm-client-providers/overview)'s providers under the hood, so their docs may be a useful secondary reference for credential configuration.</Info>
+
 
 To configure your planner model, pass one of the client interfaces described below to your `magnitude.config.ts`, like:
 ```typescript
@@ -30,12 +27,6 @@ export default {
     }
 } satisfies MagnitudeConfig;
 ```
-
-If no planner is configured, Magnitude will pick a provider and model based on available environment variables in this order:
-- `GOOGLE_API_KEY` (Google AI Studio `gemini-2.5-pro-preview-03-25`)
-- `OPENROUTER_API_KEY` (OpenRouter `google/gemini-2.5-pro-preview-03-25`)
-- `ANTHROPIC_API_KEY` (Anthropic `claude-3-7-sonnet-latest`)
-- `OPENAI_API_KEY` (OpenAI `gpt-4.1-2025-04-14`)
 
 # Providers
 
@@ -112,7 +103,7 @@ interface AnthropicClient {
 
 ## OpenAI
 ```typescript
-export interface OpenAIClient {
+interface OpenAIClient {
     provider: 'openai',
     options: {
         model: string,
@@ -125,7 +116,7 @@ export interface OpenAIClient {
 ## OpenAI-compatible (OpenRouter, Ollama, etc.)
 
 ```typescript
-export interface OpenAIGenericClient {
+interface OpenAIGenericClient {
     provider: 'openai-generic'
     options: {
         model: string,

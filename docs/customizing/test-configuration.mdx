@@ -1,6 +1,6 @@
 ---
-title: Configuration
-description: "Customize LLMs, browser settings, and more"
+title: Test Configuration
+description: "Customize browser settings, web servers, and more"
 icon: settings
 ---
 
@@ -17,30 +17,6 @@ export default {
 `url` is the default URL that all test cases will use if not specified.
 
 However, there's a lot more you can customize to get Magnitude working exactly as you want.
-
-## Customizing Planner LLM
-
-You can pass a `provider` and `options` to `planner` in order to configure the planner LLM, for example:
-
-```typescript
-import { type MagnitudeConfig } from 'magnitude-test';
-
-export default {
-    url: "http://localhost:5173",
-    planner: {
-        provider: 'openai-generic',
-        options: {
-            baseUrl: "https://openrouter.ai/api/v1",
-            apiKey: process.env.OPENROUTER_API_KEY,
-            model: "google/gemini-2.5-pro-preview-03-25"
-        }
-    }
-} satisfies MagnitudeConfig;
-```
-
-The planner LLM should be a strong general purpose multi-modal model. We recommend Gemini 2.5 Pro or Claude Sonnet 3.7.
-
-For instructions on configuring LLMs with various providers, see [LLM Configuration](/reference/llm-configuration).
 
 ## Browser Options
 
