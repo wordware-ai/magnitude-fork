@@ -3,7 +3,7 @@ title: Low-Level AI Actions
 description: Bypass the planner and trigger specific web actions with AI
 ---
 
-While `ai.step()` is the primary method for defining actions using natural language, the `ai` object also provides lower-level methods for more direct control over specific browser interactions, like clicking and typing into specific targets.
+While `agent.act()` is the primary method for defining actions using natural language, the `agent` object also provides lower-level methods for more direct control over specific browser interactions, like clicking and typing into specific targets.
 
 
 These actions bypass the planner and go straight to Moondream. This can be useful to use AI selectors directly as we refine the agent's behavior on steps and checks.
@@ -13,9 +13,9 @@ These actions bypass the planner and go straight to Moondream. This can be usefu
 
 |                      | Example                | Web Actions | Brittleness | Control |
 | -------------------- | ---------------------- | ----------- | ----------- | ------- |
-| 🧠 **High Level AI** | ai.step(decription)    | One or Many | 😀 Low      | Medium  |
-| 🤖 **Low Level AI**  | ai.click(target)       | One         | 🙂 Medium   | High    |
-| ✒️ **Playwright**    | page.mouse.click(x, y) | One         | ⚠️ High     | High    |
+| 🧠 **High Level AI** | agent.act(decription)  | One or Many | 😀 Low      | Medium  |
+| 🤖 **Low Level AI**  | agent.click(target)    | One         | 🙂 Medium   | High    |
+| ✒️ **Playwright**    | agent.page.mouse.click(x, y) | One         | ⚠️ High     | High    |
 
 
 ## When to use low level actions
@@ -24,14 +24,14 @@ They can be useful when:
 - You need precise control over a specific interaction.
 - Moondream is having trouble clicking a specific target and you want to directly control the prompt
 
-## `ai.click(target)`
+## `agent.click(target)`
 
 Directly performs a click action on an element identified by the `target` description.
 
 <RequestExample>
 ```typescript Click Example
-await ai.click("the 'Save Settings' button");
-await ai.click("the checkbox labeled 'I agree'");
+await agent.click("the 'Save Settings' button");
+await agent.click("the checkbox labeled 'I agree'");
 ```
 </RequestExample>
 
@@ -39,14 +39,14 @@ await ai.click("the checkbox labeled 'I agree'");
   A natural language description of the element to click. The AI identifies the element based on this description and performs a click.
 </ParamField>
 
-## `ai.type(target, content)`
+## `agent.type(target, content)`
 
 Directly performs a typing action into a specified input element.
 
 <RequestExample>
 ```typescript Type Example
-await ai.type("the search input field", "Magnitude Testing");
-await ai.type("the password box", process.env.USER_PASSWORD); // Use secure methods for sensitive data
+await agent.type("the search input field", "Magnitude Testing");
+await agent.type("the password box", process.env.USER_PASSWORD); // Use secure methods for sensitive data
 ```
 </RequestExample>
 
@@ -57,7 +57,7 @@ await ai.type("the password box", process.env.USER_PASSWORD); // Use secure meth
   The text content to type into the target element.
 </ParamField>
 
-## `ai.exec(action)`
+## `agent.exec(action)`
 
 Execute any action using its JSON representation.
 
@@ -70,7 +70,7 @@ const specificClick: ClickIntent = {
   target: '#submit-button-id' // Can be a selector or description
 };
 
-await ai.exec(specificClick);
+await agent.exec(specificClick);
 ```
 </RequestExample>
 
