@@ -1,0 +1,86 @@
+import { Action } from '@/actions/types';
+import { AgentConnector } from '@/connectors';
+import { 
+    ModularMemoryContext, 
+    // BamlThought, 
+    // BamlTurn, 
+    ConnectorInstructions 
+} from '@/ai/baml_client';
+import { Observation, renderObservations } from './observation';
+import { BamlRenderable, observableDataToContext } from './context';
+import z from 'zod';
+
+export class AgentMemory {
+    //private options: Required<MemoryOptions>;
+    //private history: StoredHistoryEntry[] = [];
+
+    // Custom instructions relating to this memory instance (e.g. agent-level and/or task-level instructions)
+    public readonly instructions: string | null;
+
+    private observations: Observation[] = [];
+    //private tasks: { task: string, observations: Observation[] }[] = [];
+
+    constructor(instructions?: string) {
+        this.instructions = instructions ?? null;
+    }
+
+    // get observations(): Observation[] {
+    //     if (this.tasks.length === 0) {
+            
+    //     }
+    //     return this.tasks.at(-1).observations
+    // }
+
+    // public newTask(task: string): void {
+    //     // Mark start of task for a new isolated memory window
+    // }
+
+    public isEmpty(): boolean {
+        return this.observations.length === 0;
+    }
+
+    public recordThought(content: string): void {
+        this.observations.push(
+            Observation.fromThought(content)
+        );
+    }
+
+    public recordObservation(obs: Observation): void {
+        this.observations.push(obs);
+    }
+
+    public getLastThoughtMessage(): string | null {
+        for (let i = this.observations.length - 1; i >= 0; i--) {
+            const obs = this.observations[i];
+            // toString() is a little funky here, or the idea that thought might not just be text
+            if (obs.source.startsWith('thought')) return obs.toString();
+        }
+        return null;
+    }
+
+    public async buildContext(activeConnectors: AgentConnector[]): Promise<ModularMemoryContext> {
+        const content = await renderObservations(this.observations);
+
+        // TODO: doesn't really make sense for memory to be responsible for current state and instruction render logic
+        const connectorInstructions: ConnectorInstructions[] = [];
+
+        for (const connector of activeConnectors) {
+            if (connector.getInstructions) {
+                const instructions = await connector.getInstructions();
+
+                if (instructions) {
+                    connectorInstructions.push({
+                        connectorId: connector.id,
+                        instructions: instructions
+                    });
+                }
+            }
+        }
+
+        return {
+            instructions: this.instructions,
+            observationContent: content,
+            connectorInstructions: connectorInstructions
+        };
+    }
+}

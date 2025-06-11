@@ -1,15 +1,22 @@
 import { setLogLevel } from '@/ai/baml_client/config';
 
-export { TestCaseAgent } from "@/agent/agent";
-export { Magnus } from "@/agent/magnus";
-export type { TestCaseAgentOptions } from "@/agent/agent";
+export { Agent } from "@/agent";
+export { createAction } from '@/actions';
+export { BrowserAgent, startBrowserAgent } from '@/agent/browserAgent';
+//export { Magnus } from "@/agent/magnus";
+//export type { AgentOptions as TestCaseAgentOptions } from "@/agent";
+export * from "@/agent";
+export * from "@/actions";
+export * from "@/connectors";
+export * from "@/connectors/browserConnector";
 export * from "@/agent/errors";
-export * from "@/agent/state";
 export * from "@/types";
 export * from "@/ai/types";
 export * from "@/web/types";
-export * from "@/intents/types";
+export * from "@/actions/types";
 export * from '@/common';
+export { buildDefaultBrowserAgentOptions } from "@/ai/util";
 export { logger } from './logger';
+//export { ModelUsage } from '@/ai/modelHarness';
 
 setLogLevel('OFF');

@@ -1,6 +1,6 @@
 import { FailureDescriptor } from "./common";
 //import { TestCaseError } from "./errors";
-import { Intent } from "./intents/types";
+import { Intent } from "./actions/types";
 
 export interface TestDataEntry {
     key: string;
@@ -43,6 +43,3 @@ export interface FailedTestCaseResult {
     failure: FailureDescriptor
 }
 
-export interface StepOptions {
-	data?: string | Record<string, string>
-}

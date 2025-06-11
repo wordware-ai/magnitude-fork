@@ -9,14 +9,14 @@ export const ANSI_BOLD = '\x1b[1m';
 export const ANSI_DIM = '\x1b[2m';
 
 // --- Box Drawing Characters ---
-export const BOX_CHARS_ROUNDED = {
-    topLeft: '╭', topRight: '╮', bottomLeft: '╰', bottomRight: '╯',
-    horizontal: '─', vertical: '│'
-};
+// export const BOX_CHARS_ROUNDED = {
+//     topLeft: '╭', topRight: '╮', bottomLeft: '╰', bottomRight: '╯',
+//     horizontal: '─', vertical: '│'
+// };
 
 // --- Configuration ---
 export const MAX_APP_WIDTH = 100;
-export const PADDING = 2;
+// export const PADDING = 2;
 
 // --- Spinner Characters ---
 export const spinnerChars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];

@@ -1,6 +1,9 @@
-import { TestOptions, TestGroup, MagnitudeConfig, CategorizedTestCases, TestFunction, TestRunnable, CategorizedTestRunnable } from "./types";
+import { TestOptions, TestGroup, MagnitudeConfig, TestFunction, RegisteredTest } from "./types";
 import { TestCompiler } from "@/compiler";
+import cuid2 from "@paralleldrive/cuid2";
 import { pathToFileURL } from "node:url";
+
+const generateId = cuid2.init({ length: 12 });
 
 // Warning: The registry is bundled with every test, be careful about the module tree here.
 
@@ -12,7 +15,8 @@ export class TestRegistry {
     //private static instance: TestRegistry;
 
     // map from filepath to ungrouped & grouped test cases
-    private tests: CategorizedTestCases = {};
+    private tests: RegisteredTest[] = [];
+    //private tests: CategorizedTestCases = {};
 
     private currentGroup?: TestGroup;
     private currentFilePath?: string;
@@ -38,51 +42,73 @@ export class TestRegistry {
         return (globalThis as any).__magnitude__.registry;
     }
 
-    public register(testCase: TestRunnable): void {
+    public register(testCase: {
+        fn: TestFunction
+        title: string
+        url: string
+    }): void {
         // Register a test case to be tracked by test runner
         if (!this.currentFilePath) {
             throw Error("File path context not set before registering test");
         }
 
-        if (!(this.currentFilePath in this.tests)) {
-            this.tests[this.currentFilePath] = { ungrouped: [], groups: {} }
-        }
-        const testsForPath = this.tests[this.currentFilePath];
+        const id = generateId();
+        const filepath = this.currentFilePath;
 
-        if (this.currentGroup) {
-            const groupName = this.currentGroup.name;
-            if (!(groupName in testsForPath.groups)) {
-                testsForPath.groups[groupName] = [];
-            }
-            testsForPath.groups[groupName].push(testCase);
-        } else {
-            testsForPath.ungrouped.push(testCase);
-        }
+        this.tests.push({
+            id: id,
+            fn: testCase.fn,
+            title: testCase.title,
+            url: testCase.url,
+            filepath: filepath,
+            group: this.currentGroup?.name
+        });
+
+        
+
+        // if (!(this.currentFilePath in this.tests)) {
+        //     this.tests[this.currentFilePath] = { ungrouped: [], groups: {} }
+        // }
+        // const testsForPath = this.tests[this.currentFilePath];
+
+        // if (this.currentGroup) {
+        //     const groupName = this.currentGroup.name;
+        //     if (!(groupName in testsForPath.groups)) {
+        //         testsForPath.groups[groupName] = [];
+        //     }
+        //     testsForPath.groups[groupName].push(testCase);
+        // } else {
+        //     testsForPath.ungrouped.push(testCase);
+        // }
     }
 
-    public getRegisteredTestCases(): CategorizedTestCases {
+    getRegisteredTests(): RegisteredTest[] {
         return this.tests;
     }
 
-    public getFlattenedTestCases(): Array<CategorizedTestRunnable> {
-        const tests = [];
+    // public getRegisteredTestCases(): CategorizedTestCases {
+    //     return this.tests;
+    // }
+
+    // public getFlattenedTestCases(): Array<CategorizedTestRunnable> {
+    //     const tests = [];
         
-        for (const filePath in this.tests) {
-            // Add ungrouped tests
-            for (const runnable of this.tests[filePath].ungrouped) {
-                tests.push({ ...runnable, file: filePath, group: null });
-            }
+    //     for (const filePath in this.tests) {
+    //         // Add ungrouped tests
+    //         for (const runnable of this.tests[filePath].ungrouped) {
+    //             tests.push({ ...runnable, file: filePath, group: null });
+    //         }
             
-            // Add grouped tests
-            for (const groupName in this.tests[filePath].groups) {
-                for (const runnable of this.tests[filePath].groups[groupName]) {
-                    tests.push({ ...runnable, file: filePath, group: groupName });
-                }
-            }
-        }
+    //         // Add grouped tests
+    //         for (const groupName in this.tests[filePath].groups) {
+    //             for (const runnable of this.tests[filePath].groups[groupName]) {
+    //                 tests.push({ ...runnable, file: filePath, group: groupName });
+    //             }
+    //         }
+    //     }
         
-        return tests;
-    }
+    //     return tests;
+    // }
 
     public setCurrentGroup(group: TestGroup): void {
         //this.currentGroupName = groupName;

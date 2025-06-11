@@ -1,11 +1,12 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import { PlannerClient, TestCaseDefinition } from "magnitude-core";
+//import { PlannerClient, TestCaseDefinition } from "magnitude-core";
 import { init } from '@paralleldrive/cuid2';
 import logger from './logger';
+import { LLMClient, LLMClientIdentifier } from 'magnitude-core';
 
-const createId = init({ length: 12 });
+
 
 const IPV4_IN_IPV6_PREFIX = '::f{4}:';
 
@@ -127,138 +128,72 @@ export function addProtocolIfMissing(url: string): string {
     }
 }
 
-export function tryDeriveEnvironmentPlannerClient(): PlannerClient | null {
-    // Order by approximate model suitability as planner
+// export function tryDeriveEnvironmentPlannerClient(): PlannerClient | null {
+//     // Order by approximate model suitability as planner
 
-    // Best: Gemini 2.5 pro
-    if (process.env.GOOGLE_API_KEY) {
-        // Google AI Studio
-        return {
-            'provider': 'google-ai',
-            'options': {
-                model: 'gemini-2.5-pro-preview-03-25',
-                apiKey: process.env.GOOGLE_API_KEY
-            }
-        }
-    }
-    // Patching out until vertex AI authorization issues are resolved
-    // if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    //     // Google Vertex AI
-    //     return {
-    //         'provider': 'vertex-ai',
-    //         'options': {
-    //             location: 'us-central1',
-    //             model: 'gemini-2.5-pro-preview-03-25'
-    //         }
-    //     }
-    // }
-    if (process.env.OPENROUTER_API_KEY) {
-        return {
-            'provider': 'openai-generic',
-            'options': {
-                baseUrl: "https://openrouter.ai/api/v1",
-                model: 'google/gemini-2.5-pro-preview-03-25',
-                apiKey: process.env.OPENROUTER_API_KEY
-            }
-        }
-    }
-    // Good
-    if (process.env.ANTHROPIC_API_KEY) {
-        return {
-            'provider': 'anthropic',
-            'options': {
-                model: 'claude-3-7-sonnet-latest',
-                apiKey: process.env.ANTHROPIC_API_KEY
-            }
-        }
-    }
-    // Ok
-    if (process.env.OPENAI_API_KEY) {
-        return {
-            'provider': 'openai',
-            'options': {
-                model: 'gpt-4.1-2025-04-14',
-                apiKey: process.env.OPENAI_API_KEY
-            }
-        }
-    }
+//     // Best: Gemini 2.5 pro
+//     if (process.env.GOOGLE_API_KEY) {
+//         // Google AI Studio
+//         return {
+//             'provider': 'google-ai',
+//             'options': {
+//                 model: 'gemini-2.5-pro-preview-03-25',
+//                 apiKey: process.env.GOOGLE_API_KEY
+//             }
+//         }
+//     }
+//     // Patching out until vertex AI authorization issues are resolved
+//     // if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+//     //     // Google Vertex AI
+//     //     return {
+//     //         'provider': 'vertex-ai',
+//     //         'options': {
+//     //             location: 'us-central1',
+//     //             model: 'gemini-2.5-pro-preview-03-25'
+//     //         }
+//     //     }
+//     // }
+//     if (process.env.OPENROUTER_API_KEY) {
+//         return {
+//             'provider': 'openai-generic',
+//             'options': {
+//                 baseUrl: "https://openrouter.ai/api/v1",
+//                 model: 'google/gemini-2.5-pro-preview-03-25',
+//                 apiKey: process.env.OPENROUTER_API_KEY
+//             }
+//         }
+//     }
+//     // Good
+//     if (process.env.ANTHROPIC_API_KEY) {
+//         return {
+//             'provider': 'anthropic',
+//             'options': {
+//                 model: 'claude-3-7-sonnet-latest',
+//                 apiKey: process.env.ANTHROPIC_API_KEY
+//             }
+//         }
+//     }
+//     // Ok
+//     if (process.env.OPENAI_API_KEY) {
+//         return {
+//             'provider': 'openai',
+//             'options': {
+//                 model: 'gpt-4.1-2025-04-14',
+//                 apiKey: process.env.OPENAI_API_KEY
+//             }
+//         }
+//     }
 
-    return null;
-}
+//     return null;
+// }
 
-export function getMachineId(): string {
-    // Define storage location
-    const dir = path.join(os.homedir(), '.magnitude');
-    const filePath = path.join(dir, 'user.json');
 
-    try {
-        // Read existing ID if available
-        if (fs.existsSync(filePath)) {
-            const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-            if (data.id) return data.id;
-        }
 
-        // Generate new ID if needed
-        //console.log(`generating new ID in ${filePath}`)
-        fs.mkdirSync(dir, { recursive: true });
-        const id = createId();
-        fs.writeFileSync(filePath, JSON.stringify({ id }));
-        return id;
-    } catch {
-        // Fallback to temporary ID if storage fails
-        return createId();
-    }
-}
-
-export function describeModel(client: PlannerClient) {
-    if ('model' in client.options) {
-        return `${client.provider}:${client.options.model}`;
+export function describeModel(client: LLMClientIdentifier) {
+    if (client.model !== 'unknown') {
+        return `${client.provider}:${client.model}`;
     } else {
         return `${client.provider}`;
-    }
-}
-
-export interface TelemetryPayload {
-	version: string, // telemetry payload version will prob be nice in the future
-	userId: string, // anon cuid2 stored on local machines
-	startedAt: number, // timestamp
-	doneAt: number, // timestamp
-	cached: boolean, // whether used a cached recipe
-	testCase: {
-		numSteps: number, // total num steps
-		numChecks: number // total num checks
-	},
-	actionCount: number, // number of web actions taken
-	macroUsage: {
-		provider: string,
-		model: string,
-		inputTokens: number,
-		outputTokens: number,
-		numCalls: number
-	}
-	microUsage: {
-		provider: string,
-		numCalls: number
-	},
-	result: string//'passed' | 'bug' | 'misalignment'
-};
-
-export async function sendTelemetry(payload: Omit<TelemetryPayload, 'version' | 'userId'>) {
-    const fullPayload: TelemetryPayload = {
-        version: '0.1',
-        userId: getMachineId(),
-        ...payload
-    }
-    const jsonString = JSON.stringify(fullPayload);
-    const encodedData = btoa(jsonString);
-    const telemetryUrl = "https://telemetry.magnitude.run/functions/v1/telemetry?data=" + encodedData;
-    try {
-        const resp = await fetch(telemetryUrl, { signal: AbortSignal.timeout(3000) });
-        if (!resp.ok) {
-            logger.warn(`Failed to send telemetry (status ${resp.status})`);
-        }
-    } catch (error) {
-        logger.warn(`Failed to send telemetry (may have timed out): ${(error as Error).message}`);
     }
 }
 

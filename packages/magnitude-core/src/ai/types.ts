@@ -4,8 +4,8 @@
 // }
 
 // Approximately mirrors https://docs.boundaryml.com/ref/llm-client-providers
-export type PlannerClient = AnthropicClient | BedrockClient | GoogleAIClient | GoogleVertexClient | OpenAIClient | OpenAIGenericClient | AzureOpenAIClient;
-export type ExecutorClient = MoondreamClient;
+export type LLMClient = AnthropicClient | BedrockClient | GoogleAIClient | GoogleVertexClient | OpenAIClient | OpenAIGenericClient | AzureOpenAIClient;
+export type GroundingClient = MoondreamClient;
 
 export interface AnthropicClient {
     provider: 'anthropic',
@@ -89,4 +89,19 @@ export interface MoondreamClient {
         baseUrl?: string,
         apiKey?: string
     }
+}
+
+export interface LLMClientIdentifier {
+    provider: string,
+    model: string,
+    //temperature: number
+}
+
+// incremental usage report
+export interface ModelUsage {
+    llm: LLMClientIdentifier,
+    inputTokens: number,
+    outputTokens: number,
+    inputCost?: number,
+    outputCost?: number,
 }

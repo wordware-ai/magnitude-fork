@@ -1,227 +1,137 @@
-class TestDataEntry {
-    key string
-    value string
-    sensitive bool
-}
-
-class TestData {
-    data TestDataEntry[]?
-    other string?
-}
-
-class TestStep {
-    description string
-    checks string[]
-    testData TestData
-}
-
-class TestCase {
-    url string
-    steps TestStep[]
-}
-
-class ClickIntent {
-    variant "click" @description(#"
-        Click something
-    "#)
-    target string @description(#"
-        Where exactly to click
-    "#)
-}
-
-class TypeIntent {
-    variant "type" @description(#"
-        Click something and type into it
-    "#)
-    target string @description(#"
-        Where exactly to click before typing
-    "#)
-    content string @description(#"
-        Content to type, insert sequences <enter> or <tab> for those keypresses respectively.
-    "#)
-}
-
-class ScrollIntent {
-    variant "scroll" @description(#"
-        Hover mouse over target and scroll
-    "#)
-    target string @description(#"
-        Somewhere specific inside the container to scroll in
-    "#)
-    deltaX int @description(#"
-        Pixels to scroll horizontally
-    "#)
-    deltaY int @description(#"
-        Pixels to scroll vertically
-    "#)
-}
-
-class SwitchTabIntent {
-    variant "tab" @description(#"
-        Switch tabs
-    "#)
-    index int @description(#"
-        Index of tab to switch to
-    "#)
-}
-
-class CheckIntent {
-    variant "check"
-    checks string[]
-}
-
-type Intent = ActionIntent | CheckIntent
-type ActionIntent = ClickIntent | TypeIntent | ScrollIntent | SwitchTabIntent
-
 class PartialRecipe {
-    reasoning string @description(#"Consider what you can see right now and what actions you can plan without guessing"#)
-    actions ActionIntent[]
-    finished bool
+    // this CoT pipeline is not thoroughly tested against alternatives
+    // observations string? @description(#"Any key observations about past actions or current state"#)
+    // meta_reasoning string @description(#"Reflect on the current state of task execution with respect to your own abilities as an agent"#)
+    // reasoning string @description(#"Consider what you can see right now and what actions you can plan without guessing"#)
+
+    // Simplifying CoT - seemed to be causing underplanning on Claude
+    //observations string @description(#"What important clues or key information are worth considering?"#)
+    reasoning string @description(#"What is the most actions you can safely take at once?"#)
+
+    //actions ActionIntent[]
+    @@dynamic
+    //finished bool
 }
 
-class OpenTab {
-    title string
-    url string
-}
 
-class TabState {
-    activeTab int
-    tabs OpenTab[]
-}
-
-class BrowserExecutionContext {
-    screenshot image
-    actionHistory string[]
-    tabState TabState
-}
-
-// screenshot: image, actionHistory: string[], tabState: TabState
-template_string DescribeBrowserExecutionContext (context: BrowserExecutionContext) #"
-    <browser_state>
-        <action_history>
-        {%for action in context.actionHistory%}
-        {{ action }}
-        {%endfor%}
-        </action_history>
-
-        <open_tabs>
-        {%for tab in context.tabState.tabs%}
-            {%if context.tabState.activeTab == loop.index0%}
-            {{ loop.index0 }} [ACTIVE]: {{ tab.title }} ({{tab.url}})
-            {%else%}
-            {{ loop.index0 }}: {{ tab.title }} ({{tab.url}})
-            {%endif%}
-        {%endfor%}
-        </open_tabs>
-
-        <current_screenshot>
-        {{ context.screenshot }}
-        </current_screenshot>
-    </browser_state>
+// render "chunked" multimedia content of strings or images with no added whitespace between
+template_string RenderContent(content: (string | image)[]) #"
+    {% for chunk in content -%}{{chunk}}{%- endfor %}
 "#
 
-function CreatePartialRecipe (context: BrowserExecutionContext, step: TestStep) -> PartialRecipe {
+
+// template_string DescribeModularMemoryContext(context: ModularMemoryContext) #"
+//     {% for entry in context.history %}
+//         {% if entry.variant == "thought" %}
+//             [{{entry.timestamp}}] {{entry.message}}
+//         {% elif entry.variant == "turn" %}
+//             [{{entry.timestamp}}] {{entry.action}}
+//             {{ RenderContent(entry.content) }}
+//         {% endif %}
+//     {% endfor %}
+// "#
+
+// unused
+template_string HybridMeta #"
+    <meta>
+    You are a web agent powered by (1) a powerful LLM (you) and (2) a small vision model (Moondream).
+    You operate by planning out actions over time to try and complete a certain task.
+    To do this successfully you may need to consider and adjust for your own limitations as an agent, so here is some information about how you work:
+    - You plan several actions ahead of time without trying to guess, which are then executed
+    - You are then given a new screenshot of the webpage which is the result of all actions taken
+    - This occurs in a loop until you complete your task
+    - Mouse movements require a "target", which is located by Moondream as a specific coordinate on the page
+    - Moondream may sometimes fail to locate the target you expected it to.
+    - Therefore, actions may not always be completely successful and you may need to try different variations
+    </meta>
+"#
+
+template_string DescribeConnectorInstructions(memory: ModularMemoryContext) #"
+    {% for conn in memory.connectorInstructions %}
+    <{{ conn.connectorId }}>
+    {{- conn.instructions -}}
+    </{{ conn.connectorId }}>
+    {% endfor %}
+"#
+
+template_string InstructionsWithContext(memory: ModularMemoryContext, instructions: string) #"
+    {{ _.role("system") }}
+    <instructions>
+    {{ instructions }}
+    {%if memory.instructions %}
+
+    {{ memory.instructions }}
+    {%endif%}
+    </instructions>
+    {{ DescribeConnectorInstructions(memory) }}
+    {{ ctx.output_format }}
+
+    {{ _.role("user") }}
+
+    {{ RenderContent(memory.observationContent) }}
+"# 
+
+template_string TaskInstructions(task: string) #"
+    Plan out actions that should be executed in order to complete the task:
+    <task>
+    {{ task }}
+    </task>
+
+    Execute the task serially.
+
+    Plan out as many actions as possible, but stopping at the point where you will need to observe to plan further.
+"#
+
+// TODO: connector system instructions
+function CreatePartialRecipe (memory: ModularMemoryContext, task: string) -> PartialRecipe {
     client GeminiPro
     prompt #"
-        {{ _.role("system") }}
-        Plan out web actions that should be executed in order to complete the step:
-        <step>{{ step.description }}</step>
-        Do not always take the step exactly literally - if ambiguity use common sense.
-        Target descriptions are located by a small vision LLM. They should be:
-        (1) Based only on what can be seen in the screenshot right now.
-        (2) Positional information, shapes, and text - no high level abstractions.
-        (3) Simple but unique enough to be distinguished specifically from anything matching a similar description.
-        Only plan out actions that involve things you can see right now.
-        Note that many actions combine click + something else, so you may not need to click separately.
-        For scroll, describe ONE specific element IN the appropriate container rather than trying to describe the container itself.
-        
-        {{ ctx.output_format }}
-
-        {{ _.role("user") }}
-
-        {%if step.testData.data or step.testData.other %}
-        Additionally, bake this test data into the actions you plan out (only where appropriate):
-        {%if step.testData.data %}
-        {%for field in step.testData.data %}
-        {{field.key}} = {{field.value}}
-        {%endfor%}
-        {%endif%}
-        {%if step.testData.other %}
-        {{ step.testData.other }}
-        {%endif%}
-        {%endif%}
-
-        {{ DescribeBrowserExecutionContext(context) }}
+        {{ InstructionsWithContext(memory, TaskInstructions(task)) }}
     "# 
 }
 
-// class CheckNoContext {
+// class EvaluatedCheck {
 //     reasoning string
-//     // Not used as output rn but as an indicator for the LLM, it will not convert and return original check
-//     should_pass bool
-//     check string
+//     passes bool
+// }
+class QueryResponse {
+    @@dynamic
+}
+
+function QueryMemory(memory: ModularMemoryContext, query: string) -> QueryResponse {
+    client GeminiPro
+    prompt #"
+        {{ InstructionsWithContext(memory, query) }}
+    "#
+}
+
+
+// template_string CheckInstructions(check: string) #"
+//     Given the actions of an LLM agent executing a test case, and a screenshot taken afterwards, evaluate whether the provided check "passes" i.e. holds true or not.
+
+//     Check to evaluate:
+//     <check>{{ check }}</check>
+// "#
+
+// function EvaluateCheck (context: ModularMemoryContext, check: string) -> EvaluatedCheck {
+//     client GeminiPro
+//     prompt #"
+//         {{ InstructionsWithContext(context, CheckInstructions(check)) }}
+//     "#
 // }
 
-class ConvertedChecks {
-    reasoning string
-    // Not used as output rn but as an indicator for the LLM, it will not convert and return original check
-    should_pass bool
-    checks string[]
-}
-
-function RemoveImplicitCheckContext (screenshot: image, check: string, previousActions: string[]) -> ConvertedChecks {
-    client GeminiPro
-    prompt #"
-        {{ _.role("system") }}
-        Your job is to break down a visual "assertion" that may depend on contextual history into simple, isolated, context-independent "checks".
-        The checks you generate will be verified by a small visual LLM. This LLM is capable of understanding basic descriptions but not lengthy descriptions or high level concepts.
-
-        Each check should be:
-        (1) Simple
-        (2) Grounded in specific visual details
-        (3) Depend only on what is visible in the current screenshot
-
-        Only include enough checks such that their union is semantically equivalent to the assertion.
-
-        If the original assertion does NOT hold true based on the screenshot, instead set should_pass to false, and simply return the original assertion.
-
-        {{ ctx.output_format }}
-
-        {{ _.role("user")}}
-
-        The history of previous actions:
-        {%if not previousActions %}
-        (there are none)
-        {%endif%}
-        {%for action in previousActions%}
-        {{ action }}
-        {%endfor%}
-        
-        The original "check" to convert: 
-        {{ check }}
-
-        Current screenshot:
-        {{screenshot}}
-    "# 
-}
-
-class EvaluatedCheck {
-    reasoning string
-    passes bool
-}
-
 // Moondream struggles to handle converted check, this is a bypass to use big model to evaluate check directly
-function EvaluateCheck (context: BrowserExecutionContext, check: string) -> EvaluatedCheck {
-    client GeminiPro
-    prompt #"
-        {{ _.role("system") }}
-        Given the actions of an LLM agent executing a test case, and a screenshot taken afterwards, evaluate whether the provided check "passes" i.e. holds true or not.
-        {{ ctx.output_format }}
+// function EvaluateCheck (context: BrowserExecutionContext, check: string) -> EvaluatedCheck {
+//     client GeminiPro
+//     prompt #"
+//         {{ _.role("system") }}
+//         Given the actions of an LLM agent executing a test case, and a screenshot taken afterwards, evaluate whether the provided check "passes" i.e. holds true or not.
+//         {{ ctx.output_format }}
 
-        {{ _.role("user")}}
-        Check to evaluate:
-        <check>{{ check }}</check>
+//         {{ _.role("user")}}
+//         Check to evaluate:
+//         <check>{{ check }}</check>
 
-        {{ DescribeBrowserExecutionContext(context) }}
-    "# 
-}
+//         {{ DescribeBrowserExecutionContext(context) }}
+//     "# 
+// }

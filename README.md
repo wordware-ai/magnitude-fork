@@ -28,18 +28,17 @@ End-to-end testing framework powered by visual AI agents that see your interface
 
 ↕️ Magnitude test case in action! ↕️
 ```ts
-test('can add and complete todos', { url: 'https://magnitodo.com' }, async ({ ai }) => {
-    await ai.step('create 3 todos', {
+test('can add and complete todos', { url: 'https://magnitodo.com' }, async (agent) => {
+    await agent.act('create 3 todos', {
         data: 'Take out the trash, Buy groceries, Build more test cases with Magnitude'
     });
-    await ai.check('should see all 3 todos');
-    await ai.step('mark each todo complete');
-    await ai.check('says 0 items left');
+    await agent.check('should see all 3 todos');
+    await agent.act('mark each todo complete');
+    await agent.check('says 0 items left');
 });
 ```
 
 ## Setup
-
 
 ### Install Magnitude
 **1. Install our test runner** in the node project you want to test (or see our [demo repo](https://github.com/magnitudedev/magnitude-demo-repo) if you don't have a project to try it on)
@@ -55,26 +54,11 @@ This will create a basic tests directory `tests/magnitude` with:
 - `magnitude.config.ts`: Magnitude test configuration file
 - `example.mag.ts`: An example test file
 
-### Configure LLMs
+**3. Configure an LLM**
 
-Magnitude requires setting up two LLM clients:
-1. A strong general multi-modal LLM (the **"planner"**)
-2. A fast vision LLM with pixel-precision (the **"executor"**)
+The easiest way to set up an LLM for Magnitude is to set the `ANTHROPIC_API_KEY` environment variable. Claude Sonnet 4 will be used by default. See [docs](https://docs.magnitude.run/customizing/llm-configuration) for more details.
 
-For the **planner**, you can use any multi-modal LLM, but we recommend Gemini 2.5 pro. You can use Gemini via Google AI Studio or Vertex AI. If you don't have either set up, you can create an API key in [Google AI Studio](https://aistudio.google.com) (requires billing) and export to `GOOGLE_API_KEY`.
-
-
-If no `GOOGLE_API_KEY` is found, Magnitude will fallback to other common providers (`ANTHROPIC_API_KEY` / `OPENAI_API_KEY`).
-
-To explicitly select a specific provider and model, see [configuration docs](https://docs.magnitude.run/reference/llm-configuration). Currently we support Google AI Studio, Google Vertex AI, Anthropic, AWS Bedrock, OpenAI, and OpenAI-compatible providers.
-
-#### Configure Moondream
-
-Currently for the **executor** model, we only support [Moondream](https://moondream.ai/), which is a fast vision model that Magnitude uses for precise UI interactions.
-
-To configure Moondream, sign up and create an API with Moondream [here](https://moondream.ai/c/cloud/api-keys), then add to your environment as `MOONDREAM_API_KEY`. This will use the cloud version, which includes 5,000 free requests per day (roughly a few hundred test cases in Magnitude). Moondream is fully open source and self-hostable as well.
-
-🚀 Once you've got your LLMs set up, you're ready to run tests!
+🚀 Now you're ready to run tests!
 
 
 ## Running tests
@@ -95,27 +79,22 @@ Now that you've got Magnitude set up, you can create real test cases for your ap
 ```ts
 import { test } from 'magnitude-test';
 
-test('can log in and create company', async ({ ai }) => {
-    await ai.step('Log in to the app', {
+test('can log in and create company', async (agent) => {
+    await agent.act('Log in to the app', {
         data: { username: 'test-user@magnitude.run', password: 'test' }
     });
-    await ai.check('Can see dashboard');
-    await ai.step('Create a new company', { data: 'Make up the first 2 values and use defaults for the rest' });
-    await ai.check('Company added successfully');
+    await agent.check('Can see dashboard');
+    await agent.act('Create a new company', { data: 'Make up the first 2 values and use defaults for the rest' });
+    await agent.check('Company added successfully');
 });
 ```
 
-Steps, checks, and data are all natural language. Think of it like you're describing how to test a particular flow to a co-worker - what steps they need to take, what they should check for, and what test data to use.
+Act, checks, and data are all natural language. Think of it like you're describing how to test a particular flow to a co-worker - what steps they need to take, what they should check for, and what test data to use.
 
 For more information on how to build test cases see <a href="https://docs.magnitude.run/core-concepts/building-test-cases" target="_blank">our docs.</a>
 
 ## Integrating with CI/CD
 You can run Magnitude tests in CI anywhere that you could run Playwright tests, just include LLM client credentials. For instructions on running tests cases on GitHub actions, see [here](https://docs.magnitude.run/integrations/github-actions).
-
-## FAQ
-
-### Why not OpenAI Operator / Claude Computer Use?
-We use separate planning / execution models in order to plan effective tests while executing them quickly and reliably. OpenAI or Anthropic's Computer Use APIs are better suited to general purpose desktop/web tasks but lack the speed, reliability, and cost-effectiveness for running test cases. Magnitude's agent is designed from the ground up to plan and execute test cases, and provides a native test runner purpose-built for designing and running these tests.
 
 ## Contact
 

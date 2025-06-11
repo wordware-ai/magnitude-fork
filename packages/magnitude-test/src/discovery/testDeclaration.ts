@@ -1,4 +1,4 @@
-import { TestDeclaration, TestOptions, TestFunction, TestGroupFunction, TestRunnable } from './types';
+import { TestDeclaration, TestOptions, TestFunction, TestGroupFunction } from './types';
 import { TestRegistry, processUrl } from './testRegistry';
 import { addProtocolIfMissing } from '@/util';
 
@@ -35,13 +35,12 @@ function testDecl(
         throw Error("URL must be provided either through (1) env var MAGNITUDE_TEST_URL, (2) via test.config, or (3) in group or test options");
     }
 
-    // Add the declared test function as a runnable to the registry
-    const runnable: TestRunnable = {
+    // Add the declared test function as a runnable to the registry 
+    registry.register({
         fn: testFn,
         title: title,
         url: addProtocolIfMissing(combinedOptions.url)
-    }
-    registry.register(runnable);
+    });
 
     // TODO: maybe return an object to enable some kind of chaining
 }

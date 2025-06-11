@@ -68,8 +68,8 @@
                     {
                         "group": "Customizing",
                         "pages": [
-                            "customizing/configuration",
-                            "customizing/self-hosting-moondream"
+                            "customizing/test-configuration",
+                            "customizing/llm-configuration"
                         ]
                     },
                     {
@@ -83,10 +83,9 @@
                     {
                         "group": "Reference",
                         "pages": [
-                            "reference/llm-configuration",
+                            "reference/llm-providers",
                             "reference/test-declaration",
                             "reference/ai-steps-checks",
-                            "reference/ai-low-level",
                             "reference/playwright-access"
                         ]
                     }

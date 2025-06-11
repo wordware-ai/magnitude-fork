@@ -1,0 +1,352 @@
+import { WebAction, ClickWebAction, TypeWebAction, ScrollWebAction, SwitchTabWebAction } from "@/web/types";
+import { ActionIntent, ClickIntent, TypeIntent, ScrollIntent, SwitchTabIntent, Action } from "@/actions/types";
+import { GroundingService } from "@/ai/grounding";
+import { ModelHarness } from "@/ai/modelHarness";
+import { Page } from "playwright"; 
+import { WebHarness } from "@/web/harness";
+import { AgentEvents } from "../common/events";
+import logger from '../logger';
+import { AgentConnector } from '@/connectors';
+import { BrowserConnector, BrowserConnectorOptions } from '@/connectors/browserConnector';
+import { Observation } from '@/memory/observation';
+
+import { LLMClient, GroundingClient } from "@/ai/types";
+import EventEmitter from "eventemitter3";
+import { AgentError } from "./errors";
+import { ActionDescriptor, FailureDescriptor, retryOnError } from "../common";
+import { AgentMemory } from "../memory";
+import { ActionDefinition } from "@/actions";
+import { ZodObject } from "zod";
+import { taskActions } from "@/actions/taskActions";
+import { traceAsync } from "@/ai/baml_client";
+import z from "zod";
+
+export interface AgentOptions {
+    llm?: LLMClient;
+    connectors?: AgentConnector[];
+    actions?: ActionDefinition<any>[]; // any additional actions not provided by connectors
+    prompt?: string | null; // additional agent-level system prompt instructions
+    
+    //executor?: GroundingClient;
+}
+
+export interface ActOptions {
+    prompt?: string // additional task-level system prompt instructions
+    // TODO: reimpl, or maybe for tc agent specifically
+	data?: string | Record<string, string>
+}
+
+// Options for the startAgent helper function
+
+const DEFAULT_CONFIG: Required<Omit<AgentOptions, 'actions'> & { actions: ActionDefinition<any>[] }> = {
+    actions: [...taskActions], // Default to taskActions; other actions come from connectors
+    connectors: [],
+    llm: {
+        provider: 'google-ai',
+        options: {
+            model: 'gemini-2.5-pro-preview-05-06',
+            apiKey: process.env.GOOGLE_API_KEY || "YOUR_GOOGLE_API_KEY"
+        }
+    } as LLMClient,
+    prompt: null,
+};
+
+export class Agent {
+    // maybe remove conns/actions from options since stored sep
+    private options: Required<AgentOptions>//Omit<Required<AgentOptions>, 'actions'>;
+    private connectors: AgentConnector[];
+    private actions: ActionDefinition<any>[]; // actions from connectors + any other additional ones configured
+
+    public readonly model: ModelHarness;
+    //public readonly micro: GroundingService;
+    //public readonly events: EventEmitter<AgentEvents>;
+
+    //protected readonly _emitter: EventEmitter<AgentEvents>;
+    public readonly events: EventEmitter<AgentEvents> = new EventEmitter();
+    
+    //public readonly memory: AgentMemory;
+    private doneActing: boolean;
+
+    private latestTaskMemory: AgentMemory;// | null = null;
+
+    constructor(baseConfig: Partial<AgentOptions> = {}) {
+        this.options = {
+            ...DEFAULT_CONFIG,
+            ...baseConfig,
+            connectors: baseConfig.connectors ?? [],
+            actions: [...(baseConfig.actions || DEFAULT_CONFIG.actions)], 
+        } as Required<AgentOptions>;
+
+        this.connectors = this.options.connectors;
+
+        // Aggregate actions from connectors
+        //const aggregatedActions = [...this.options.actions];
+        this.actions = [...this.options.actions];
+        for (const connector of this.connectors) {
+            this.actions.push(...(connector.getActionSpace ? connector.getActionSpace() : []));
+        }
+        // Deduplicate actions by name
+        // TODO: maybe error instead, or automatically differentiate them?
+        //this.options.actions = Array.from(new Map(aggregatedActions.map(actDef => [actDef.name, actDef])).values());
+        
+        this.model = new ModelHarness({ llm: this.options.llm });
+        this.model.events.on('tokensUsed', (usage) => this.events.emit('tokensUsed', usage), this);
+        this.doneActing = false;
+
+        // Empty memory will get replaced on first act(), but this prevents errors from having undefined memory
+        this.latestTaskMemory = new AgentMemory();
+    }
+
+    public getConnector<C extends AgentConnector>(
+        connectorClass: new (...args: any[]) => C
+    ): C | undefined {
+        return this.connectors.find(c => c instanceof connectorClass) as C | undefined;
+    }
+
+    public require<C extends AgentConnector>(
+        connectorClass: new (...args: any[]) => C
+    ): C {
+        const connector = this.getConnector(connectorClass);
+        if (!connector) throw new Error(`Missing required connector ${connectorClass}`);
+        return connector;
+    }
+
+    // Access to page now goes through WebInteractionConnector
+    // TODO: Move to a WebAgent subclass
+    
+
+    async start(): Promise<void> { 
+        logger.info("Agent: Starting connectors...");
+        for (const connector of this.connectors) {
+            if (connector.onStart) await connector.onStart(); 
+        }
+        this.events.emit('start');
+        logger.info("Agent: All connectors started.");
+
+        // logger.info("Making initial observations...");
+        // await this._recordConnectorObservations();
+        // logger.info("Initial observations recorded");
+        // Initial observations are handled by the first getObservations call in exec
+    }
+
+    // captureState is removed as state is now captured by connectors and surfaced via observations/renderCurrentStateToBaml
+
+    async exec(action: Action, memory?: AgentMemory): Promise<void> {
+        /**
+         * Execute an action that belongs to this Agent's action space.
+         * Provide memory to record the action taken, its results, and any connector observations to that memory.
+         */
+        let actionDefinition = this.actions.find(def => def.name === action.variant);
+
+        if (!actionDefinition) {
+            // It's possible the action name was from a connector that is no longer active,
+            // or the action space was not correctly aggregated.
+            throw new AgentError(`Undefined action type '${action.variant}'. Ensure agent is configured with appropriate action definitions from connectors.`);
+        }
+        
+        let input: any;
+        if (actionDefinition.schema instanceof ZodObject) {
+            let variant: string;
+            ({ variant, ...input } = action);
+        } else {
+            input = (action as any).input; 
+        }
+
+        let parsed = actionDefinition.schema.safeParse(input);
+
+        if (!parsed.success) {
+            throw new AgentError(`Generated action '${action.variant}' violates input schema: ${parsed.error.message}`, { adaptable: true });
+        }
+
+        this.events.emit('actionStarted', action);
+        
+        const data = await actionDefinition.resolver(
+            { input: parsed.data, agent: this }
+        );
+
+        this.events.emit('actionDone', action);
+
+        if (memory) {
+            // Record action taken
+            memory.recordObservation(Observation.fromActionTaken(actionDefinition.name, JSON.stringify(action)));
+
+            // Record results of action
+            if (data) {
+                memory.recordObservation(Observation.fromActionResult(actionDefinition.name, data));
+            }
+
+            // Collect and record observations from connectors
+            await this._recordConnectorObservations(memory);
+        }
+    }
+
+    private async _recordConnectorObservations(memory: AgentMemory) {
+        for (const connector of this.connectors) {
+            try {
+                const connObservations = connector.collectObservations ? await connector.collectObservations() : [];
+                //observations.push(...connObservations);
+                for (const obs of connObservations) {
+                    memory.recordObservation(obs);
+                }
+            } catch (error) {
+                logger.warn(`Agent: Error getting observations from connector ${connector.id}: ${error instanceof Error ? error.message : String(error)}`);
+            }
+        }
+    }
+
+    get memory(): AgentMemory {
+        //if (!this.latestTaskMemory) throw new Error("No memory available");
+        return this.latestTaskMemory;
+    }
+
+    async act(taskOrSteps: string | string[], options: ActOptions = {}): Promise<void> {
+        const instructions = [
+            ...(this.options.prompt ? [this.options.prompt] : []),
+            ...(options.prompt ? [options.prompt] : []),
+        ].join('\n');
+        const taskMemory = new AgentMemory(instructions === '' ? undefined : instructions);
+
+        if (Array.isArray(taskOrSteps)) {
+            const steps = taskOrSteps;
+
+            this.events.emit('actStarted', steps.join(', '));
+
+            // trace overall task
+            await (traceAsync('multistep', async (steps: string[], options: ActOptions) => {
+                for (const step of steps) {
+                    await this._traceAct(step, taskMemory, options);
+                }
+            })(steps, options));
+
+            this.events.emit('actDone', steps.join(', '));
+        } else {
+            const task = taskOrSteps;
+
+            this.events.emit('actStarted', task);
+
+            await this._traceAct(task, taskMemory, options);
+            this.events.emit('actDone', task);
+        }
+    }
+
+    async _traceAct(task: string, memory: AgentMemory, options: ActOptions = {}) {
+        // memory not serializable to trace so bake it
+        await (traceAsync('act', async (task: string, options: ActOptions) => {
+            await this._act(task, memory, options);
+        })(task, options));
+    }
+
+    async _act(description: string, memory: AgentMemory, options: ActOptions = {}): Promise<void> {
+        this.doneActing = false;
+        logger.info(`Act: ${description}`);
+
+        // for now simply add data to task
+        if (options.data) {
+            //description += "\nUse the following data where appropriate:\n";
+            description += "\n<data>\n";
+            if (typeof options.data === 'string') {
+                description += options.data;
+            } else {
+                description += Object.entries(options.data).map(([k, v]) => `${k}: ${v}`).join("\n");
+            }
+            description += "\n</data>";
+        }
+        //this.events.emit('stepStart', description);
+
+        //const testData = convertOptionsToTestData(options);
+
+        // Initialize task memory and record initial observations
+        // Combine any agent-level and task-level instructions
+        
+        this.latestTaskMemory = memory;
+
+        // record initial observations
+        logger.info("Making initial observations...");
+        await this._recordConnectorObservations(memory);
+        logger.info("Initial observations recorded");
+
+        while (true) {
+            // Removed direct screenshot/tabState access here; it's part of memoryContext via connectors
+            logger.info(`Creating partial recipe`);
+
+            let reasoning: string;
+            let actions: Action[];
+            try {
+                const memoryContext = await memory.buildContext(this.connectors);
+                ({ reasoning, actions } = await this.model.createPartialRecipe(
+                    memoryContext, 
+                    description,
+                    this.actions 
+                ));
+            } catch (error: unknown) {
+                logger.error(`Agent: Error creating partial recipe: ${error instanceof Error ? error.message : String(error)}`);
+                /**
+                 * (1) Failure to conform to JSON
+                 * (2) Misconfigured BAML client / bad API key
+                 * (3) Network error (past max retries)
+                 */
+                // this.fail({
+                //     variant: 'misalignment',
+                //     message: `Could not create partial recipe -> ${(error as Error).message}`
+                // });
+                throw new AgentError(
+                    `Could not create partial recipe -> ${(error as Error).message}`, { variant: 'misalignment' }
+                )
+            }
+
+            logger.info({ reasoning, actions }, `Partial recipe created`);
+
+            memory.recordThought(reasoning);
+
+            // Execute partial recipe
+            for (const action of actions) {
+                await this.exec(action, memory);
+
+                // const postActionScreenshot = await this.screenshot();
+                // const actionDescriptor: ActionDescriptor = { ...action, screenshot: postActionScreenshot.image } as ActionDescriptor;
+                // this.events.emit('action', actionDescriptor);
+                logger.info({ action }, `Action taken`);
+            }
+
+            // If macro expects these actions should complete the step, break
+            // if (finished) {
+            //     break;
+            // }
+            if (this.doneActing) {
+                break;
+            }
+        }
+
+        logger.info(`Done with step`);
+        //this.events.emit('stepSuccess');
+        //this.currentTaskMemory = null;
+    }
+
+    async query<T extends z.Schema>(query: string, schema: T): Promise<z.infer<T>> {
+        const memoryContext = await this.memory.buildContext(this.connectors);
+        return await this.model.query(memoryContext, query, schema);
+    }
+
+    async queueDone() {
+        this.doneActing = true;
+    }
+
+    async stop() {
+        /**
+         * Stop the agent and close the browser context.
+         * May be called asynchronously and interrupt an agent in the middle of a action sequence.
+         */
+        // set signal to cancelled?
+        logger.info("Agent: Stopping connectors...");
+        for (const connector of this.connectors) {
+            try {
+                if (connector.onStop) await connector.onStop();
+            } catch (error) {
+                logger.warn(`Agent: Error stopping connector ${connector.id}: ${error instanceof Error ? error.message : String(error)}`);
+            }
+        }
+        this.events.emit('stop');
+        logger.info("Agent: All connectors stopped.");
+        logger.info("Agent: Stopped successfully.");
+    }
+}

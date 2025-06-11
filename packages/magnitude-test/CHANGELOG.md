@@ -1,5 +1,13 @@
 # magnitude-test
 
+## 0.2.0
+
+### Patch Changes
+
+- mono model
+- Updated dependencies
+  - magnitude-core@0.2.0
+
 ## 0.1.4
 
 ### Patch Changes

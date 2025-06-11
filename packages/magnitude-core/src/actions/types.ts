@@ -5,6 +5,11 @@
 
 import { SwitchTabWebAction } from "@/web/types";
 
+export interface Action {
+    variant: string,
+    [key: string]: any
+}
+
 export type ActionIntent = ClickIntent | TypeIntent | ScrollIntent | SwitchTabIntent; // really we want switch tab to be an option only if >1 tab
 export type Intent = ActionIntent | CheckIntent;
 //export type Recipe = Ingredient[];
