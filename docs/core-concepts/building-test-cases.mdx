@@ -83,6 +83,17 @@ test('example', async (agent) => {
 });
 ```
 
+### Custom LLM prompting
+
+You can pass custom instructions to any `act` call by specifing the `prompt` option.
+
+```typescript
+test('example', async (agent) => {
+    await agent.act('create 3 todos', { prompt: 'all todos must be animal-related' });
+});
+```
+
+
 ### Example of migrating a Playwright test case to Magnitude
 
 A simple test case from the Playwright demo TODO app:

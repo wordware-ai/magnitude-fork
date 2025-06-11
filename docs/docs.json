@@ -87,7 +87,6 @@
                             "reference/llm-configuration",
                             "reference/test-declaration",
                             "reference/ai-steps-checks",
-                            "reference/ai-low-level",
                             "reference/playwright-access"
                         ]
                     }

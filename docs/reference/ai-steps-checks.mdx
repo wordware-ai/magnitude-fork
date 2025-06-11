@@ -35,6 +35,9 @@ await agent.act("Enter {username} into the user field", {
     - **`string`**: A single string value.
     - **`Record<string, string>`**: Key-value pairs where keys match placeholders in the `description`.
   </ResponseField>
+  <ResponseField name="prompt" type="string">
+    - **`string`**: Provide additional instructions for the LLM. These are injected into the system prompt.
+  </ResponseField>
 </Expandable>
 
 <Note>
