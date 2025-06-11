@@ -11,13 +11,13 @@ You can specify which LLM to use in `magnitude.config.ts`. If no LLM is configur
 <Info>Magnitude uses [BAML](https://docs.boundaryml.com/ref/llm-client-providers/overview)'s providers under the hood, so their docs may be a useful secondary reference for credential configuration.</Info>
 
 
-To configure your planner model, pass one of the client interfaces described below to your `magnitude.config.ts`, like:
+To configure your LLM, pass one of the client interfaces described below to your `magnitude.config.ts`, like:
 ```typescript
 import { type MagnitudeConfig } from 'magnitude-test';
 
 export default {
     url: "http://localhost:5173",
-    planner: {
+    llm: {
         provider: 'anthropic', // your provider of choice
         options: {
             // any required + optional configuration for that provider
@@ -72,7 +72,7 @@ import { type MagnitudeConfig } from "magnitude-test";
 
 export default {
     url: "http://localhost:5173",
-    planner: {
+    llm: {
         provider: 'vertex-ai',
         options: {
             model: 'google/gemini-2.5-pro-preview-05-06',
