@@ -100,9 +100,22 @@ export function tryDeriveUIGroundedClients(): { llm: LLMClient | null, grounding
                 // TODO: do more testing on best claude model for visuals
                 // model: 'claude-3-5-sonnet-20240620', // <- definitely not, pre computer use
                 // model: 'claude-3-5-sonnet-20241022', // <- not great on rescaling res
-                model: 'claude-3-7-sonnet-latest', // <- underplans
-                // model: 'claude-sonnet-4-20250514', // <- underplans, also supposedly worse at visual reasoning
+                //model: 'claude-3-7-sonnet-latest', // <- underplans
+                model: 'claude-sonnet-4-20250514', // <- underplans, also supposedly worse at visual reasoning
                 apiKey: process.env.ANTHROPIC_API_KEY
+            }
+        }
+        return { llm, grounding: null };
+    }
+
+    // Solid: Solo Grounded Qwen 2.5 VL 72b
+    if (process.env.OPENROUTER_API_KEY) {
+        llm = {
+            provider: 'openai-generic',
+            options: {
+                baseUrl: "https://openrouter.ai/api/v1",
+                model: 'qwen/qwen2.5-vl-72b-instruct',
+                apiKey: process.env.OPENROUTER_API_KEY
             }
         }
         return { llm, grounding: null };
@@ -115,17 +128,6 @@ export function tryDeriveUIGroundedClients(): { llm: LLMClient | null, grounding
             options: {
                 model: 'gemini-2.5-pro-preview-03-25',
                 apiKey: process.env.GOOGLE_API_KEY
-            }
-        }
-    }
-
-    if (process.env.OPENROUTER_API_KEY) {
-        llm = {
-            provider: 'openai-generic',
-            options: {
-                baseUrl: "https://openrouter.ai/api/v1",
-                model: 'google/gemini-2.5-pro-preview-03-25',
-                apiKey: process.env.OPENROUTER_API_KEY
             }
         }
     }
