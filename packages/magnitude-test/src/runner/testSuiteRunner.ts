@@ -82,11 +82,35 @@ export class TestSuiteRunner {
                     telemetry: this.config.telemetry
                 });
 
+                
+
                 runner.events.on('stateChanged', (state) => {
-                    this.config.renderer.onTestStateUpdated(test, state);
+                    try {
+                        this.config.renderer.onTestStateUpdated(test, state);
+                    } catch (err: unknown) {
+                        // shouldn't happen
+                        if (err instanceof Error) {
+                            logger.error(`Error updating test state:\n${err.message}`);
+                        } else {
+                            logger.error(`Error updating test state:\n${err}`);
+                        }
+                        throw err;
+                    }
                 });
                 
-                return await runner.run();
+                //return await runner.run();
+                try {
+                    return await runner.run();
+                } catch (err: unknown) {
+                    // user-facing, can happen e.g. when URL is not running
+                    if (err instanceof Error) {
+                        console.error(`Unexpected error during test '${test.title}':\n${err.message}`);
+                    } else {
+                        console.error(`Unexpected error during test '${test.title}':\n${err}`);
+                    }
+                    
+                    throw err;
+                }
             };
         });
 
