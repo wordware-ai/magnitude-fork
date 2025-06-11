@@ -4,13 +4,18 @@ description: "Visually grounded LLMs compatible with Magnitude"
 icon: brain-cog
 ---
 
-Magnitude requires a **visually grounded** LLM - a model that understands precise coordinates in an image so it can interact with the browser accurately.
+Magnitude requires an LLM than is both:
+1. Very good at instruction following and planning
+2. Is **visually grounded**, meaning it understands precise coordinates in an image to interact with the browser accurately.
+
+Very few LLMs meet this criteria, which is why we recommend **Claude Sonnet 4**, which has strong reasoning abilities and is grounded.
+To use Sonnet, simply set `ANTHROPIC_API_KEY` in your environment.
+
+<Info> You can also choose a specific Claude model by configuring an [Anthropic](/reference/llm-providers#anthropic) or [Bedrock](/reference/llm-providers#aws-bedrock) client in Magnitude config. </Info>
+
 
 <Warning> Most LLMs are NOT grounded, for example models from OpenAI, Gemini, or Llama. </Warning>
 
-The easiest grounded model to set up with Magnitude is **Claude Sonnet 4** from Anthropic. To use this model, simply set `ANTHROPIC_API_KEY` in your environment. To configure a different grounded model, see below.
-
-<Info> You can also choose a specific Claude model by configuring an [Anthropic](/reference/llm-providers#anthropic) or [Bedrock](/reference/llm-providers#aws-bedrock) client in Magnitude config. </Info>
 
 ## Other compatible models
 
