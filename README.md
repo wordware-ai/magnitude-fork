@@ -56,7 +56,7 @@ This will create a basic tests directory `tests/magnitude` with:
 
 **3. Configure an LLM**
 
-The easiest way to set up an LLM for Magnitude is to set the `ANTHROPIC_API_KEY` environment variable. Claude Sonnet 4 will be used by default. See [docs](https://docs.magnitude.run/customizing/compatible-llms) for more details.
+The easiest way to set up an LLM for Magnitude is to set the `ANTHROPIC_API_KEY` environment variable. Claude Sonnet 4 will be used by default. See [docs](https://docs.magnitude.run/customizing/llm-configuration) for more details.
 
 🚀 Now you're ready to run tests!
 
