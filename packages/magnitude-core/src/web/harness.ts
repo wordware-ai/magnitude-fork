@@ -158,6 +158,10 @@ export class WebHarness { // implements StateComponent
     }
 
     async clickAndType({ x, y, content }: { x: number, y: number, content: string }) {
+        // TODO: transforms incorrect for moondream grounding with virtual screen dims (claude) - unsure why
+        //console.log(`Pre transform: ${x}, ${y}`);
+        ({ x, y } = this.transformCoordinates({ x, y }));
+        //console.log(`Post transform: ${x}, ${y}`);
         await this.visualizer.visualizeAction(x, y);
         await this.page.mouse.click(x, y);
         await this._type(content);

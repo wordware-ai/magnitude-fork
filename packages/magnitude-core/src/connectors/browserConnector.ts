@@ -67,7 +67,7 @@ export class BrowserConnector implements AgentConnector {
         
         this.logger.info("Creating new browser context.");
         if (browserInstance) {
-            this.context = await browserInstance.newContext()
+            this.context = await browserInstance.newContext(browserContextOptions)
         } else {
             this.context = await BrowserProvider.getInstance().newContext(browserContextOptions);
             this.logger.info("Using singleton browser provider.");
