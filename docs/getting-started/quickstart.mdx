@@ -6,47 +6,27 @@ icon: rocket
 
 ## Setup
 
+<Steps>
+  <Step title="Install our test library">
+    ```sh
+    npm install --save-dev magnitude-test
+    ```
+    > or see our [demo repo](https://github.com/magnitudedev/magnitude-demo-repo) if you don't have a project to try it on
+  </Step>
+  <Step title="Initialize Magnitude">
+    ```sh
+    npx magnitude init
+    ```
+    This will create a basic tests directory `tests/magnitude` with:
+    - `magnitude.config.ts`: Magnitude test configuration file
+    - `example.mag.ts`: An example test file
+  </Step>
+  <Step title="Configure LLM">
+    The easiest way to set up an LLM for Magnitude is to set the `ANTHROPIC_API_KEY` environment variable. Sonnet 4 will be used by default. See [Compatible LLMS](/customizing/compatible-llms) for more details.
+  </Step>
+</Steps>
 
-**Install our test runner** in the node project you want to test (or see our [demo repo](https://github.com/magnitudedev/magnitude-demo-repo) if you don't have a project to try it on)
-```sh
-npm install --save-dev magnitude-test
-```
-
-**Initialize Magnitude** in your project by running:
-```sh
-npx magnitude init
-```
-This will create a basic tests directory `tests/magnitude` with:
-- `magnitude.config.ts`: Magnitude test configuration file
-- `example.mag.ts`: An example test file
-
-### Configure LLMs
-
-Magnitude requires setting up two LLM clients:
-1. 🧠 A strong general multi-modal LLM (the **"planner"**)
-2. 👁️ A fast vision LLM with pixel-precision (the **"executor"**)
-
-#### Planner Configuration
-
-For the **planner**, you can use models like Gemini 2.5 pro, Claude Sonnet 3.7, GPT 4.1, or any other model that accepts image input.
-
-Magnitude will automatically read and use any of the following API keys if configured:
-- `GOOGLE_API_KEY` (Google AI Studio `gemini-2.5-pro-preview-03-25`)
-- `OPENROUTER_API_KEY` (OpenRouter `google/gemini-2.5-pro-preview-03-25`)
-- `ANTHROPIC_API_KEY` (Anthropic `claude-3-7-sonnet-latest`)
-- `OPENAI_API_KEY` (OpenAI `gpt-4.1-2025-04-14`)
-
-If you have any of these in your environment, no additional setup is needed for the planner. To explicitly select a specific provider and model, see [configuration](https://docs.magnitude.run/reference/llm-configuration). Currently we support Google Vertex AI, Anthropic, AWS Bedrock, OpenAI, and OpenAI-compatible providers.
-
-<Info> We strongly recommend Gemini 2.5 pro or Sonnet 3.5/3.7 for the planner model. We design the planner agent with the strongest models in mind, so other models may not work as expected.</Info>
-
-#### Executor Configuration (Moondream)
-
-Currently for the **executor** model, we only support [Moondream](https://moondream.ai/), which is a fast vision model that Magnitude uses for precise UI interactions.
-
-To configure Moondream, sign up and create an API with Moondream [here](https://moondream.ai/c/cloud/api-keys), then add to your environment as `MOONDREAM_API_KEY`. This will use the cloud version, which includes 5,000 free requests per day (roughly a few hundred test cases in Magnitude). Moondream is fully open source and self-hostable as well.
-
-🚀 Once you've got your LLMs set up, you're ready to run tests!
+🚀 Now you're ready to run tests!
 
 
 ## Running tests
@@ -69,19 +49,16 @@ Now that you've got Magnitude set up, you can create real test cases for your ap
 ```ts
 import { test } from 'magnitude-test';
 
-test('can log in and create company', async ({ ai }) => {
-    await ai.step('Log in to the app', { data: {
-        username: 'test-user@magnitude.run',
-        password: 'test'
-    }});
-    await ai.check('Can see dashboard');
-    await ai.step('Create a new company', {
-        data: 'Make up the first 2 values and use defaults for the rest'
+test('can log in and create company', async (agent) => {
+    await agent.act('Log in to the app', {
+        data: { username: 'test-user@magnitude.run', password: 'test' }
     });
-    await ai.check('Company added successfully');
+    await agent.check('Can see dashboard');
+    await agent.act('Create a new company', { data: 'Make up the first 2 values and use defaults for the rest' });
+    await agent.check('Company added successfully');
 });
 ```
 
-Steps, checks, and data are all natural language. Think of it like you're describing how to test a particular flow to a co-worker - what steps they need to take, what they should check for, and what test data to use.
+Acts, checks, and data are all natural language. Think of it like you're describing how to test a particular flow to a co-worker - what steps they need to take, what they should check for, and what test data to use.
 
 For more information on how to build test cases see <a href="https://docs.magnitude.run/core-concepts/building-test-cases" target="_blank">our docs.</a>

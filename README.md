@@ -102,11 +102,6 @@ Another strong grounded model that happens to be open source is `qwen2.5-vl-72b-
 ## Integrating with CI/CD
 You can run Magnitude tests in CI anywhere that you could run Playwright tests, just include LLM client credentials. For instructions on running tests cases on GitHub actions, see [here](https://docs.magnitude.run/integrations/github-actions).
 
-## FAQ
-
-### Why not OpenAI Operator / Claude Computer Use?
-We use separate planning / execution models in order to plan effective tests while executing them quickly and reliably. OpenAI or Anthropic's Computer Use APIs are better suited to general purpose desktop/web tasks but lack the speed, reliability, and cost-effectiveness for running test cases. Magnitude's agent is designed from the ground up to plan and execute test cases, and provides a native test runner purpose-built for designing and running these tests.
-
 ## Contact
 
 To get a personalized demo or see how Magnitude can help your company, feel free to reach out to us at founders@magnitude.run
