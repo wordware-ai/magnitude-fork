@@ -1,7 +1,7 @@
 import { BrowserContext, Page } from "playwright";
 import { Agent, AgentOptions } from ".";
 import { BrowserConnector, BrowserConnectorOptions } from "@/connectors/browserConnector";
-import { buildDefaultBrowserAgentOptions, isClaude, isGroundedLlm, tryDeriveUIGroundedClients } from "@/ai/util";
+import { buildDefaultBrowserAgentOptions } from "@/ai/util";
 import { LLMClient } from "@/ai/types";
 import { Schema } from "zod";
 import z from "zod";
