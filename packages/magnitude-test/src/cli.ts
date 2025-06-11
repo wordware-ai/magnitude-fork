@@ -290,8 +290,8 @@ program
                     }
                 }
             },
-            planner: config.planner,
-            executor: config.executor,
+            llm: config.llm,
+            grounding: config.grounding,
             browserContextOptions: config.browser?.contextOptions ?? {},
             browserLaunchOptions: config.browser?.launchOptions ?? {},
             telemetry: config.telemetry ?? true

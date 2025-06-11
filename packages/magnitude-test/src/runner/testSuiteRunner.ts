@@ -24,8 +24,8 @@ export interface TestSuiteRunnerConfig {
     workerCount: number;
     //prettyDisplay: boolean;
     renderer: TestRenderer;
-    planner?: LLMClient;
-    executor?: GroundingClient;
+    llm?: LLMClient;
+    grounding?: GroundingClient;
     browserContextOptions: BrowserContextOptions;
     browserLaunchOptions: LaunchOptions;
     telemetry: boolean;
@@ -76,8 +76,8 @@ export class TestSuiteRunner {
             return async (signal: AbortSignal): Promise<TestResult> => {
                 const runner = new TestRunner(test, {
                     browser: browser,
-                    llm: this.config.planner,
-                    grounding: this.config.executor,
+                    llm: this.config.llm,
+                    grounding: this.config.grounding,
                     browserContextOptions: this.config.browserContextOptions,
                     telemetry: this.config.telemetry
                 });

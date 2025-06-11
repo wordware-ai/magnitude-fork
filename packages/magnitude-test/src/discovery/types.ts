@@ -18,8 +18,8 @@ export interface WebServerConfig {
 export type MagnitudeConfig = {
     //apiKey?: string;
     url: string; // base URL used as default, required
-    planner?: LLMClient,
-    executor?: GroundingClient,
+    llm?: LLMClient,
+    grounding?: GroundingClient,
     webServer?: WebServerConfig | WebServerConfig[],
     browser?: {
         contextOptions?: BrowserContextOptions,
