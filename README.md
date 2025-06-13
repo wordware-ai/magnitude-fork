@@ -1,28 +1,27 @@
 <div align="center">
-  <p>
-    <img src="https://magnitude.run/logo.svg" alt="Magnitude Logo" width="100" style="vertical-align: middle; margin-right: 20px" />
-  </p>
-
-  <h3 align="center">
-    Magnitude: The open source, AI-native testing framework for web apps
-  </h3>
-
-  <p>
-    <a href="https://discord.gg/VcdpMh9tTy" target="_blank"><img src="https://img.shields.io/discord/1305570963206836295?style=flat-square&color=5865F2&logo=discord&logoColor=white&label=Discord" alt="Discord" /></a> <a href="https://magnitude.run/" target="_blank"><img src="https://img.shields.io/badge/Homepage-blue?style=flat-square&logo=homebridge&logoColor=white" alt="Homepage" /></a> <a href="https://docs.magnitude.run/getting-started/introduction" target="_blank"><img src="https://img.shields.io/badge/Docs-blue?style=flat-square&logo=readthedocs&logoColor=white" alt="Documentation" /></a> <img src="https://img.shields.io/github/license/magnitudedev/magnitude?style=flat-square" alt="License" /> <a href="https://x.com/tgrnwld" target="_blank"><img src="https://img.shields.io/badge/follow-%40tgrnwld-000000?style=flat-square&logo=x&logoColor=white" alt="Follow @tgrnwld" /></a> <a href="https://x.com/ndrsrkl" target="_blank"><img src="https://img.shields.io/badge/follow-%40ndrsrkl-000000?style=flat-square&logo=x&logoColor=white" alt="Follow @ndrsrkl" /></a>
-  </p>
-
-  <hr style="height: 1px; border: none; background-color: #e1e4e8; margin: 24px 0;">
+  <img src="assets/full-header.png" alt="Magnitude Text Logo" width="500"/>
 </div>
 
-End-to-end testing framework powered by visual AI agents that see your interface and adapt to any changes in it.
+<h1 align="center">
+  The AI browser automation framework
+</h1>
 
-## How it works
-- ✍️ Build test cases easily with natural language
-- 🧠 Strong reasoning agent to plan and adjust tests
-- 👁️ Fast visual agent to reliably execute runs
-- 📄 Plan is saved to execute runs the same way
-- 🛠 Reasoning agent steps in if there is a problem
-- 🏃‍♂️ Run tests locally or in CI/CD pipelines
+<p align="center">
+  Magnitude uses vision AI to enable you to control your browser with natural language
+</p>
+
+<p align="center">
+  <a href="https://docs.magnitude.run/getting-started/introduction" target="_blank"><img src="https://img.shields.io/badge/📕-Docs-0369a1?style=flat-square&labelColor=0369a1&color=gray" alt="Documentation" /></a> <img src="https://img.shields.io/badge/License-Apache%202.0-0369a1?style=flat-square&labelColor=0369a1&color=gray" alt="License" /> <a href="https://discord.gg/VcdpMh9tTy" target="_blank"><img src="https://img.shields.io/badge/Discord-22%20online-5865F2?style=flat-square&labelColor=5865F2&color=gray&logo=discord&logoColor=white" alt="Discord" /></a> <a href="https://x.com/tgrnwld" target="_blank"><img src="https://img.shields.io/badge/-Follow%20Tom!-000000?style=flat-square&labelColor=000000&color=gray&logo=x&logoColor=white" alt="Follow @tgrnwld" /></a>
+</p>
+
+<hr style="height: 1px; border: none; background-color: #e1e4e8; margin: 24px 0;">
+
+**🤖 General purpose automation:** Use Magnitude for tasks like extracting hard-to-reach data, automating repetitive data entry, generating custom reports, monitoring website changes, end-to-end process automation, and more.
+
+**🧪 Test automation:** Complete with a native test runner, powerful visual assertions, parallel test execution, access to the Playwright page and context objects, and easy integration into your CI/CD pipelines.
+
+**🛠️ Build your own browser agent:** Use Magnitude for reliable web interaction and data extraction then layer your own business logic on top.
+
 
 ![Video showing Magnitude tests running in a terminal and agent taking actions in the browser](assets/demo.gif)
 
@@ -38,66 +37,51 @@ test('can add and complete todos', { url: 'https://magnitodo.com' }, async (agen
 });
 ```
 
-## Setup
+## Get started
 
-### Install Magnitude
-**1. Install our test runner** in the node project you want to test (or see our [demo repo](https://github.com/magnitudedev/magnitude-demo-repo) if you don't have a project to try it on)
-```sh
-npm install --save-dev magnitude-test
+> 🛝 Try it out right away in the [playground](https://pg.magnitude.run) (no signup required)!
+
+Get up and running with one command:
+```bash
+npx create-magnitude-app
 ```
 
-**2. Setup Magnitude** in your project by running:
-```sh
-npx magnitude init
+This will create a new project and walk you through the steps to initialize it with Magnitude. It will also create an example script that you can run right away!
+
+If you would like to install the test runner in an existing node project, please run:
+```bash
+npm i --save-dev magnitude-test && npx magnitude init
 ```
+
 This will create a basic tests directory `tests/magnitude` with:
 - `magnitude.config.ts`: Magnitude test configuration file
 - `example.mag.ts`: An example test file
 
-**3. Configure an LLM**
+For information on how to run tests and integrate into CI/CD see [here](https://docs.magnitude.run/core-concepts/running-tests).
 
-The easiest way to set up an LLM for Magnitude is to set the `ANTHROPIC_API_KEY` environment variable. Claude Sonnet 4 will be used by default. See [docs](https://docs.magnitude.run/customizing/llm-configuration) for more details.
-
-🚀 Now you're ready to run tests!
-
-
-## Running tests
-
-**Run your Magnitude tests with:**
-```sh
-npx magnitude
-```
-
-This will run all Magnitude test files discovered with the `*.mag.ts` pattern. If the agent finds a problem with your app, it will tell you what happened and describe the bug!
-
-> To run many tests in parallel, add `-w <workers>`
+> [!NOTE]
+> By default, Magnitude will look for an `ANTHROPIC_API_KEY` environment variable and use Claude Sonnet 4. Magnitude requires a model that is good at instruction following/planning **and** visually grounded. See [docs](https://docs.magnitude.run/customizing/llm-configuration) for more information and alternative models.
 
 
-## Building test cases
+## Why Magnitude?
 
-Now that you've got Magnitude set up, you can create real test cases for your app. Here's an example for a general idea:
-```ts
-import { test } from 'magnitude-test';
+❌ **Problem #1:** Most browser agents follow "high-level prompt + tools = work until done" - works for demos, not production  
+✅ **Solution: Controllable & repeatable automation**
+* Flexible abstraction levels from explicit clicks to high-level flows
+* Custom actions + prompts at agent and step levels
+* Deterministic runs via native caching
 
-test('can log in and create company', async (agent) => {
-    await agent.act('Log in to the app', {
-        data: { username: 'test-user@magnitude.run', password: 'test' }
-    });
-    await agent.check('Can see dashboard');
-    await agent.act('Create a new company', { data: 'Make up the first 2 values and use defaults for the rest' });
-    await agent.check('Company added successfully');
-});
-```
+❌ **Problem #2:** Most browser agents draw numbered boxes around DOM elements - doesn't generalize due to canvas, alerts, iframes, shadow DOM  
+✅ **Solution: Vision-first architecture**
+* Dual-agent vision system (planner + executor)
+* True generalization independent of DOM structure
+* Future-proof architecture for desktop apps/VMs/file systems
 
-Act, checks, and data are all natural language. Think of it like you're describing how to test a particular flow to a co-worker - what steps they need to take, what they should check for, and what test data to use.
+## Additional info
 
-For more information on how to build test cases see <a href="https://docs.magnitude.run/core-concepts/building-test-cases" target="_blank">our docs.</a>
-
-## Integrating with CI/CD
-You can run Magnitude tests in CI anywhere that you could run Playwright tests, just include LLM client credentials. For instructions on running tests cases on GitHub actions, see [here](https://docs.magnitude.run/integrations/github-actions).
+Please see [our docs](https://docs.magnitude.run/core-concepts/building-test-cases) for more information on how to best build Magnitude automations and test cases.
 
 ## Contact
-
-To get a personalized demo or see how Magnitude can help your company, feel free to reach out to us at founders@magnitude.run
+If you are an enterprise and want more features or support, feel free to reach out to us at founders@magnitude.run or schedule a call [here](https://cal.com/tom-greenwald/30min) to discuss your needs.
 
 You can also join our <a href="https://discord.gg/VcdpMh9tTy" target="_blank">Discord community</a> for help or any suggestions!
