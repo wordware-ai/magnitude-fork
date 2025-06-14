@@ -67,7 +67,7 @@ export class Agent {
     //public readonly memory: AgentMemory;
     private doneActing: boolean;
 
-    private latestTaskMemory: AgentMemory;// | null = null;
+    protected latestTaskMemory: AgentMemory;// | null = null;
 
     constructor(baseConfig: Partial<AgentOptions> = {}) {
         this.options = {
@@ -180,9 +180,10 @@ export class Agent {
         }
     }
 
-    private async _recordConnectorObservations(memory: AgentMemory) {
+    protected async _recordConnectorObservations(memory: AgentMemory) {
         for (const connector of this.connectors) {
             try {
+                // could do Promise.all if matters
                 const connObservations = connector.collectObservations ? await connector.collectObservations() : [];
                 //observations.push(...connObservations);
                 for (const obs of connObservations) {
