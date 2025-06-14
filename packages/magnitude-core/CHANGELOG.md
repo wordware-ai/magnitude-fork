@@ -1,5 +1,11 @@
 # magnitude-core
 
+## 0.2.1
+
+### Patch Changes
+
+- rm logs
+
 ## 0.2.0
 
 ### Patch Changes
