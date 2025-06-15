@@ -1,5 +1,11 @@
 # magnitude-test
 
+## 0.2.3
+
+### Patch Changes
+
+- fix init script example syntax
+
 ## 0.2.2
 
 ### Patch Changes
