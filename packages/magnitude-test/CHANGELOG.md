@@ -1,5 +1,13 @@
 # magnitude-test
 
+## 0.2.2
+
+### Patch Changes
+
+- fix check missing obs
+- Updated dependencies
+  - magnitude-core@0.2.2
+
 ## 0.2.1
 
 ### Patch Changes
