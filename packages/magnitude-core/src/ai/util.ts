@@ -196,7 +196,7 @@ export function tryDeriveUIGroundedClient(): LLMClient | null {
 // }
 
 export function isClaude(llm: LLMClient) {
-    if (llm.provider === 'anthropic' || llm.provider === 'aws-bedrock' || llm.provider === 'vertex-ai') {
+    if ('model' in llm.options) {//if (llm.provider === 'anthropic' || llm.provider === 'aws-bedrock' || llm.provider === 'vertex-ai') {
         const model = llm.options.model;
         if (model.includes('claude')) return true;
     }
