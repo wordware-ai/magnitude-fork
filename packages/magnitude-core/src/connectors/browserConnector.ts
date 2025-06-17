@@ -108,7 +108,7 @@ export class BrowserConnector implements AgentConnector {
         // }
         
         this.harness = new WebHarness(this.context, {
-            ...(this.options.virtualScreenDimensions ? { virtualScreenDimensions: this.options.virtualScreenDimensions } : {})
+            virtualScreenDimensions: this.options.virtualScreenDimensions
         });
         await this.harness.start();
         this.logger.info("WebHarness started.");

@@ -64,6 +64,7 @@ export class WebHarness { // implements StateComponent
 
     async start() {
         await this.context.newPage();
+        // Other logic for page tracking is automatically handled by TabManager
     }
 
     get page() {
@@ -74,6 +75,7 @@ export class WebHarness { // implements StateComponent
         /**
          * Get b64 encoded string of screenshot (PNG) with screen dimensions
          */
+        const dpr = await this.page.evaluate(() => window.devicePixelRatio);
         //const viewportSize = this.page.viewportSize();
         const buffer = await this.page.screenshot({ type: 'png', ...options }, );
 
@@ -84,7 +86,14 @@ export class WebHarness { // implements StateComponent
         const base64data = buffer.toString('base64');
 
         //console.log("Screenshot DATA:", base64data.substring(0, 100));
-        return Image.fromBase64(base64data);
+        const image = Image.fromBase64(base64data);
+
+        // Now, need to rescale the image based on DPR. This is so that:
+        // (1) Save on tokens, dont need huge high res images
+        // (2) More importantly, clicks happen in the standard resolution space, so need to do this for coordinates to be correct
+        //     for any agent not using a virtual screen space (e.g. those that aren't Claude)
+        const { width, height } = await image.getDimensions();
+        return image.resize(width / dpr, height / dpr);
 
         // return {
         //     image: `data:image/png;base64,${base64data}`,//buffer.toString('base64'),
