@@ -1,6 +1,6 @@
 // Removed React import
 import logger from '@/logger';
-import { GroundingClient, LLMClient } from 'magnitude-core';
+import { BrowserOptions, GroundingClient, LLMClient } from 'magnitude-core';
 import { RegisteredTest } from '@/discovery/types';
 // Removed App import from '@/app'
 // import { AllTestStates } from '@/term-app/types'; // Not directly used
@@ -26,8 +26,9 @@ export interface TestSuiteRunnerConfig {
     renderer: TestRenderer;
     llm?: LLMClient;
     grounding?: GroundingClient;
-    browserContextOptions: BrowserContextOptions;
-    browserLaunchOptions: LaunchOptions;
+    browserOptions?: BrowserOptions;
+    // browserContextOptions: BrowserContextOptions;
+    // browserLaunchOptions: LaunchOptions;
     telemetry: boolean;
 }
 
@@ -63,11 +64,11 @@ export class TestSuiteRunner {
     }
 
     async runTests(): Promise<void> {
-        const browser = await chromium.launch({ 
-            headless: false, // Consider making this configurable via this.config
-            args: ['--disable-gpu'], 
-            ...this.config.browserLaunchOptions 
-        });
+        // const browser = await chromium.launch({ 
+        //     headless: false, // Consider making this configurable via this.config
+        //     args: ['--disable-gpu'], 
+        //     ...this.config.browserLaunchOptions 
+        // });
 
         const workerPool = new WorkerPool(this.config.workerCount);
         const testsToRun: RegisteredTest[] = this.tests;
@@ -75,14 +76,13 @@ export class TestSuiteRunner {
         const taskFunctions = testsToRun.map((test) => {
             return async (signal: AbortSignal): Promise<TestResult> => {
                 const runner = new TestRunner(test, {
-                    browser: browser,
+                    browserOptions: this.config.browserOptions,
+                    //browser: browser,
                     llm: this.config.llm,
                     grounding: this.config.grounding,
-                    browserContextOptions: this.config.browserContextOptions,
+                    //browserContextOptions: this.config.browserContextOptions,
                     telemetry: this.config.telemetry
                 });
-
-                
 
                 runner.events.on('stateChanged', (state) => {
                     try {
@@ -134,7 +134,7 @@ export class TestSuiteRunner {
         } catch (error) {
             overallSuccess = false;
         } finally {
-            await browser.close();
+            //await browser.close();
             process.exit(overallSuccess ? 0 : 1);
         }
     }

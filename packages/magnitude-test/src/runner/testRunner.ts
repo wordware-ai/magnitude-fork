@@ -2,7 +2,7 @@ import { RegisteredTest } from "@/discovery/types";
 import { Browser, BrowserContext, BrowserContextOptions, Page } from "playwright";
 import EventEmitter from "eventemitter3";
 import { startTestCaseAgent, TestCaseAgent } from "@/agent";
-import { Action, buildDefaultBrowserAgentOptions, GroundingClient, LLMClient } from "magnitude-core";
+import { Action, BrowserOptions, buildDefaultBrowserAgentOptions, GroundingClient, LLMClient } from "magnitude-core";
 import { TestState, TestResult, TestStateTracker, TestFailure } from "./state";
 import { sendTelemetry } from "./telemetry";
 
@@ -24,10 +24,11 @@ export interface TestRunnerEvents {
 
 
 export interface TestRunnerOptions {
-    browser: Browser,
+    browserOptions?: BrowserOptions;
+    //browser: Browser,
     llm?: LLMClient,
     grounding?: GroundingClient
-    browserContextOptions?: BrowserContextOptions,
+    //browserContextOptions?: BrowserContextOptions,
     telemetry: boolean
 }
 
@@ -70,9 +71,9 @@ export class TestRunner {
             },
             browserOptions: {
                 url: this.test.url,
-                browser: this.options.browser,
+                browser: this.options.browserOptions,
                 grounding: this.options.grounding,
-                browserContextOptions: this.options.browserContextOptions
+                //browserContextOptions: this.options.browserContextOptions
             }
         });
 

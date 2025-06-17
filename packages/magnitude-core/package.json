@@ -52,9 +52,11 @@
   },
   "dependencies": {
     "@boundaryml/baml": "^0.86.0",
+    "@types/object-hash": "^3.0.6",
     "commander": "^13.1.0",
     "eventemitter3": "^5.0.1",
     "moondream": "^0.1.0",
+    "object-hash": "^3.0.0",
     "pino": "^9.6.0",
     "playwright": "npm:rebrowser-playwright@^1.52.0",
     "sharp": "^0.33.5",

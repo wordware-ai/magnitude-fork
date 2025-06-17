@@ -3,8 +3,8 @@ import { AgentConnector } from ".";
 import { WebHarness } from "@/web/harness";
 import { ActionDefinition } from '@/actions';
 import { agnosticWebActions, coordWebActions, targetWebActions } from '@/actions/webActions';
-import { Browser, BrowserContext, BrowserContextOptions } from "playwright";
-import { BrowserProvider } from "@/web/browserProvider";
+import { Browser, BrowserContext, BrowserContextOptions, LaunchOptions } from "playwright";
+import { BrowserOptions, BrowserProvider } from "@/web/browserProvider";
 import logger from "@/logger";
 import { Logger } from 'pino';
 import { TabState } from '@/web/tabs';
@@ -13,10 +13,21 @@ import { Image } from "@/memory/image";
 import { GroundingClient } from "@/ai/types";
 import { GroundingService, moondreamTargetingInstructions } from "@/ai/grounding";
 
+// export type BrowserOptions = ({ instance: Browser } | { launchOptions?: LaunchOptions }) & {
+//     contextOptions?: BrowserContextOptions;
+// };
+
+// const foo: BrowserOptions = {
+//     launchOptions: {},
+//     instance: {},
+
+// }
+
 export interface BrowserConnectorOptions {
-    browser?: Browser
+    //browser?: Browser
+    browser?: BrowserOptions
     url?: string
-    browserContextOptions?: BrowserContextOptions
+    //browserContextOptions?: BrowserContextOptions
     grounding?: GroundingClient
     virtualScreenDimensions?: { width: number, height: number }
 }
@@ -60,18 +71,41 @@ export class BrowserConnector implements AgentConnector {
         const browserContextOptions: BrowserContextOptions = {
             viewport: { width: 1024, height: 768 },
             deviceScaleFactor: dpr,
-            ...this.options.browserContextOptions
+            ...this.options.browser?.contextOptions
         };
-        
-        let browserInstance = this.options.browser;
+
+        const browserOptions = this.options.browser;
         
         this.logger.info("Creating new browser context.");
-        if (browserInstance) {
-            this.context = await browserInstance.newContext(browserContextOptions)
-        } else {
-            this.context = await BrowserProvider.getInstance().newContext(browserContextOptions);
-            this.logger.info("Using singleton browser provider.");
-        }
+
+        this.context = await BrowserProvider.getInstance().newContext({
+            ...browserOptions,
+            contextOptions: browserContextOptions
+        });
+        // if (browserOptions) {
+        //     //let browserInstance: Browser;
+        //     if ('instance' in browserOptions) {
+        //         //browserInstance = browserOptions.instance;
+        //         this.context = await browserOptions.instance.newContext(browserContextOptions);
+        //     } else {
+        //         // todo: launch browser via browserprovider with these launch options
+        //     }
+        // } else {
+        //     //browserInstance = await BrowserProvider.getInstance();
+        //     this.context = await BrowserProvider.getInstance().newContext(browserContextOptions);
+        //     this.logger.info("Using singleton browser provider.");
+        // }
+        //browserOptions.instance
+        
+        //let browserInstance = this.options.browser?.instance;
+        
+        
+        // if (browserInstance) {
+        //     this.context = await browserInstance.newContext(browserContextOptions)
+        // } else {
+        //     this.context = await BrowserProvider.getInstance().newContext(browserContextOptions);
+        //     this.logger.info("Using singleton browser provider.");
+        // }
         
         this.harness = new WebHarness(this.context, {
             ...(this.options.virtualScreenDimensions ? { virtualScreenDimensions: this.options.virtualScreenDimensions } : {})

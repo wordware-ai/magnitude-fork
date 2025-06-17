@@ -8,6 +8,7 @@ export { BrowserAgent, startBrowserAgent } from '@/agent/browserAgent';
 export * from "@/agent";
 export * from "@/actions";
 export * from "@/connectors";
+export * from "@/web/browserProvider";
 export * from "@/connectors/browserConnector";
 export * from "@/agent/errors";
 export * from "@/types";

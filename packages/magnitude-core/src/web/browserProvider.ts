@@ -1,14 +1,25 @@
 import { Browser, BrowserContext, BrowserContextOptions, chromium, LaunchOptions, Page } from "playwright";
+import objectHash from 'object-hash';
+import crypto from 'node:crypto';
+import logger from "@/logger";
 
 const DEFAULT_BROWSER_OPTIONS: LaunchOptions = {
     headless: false,
     args: ["--disable-gpu", "--disable-blink-features=AutomationControlled"],
 };
 
+export type BrowserOptions = ({ instance: Browser } | { cdp: string } | { launchOptions?: LaunchOptions }) & {
+    contextOptions?: BrowserContextOptions;
+};
+
+interface ActiveBrowser {
+    // either a browser still being launched or already resolved and ready
+    browserPromise: Promise<Browser>;
+    activeContextsCount: number;
+}
+
 export class BrowserProvider {
-    private browser: Browser | null = null;
-    private activeContextsCount: number = 0;
-    private launchPromise: Promise<Browser> | null = null;
+    private activeBrowsers: Record<string, ActiveBrowser> = {};
 
     private constructor() {}
 
@@ -24,44 +35,84 @@ export class BrowserProvider {
         return (globalThis as any).__magnitude__.browserProvider;
     }
 
-    private async _ensureBrowserLaunched(): Promise<Browser> {
-        if (this.browser && this.browser.isConnected()) {
-            return this.browser;
-        }
+    private async _launchOrReuseBrowser(options: LaunchOptions): Promise<ActiveBrowser> {
+        // hash options
+        const hash = objectHash({
+            ...options,
+            logger: options.logger ? crypto.randomUUID() : '' // replace unserializable logger - use UUID to force re-instance in case different loggers provided
+        });
+        
+        let activeBrowser: ActiveBrowser;
+        if (!(hash in this.activeBrowsers)) {
+            logger.info("Launching new browser");
+            // Launch new browser, get the PROMISE
+            const launchPromise = chromium.launch({ ...DEFAULT_BROWSER_OPTIONS, ...options });
 
-        if (this.launchPromise) {
-            return this.launchPromise;
-        }
+            activeBrowser = {
+                browserPromise: launchPromise,
+                activeContextsCount: 0
+            };
+            // add immediately in case others need to await the same one as well
+            this.activeBrowsers[hash] = activeBrowser;
 
-        this.launchPromise = chromium.launch(DEFAULT_BROWSER_OPTIONS);
-        try {
-            this.browser = await this.launchPromise;
-            this.browser.on('disconnected', () => {
-                this.browser = null;
-                this.activeContextsCount = 0;
-                this.launchPromise = null;
+            // Wait for browser to fully start
+            const browser = await launchPromise;
+
+            browser.on('disconnected', () => {
+                delete this.activeBrowsers[hash];
             });
-            return this.browser;
-        } catch (error) {
-            this.launchPromise = null;
-            throw error;
+
+            return activeBrowser;
+        } else {
+            logger.info("Browser with same launch options exists, reusing");
+            return this.activeBrowsers[hash];
         }
     }
 
-    public async newContext(options?: BrowserContextOptions): Promise<BrowserContext> {
-        const browser = await this._ensureBrowserLaunched();
-        const context = await browser.newContext(options);
+    public async _createAndTrackContext(options: BrowserOptions): Promise<BrowserContext> {
+        const activeBrowserEntry = await this._launchOrReuseBrowser('launchOptions' in options ? options.launchOptions! : {});
+        const browser = await activeBrowserEntry.browserPromise;
+        // FROM HERE
+        const context = await browser.newContext(options.contextOptions);
 
-        this.activeContextsCount++;
+        activeBrowserEntry.activeContextsCount++;
 
         context.on('close', async () => {
-            this.activeContextsCount--;
-            if (this.activeContextsCount <= 0 && this.browser && this.browser.isConnected()) {
-                await this.browser.close();
-                this.browser = null;
-                this.launchPromise = null;
+            activeBrowserEntry.activeContextsCount--;
+            if (activeBrowserEntry.activeContextsCount <= 0 && browser.isConnected()) {
+                await browser.close();
             }
         });
         return context;
+    }
+
+    public async newContext(options?: BrowserOptions): Promise<BrowserContext> {
+        console.log("newContext")
+        if (options) {
+            //let browserInstance: Browser;
+            if ('cdp' in options) {
+                const browser = await chromium.connectOverCDP(options.cdp);
+                return browser.newContext(options.contextOptions);
+            } else if ('instance' in options) {
+                //browserInstance = browserOptions.instance;
+                return await options.instance.newContext(options.contextOptions);
+            } else if ('launchOptions' in options) {
+                // todo: launch browser via browserprovider with these launch options
+                //const launchOptions = options.launchOptions;
+
+                logger.info('Creating context with custom launch options');
+                return await this._createAndTrackContext(options);
+            }
+            else {
+                // contextOptions might be passed but no instance | cdp | launchOptions
+                logger.info('Creating context for default browser options');
+                return await this._createAndTrackContext(options);
+            }
+        }
+        else {
+            // No options provided at all
+            logger.info('Creating context for default browser options');
+            return await this._createAndTrackContext({});
+        }
     }
 }

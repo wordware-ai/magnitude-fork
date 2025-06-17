@@ -292,8 +292,9 @@ program
             },
             llm: config.llm,
             grounding: config.grounding,
-            browserContextOptions: config.browser?.contextOptions ?? {},
-            browserLaunchOptions: config.browser?.launchOptions ?? {},
+            browserOptions: config.browser,
+            // browserContextOptions: config.browser?.contextOptions ?? {},
+            // browserLaunchOptions: config.browser?.launchOptions ?? {},
             telemetry: config.telemetry ?? true
         };
 
