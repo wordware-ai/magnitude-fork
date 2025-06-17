@@ -2,6 +2,7 @@ import { Browser, BrowserContext, BrowserContextOptions, chromium, LaunchOptions
 import objectHash from 'object-hash';
 import crypto from 'node:crypto';
 import logger from "@/logger";
+import { Logger } from 'pino';
 
 const DEFAULT_BROWSER_OPTIONS: LaunchOptions = {
     headless: false,
@@ -20,8 +21,11 @@ interface ActiveBrowser {
 
 export class BrowserProvider {
     private activeBrowsers: Record<string, ActiveBrowser> = {};
+    private logger: Logger;
 
-    private constructor() {}
+    private constructor() {
+        this.logger = logger.child({ name: 'browser_provider' });
+    }
 
     public static getInstance(): BrowserProvider {
         if (!(globalThis as any).__magnitude__) {
@@ -44,7 +48,7 @@ export class BrowserProvider {
         
         let activeBrowser: ActiveBrowser;
         if (!(hash in this.activeBrowsers)) {
-            logger.info("Launching new browser");
+            this.logger.trace("Launching new browser");
             // Launch new browser, get the PROMISE
             const launchPromise = chromium.launch({ ...DEFAULT_BROWSER_OPTIONS, ...options });
 
@@ -64,7 +68,7 @@ export class BrowserProvider {
 
             return activeBrowser;
         } else {
-            logger.info("Browser with same launch options exists, reusing");
+            this.logger.trace("Browser with same launch options exists, reusing");
             return this.activeBrowsers[hash];
         }
     }
@@ -87,31 +91,30 @@ export class BrowserProvider {
     }
 
     public async newContext(options?: BrowserOptions): Promise<BrowserContext> {
-        console.log("newContext")
+        if (process.env.MAGNTIUDE_PLAYGROUND) {
+            this.logger.trace("MAGNITUDE_PLAYGROUND environment detected, connecting to browser via CDP");
+            // Playground environment - force use CDP on 9222
+            const browser = await chromium.connectOverCDP('http://localhost:9222');
+            return browser.newContext(options?.contextOptions);
+        }
+
         if (options) {
-            //let browserInstance: Browser;
             if ('cdp' in options) {
                 const browser = await chromium.connectOverCDP(options.cdp);
                 return browser.newContext(options.contextOptions);
             } else if ('instance' in options) {
-                //browserInstance = browserOptions.instance;
                 return await options.instance.newContext(options.contextOptions);
             } else if ('launchOptions' in options) {
-                // todo: launch browser via browserprovider with these launch options
-                //const launchOptions = options.launchOptions;
-
-                logger.info('Creating context with custom launch options');
+                this.logger.trace('Creating context with custom launch options');
                 return await this._createAndTrackContext(options);
-            }
-            else {
+            } else {
                 // contextOptions might be passed but no instance | cdp | launchOptions
-                logger.info('Creating context for default browser options');
+                this.logger.trace('Creating context for default browser options');
                 return await this._createAndTrackContext(options);
             }
-        }
-        else {
+        } else {
             // No options provided at all
-            logger.info('Creating context for default browser options');
+            this.logger.trace('Creating context for default browser options');
             return await this._createAndTrackContext({});
         }
     }
