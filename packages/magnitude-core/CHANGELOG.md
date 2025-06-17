@@ -1,5 +1,11 @@
 # magnitude-core
 
+## 0.2.3
+
+### Patch Changes
+
+- fix coord issues due to dpr, unify browser options interface
+
 ## 0.2.2
 
 ### Patch Changes
