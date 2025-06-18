@@ -2,11 +2,13 @@ import logger from '@/logger';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
+import { execSync } from 'node:child_process';
 import cuid2 from '@paralleldrive/cuid2';
 import { TestFailure, TestState } from '@/runner/state';
 import { PostHog } from 'posthog-node'
 import { LLMClientIdentifier } from 'magnitude-core';
 import { VERSION } from '@/version';
+import { createHash } from 'crypto';
 
 export const posthog = new PostHog(
     'phc_BTdnTtG68V5QG6sqUNGqGfmjXk8g0ePBRu9FIr9upNu',
@@ -94,9 +96,13 @@ export async function sendTelemetry(state: TestState) {
         }
     }
 
+    const userId = getMachineId();
+    const codebaseId = getCodebaseId();
+
     const payload: TelemetryPayload = {
         telemetryVersion: '0.2',
         packageVersion: VERSION,
+        codebase: codebaseId,
         startedAt: state.startedAt ?? Date.now(),
         doneAt: state.doneAt ?? Date.now(),
         numSteps: numSteps,
@@ -106,8 +112,9 @@ export async function sendTelemetry(state: TestState) {
         passed: state.status === 'passed',
         failure: state.failure
     }
-
-    const userId = getMachineId();
+    // console.log("user ID:", userId);
+    // console.log("codebase ID:", codebaseId);
+    
     try {
         // const resp = await fetch(telemetryUrl, { signal: AbortSignal.timeout(3000) });
         // if (!resp.ok) {
@@ -121,7 +128,7 @@ export async function sendTelemetry(state: TestState) {
             },
             groups: {
                 // TODO: derive from git hash (also put it payload too)
-                codebase: 'example'
+                codebase: codebaseId
             }
         });
         // does NOT wait for HTTP request to fully finish so still need client.shutdown somewhere
@@ -155,4 +162,21 @@ export function getMachineId(): string {
         // Fallback to temporary ID if storage fails
         return createId();
     }
+}
+
+export function getCodebaseId(): string {
+  try {
+    const command = 'git rev-list --max-parents=0 HEAD';
+    const firstCommitHash = execSync(command, {
+      encoding: 'utf8',
+      stdio: 'pipe',
+    }).trim();
+
+    //return firstCommitHash;
+    return createHash('sha256').update(firstCommitHash).digest('hex').substring(0, 12);
+
+  } catch (error) {
+    // ID representing no git repo detected
+    return '000000000000';
+  }
 }
