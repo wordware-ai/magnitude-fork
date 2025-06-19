@@ -1,5 +1,11 @@
 # magnitude-core
 
+## 0.2.4
+
+### Patch Changes
+
+- better keyboard control, fix crash on trusted html
+
 ## 0.2.3
 
 ### Patch Changes

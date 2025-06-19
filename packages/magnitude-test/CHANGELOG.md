@@ -1,5 +1,13 @@
 # magnitude-test
 
+## 0.2.5
+
+### Patch Changes
+
+- better keyboard control, fix crash on trusted html
+- Updated dependencies
+  - magnitude-core@0.2.4
+
 ## 0.2.4
 
 ### Patch Changes
