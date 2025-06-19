@@ -201,6 +201,24 @@ export class WebHarness { // implements StateComponent
         await this.waitForStability();
     }
 
+    async selectAll() {
+        await this.page.keyboard.down('ControlOrMeta');
+        await this.page.keyboard.press('KeyA');
+        await this.page.keyboard.up('ControlOrMeta');
+    }
+
+    async enter() {
+        await this.page.keyboard.press('Enter')
+    }
+
+    async backspace() {
+        await this.page.keyboard.press('Backspace')
+    }
+
+    async tab() {
+        await this.page.keyboard.press('Tab')
+    }
+
     async goBack() {
         await this.page.goBack();
     }

@@ -87,7 +87,7 @@ export async function sendTelemetry(state: TestState) {
         if (item.variant === 'step') {
             numSteps += 1;
             for (const action of item.actions) {
-                if (action.variant.startsWith("browser")) {
+                if (action.variant.startsWith("browser") || action.variant.startsWith("keyboard") || action.variant.startsWith("mouse")) {
                     browserActionCount += 1;
                 }
             }
@@ -98,6 +98,18 @@ export async function sendTelemetry(state: TestState) {
 
     const userId = getMachineId();
     const codebaseId = getCodebaseId();
+
+    if (codebaseId) {
+        try {
+            posthog.groupIdentify({
+                groupType: 'codebase',
+                groupKey: codebaseId,
+                //properties: {}
+            });
+        } catch (error) {
+            logger.warn(`Failed to identify group: ${(error as Error).message}`);
+        }
+    }
 
     const payload: TelemetryPayload = {
         telemetryVersion: '0.2',
@@ -126,10 +138,11 @@ export async function sendTelemetry(state: TestState) {
             properties: {
                 ...payload
             },
-            groups: {
-                // TODO: derive from git hash (also put it payload too)
-                codebase: codebaseId
-            }
+            ...(codebaseId ? { groups: { codebase: codebaseId }} : {})
+            // groups: {
+            //     // TODO: derive from git hash (also put it payload too)
+            //     codebase: codebaseId
+            // }
         });
         // does NOT wait for HTTP request to fully finish so still need client.shutdown somewhere
         //await posthog.flush();
@@ -164,7 +177,7 @@ export function getMachineId(): string {
     }
 }
 
-export function getCodebaseId(): string {
+export function getCodebaseId(): string | undefined {
   try {
     const command = 'git rev-list --max-parents=0 HEAD';
     const firstCommitHash = execSync(command, {
@@ -177,6 +190,6 @@ export function getCodebaseId(): string {
 
   } catch (error) {
     // ID representing no git repo detected
-    return '000000000000';
+    return undefined;//'000000000000';
   }
 }

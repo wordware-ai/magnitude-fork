@@ -12,8 +12,8 @@ export interface ActionDefinition<T> {
 export function createAction<S extends ZodTypeAny>(
     action: {
         name: string;
-        description: string;
-        schema: S;
+        description?: string;
+        schema?: S;
         resolver: ({ input, agent }: { input: z.infer<S>; agent: Agent }) => Promise<void | ObservableData>;
     }
 ): ActionDefinition<z.infer<S>> {
@@ -21,7 +21,7 @@ export function createAction<S extends ZodTypeAny>(
     return {
         name: action.name,
         description: action.description,
-        schema: action.schema,
+        schema: action.schema ?? z.object({}),
         resolver: action.resolver
     };
 }

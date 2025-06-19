@@ -6,7 +6,7 @@ import { Agent } from "@/agent"; // Import Agent type for agent parameter
 
 // For separate grounding
 export const clickTargetAction = createAction({
-    name: 'browser:click',
+    name: 'mouse:click',
     description: "Click something",
     schema: z.object({
         target: z.string().describe("Where exactly to click"),
@@ -21,25 +21,25 @@ export const clickTargetAction = createAction({
 });
 
 // For separate grounding
-export const clickTargetAndType = createAction({
-    name: 'browser:type',
-    description: "Click something and type into it",
-    schema: z.object({
-        target: z.string().describe("Where exactly to click before typing"),
-        content: z.string().describe("Content to type, insert sequences <enter> or <tab> for those keypresses respectively."),
-    }),
-    resolver: async ({ input: { target, content }, agent }) => {
-        const web = agent.require(BrowserConnector);
-        const harness = web.getHarness();
-        const screenshot = await web.getLastScreenshot();
-        const { x, y } = await web.requireGrounding().locateTarget(screenshot, target);
-        await harness.clickAndType({ x, y, content });
-    }
-});
+// export const clickTargetAndType = createAction({
+//     name: 'browser:type',
+//     description: "Click something and type into it",
+//     schema: z.object({
+//         target: z.string().describe("Where exactly to click before typing"),
+//         content: z.string().describe("Content to type, insert sequences <enter> or <tab> for those keypresses respectively."),
+//     }),
+//     resolver: async ({ input: { target, content }, agent }) => {
+//         const web = agent.require(BrowserConnector);
+//         const harness = web.getHarness();
+//         const screenshot = await web.getLastScreenshot();
+//         const { x, y } = await web.requireGrounding().locateTarget(screenshot, target);
+//         await harness.clickAndType({ x, y, content });
+//     }
+// });
 
 // For separate grounding
 export const scrollTargetAction = createAction({
-    name: 'browser:scroll',
+    name: 'mouse:scroll',
     description: "Hover mouse over target and scroll",
     schema: z.object({
         target: z.string().describe("Somewhere specific inside the container to scroll in"),
@@ -57,7 +57,7 @@ export const scrollTargetAction = createAction({
 
 // For grounded planner
 export const clickCoordAction = createAction({
-    name: 'browser:click',
+    name: 'mouse:click',
     description: "Click something",
     schema: z.object({
         x: z.number().int(),
@@ -70,12 +70,11 @@ export const clickCoordAction = createAction({
     }
 });
 
-// For grounded planner
 export const typeAction = createAction({
-    name: 'browser:type',
+    name: 'keyboard:type',
     description: "Make sure to click where you need to type first", // make sure you click into it first
     schema: z.object({
-        content: z.string().describe("Content to type, insert sequences <enter> or <tab> for those keypresses respectively."),
+        content: z.string().describe("Content to type"),
     }),
     resolver: async ({ input: { content }, agent }) => {
         const webConnector = agent.require(BrowserConnector);
@@ -84,9 +83,38 @@ export const typeAction = createAction({
     }
 });
 
+export const keyboardEnterAction = createAction({
+    name: 'keyboard:enter',
+    resolver: async ({ agent }) => {
+        await agent.require(BrowserConnector).getHarness().enter();
+    }
+});
+
+export const keyboardTabAction = createAction({
+    name: 'keyboard:tab',
+    resolver: async ({ agent }) => {
+        await agent.require(BrowserConnector).getHarness().tab();
+    }
+});
+
+export const keyboardBackspaceAction = createAction({
+    name: 'keyboard:backspace',
+    resolver: async ({ agent }) => {
+        await agent.require(BrowserConnector).getHarness().backspace();
+    }
+});
+
+export const keyboardSelectAllAction = createAction({
+    name: 'keyboard:select_all',
+    description: "Select all content in the active text area (CTRL+A)",
+    resolver: async ({ input: { content }, agent }) => {
+        await agent.require(BrowserConnector).getHarness().selectAll();
+    }
+});
+
 // For grounded planner
 export const scrollCoordAction = createAction({
-    name: 'browser:scroll',
+    name: 'mouse:scroll',
     description: "Hover mouse over target and scroll",
     schema: z.object({
         x: z.number().int(),
@@ -174,17 +202,23 @@ export const agnosticWebActions = [
     newTabAction,
     switchTabAction,
     navigateAction,
+    typeAction,
+    keyboardEnterAction,
+    keyboardTabAction,
+    keyboardBackspaceAction,
+    keyboardSelectAllAction,
     //waitAction,
 ] as const;
 
 export const coordWebActions = [
     clickCoordAction,
     scrollCoordAction,
-    typeAction
+    //typeAction
 ] as const;
 
 export const targetWebActions = [
     clickTargetAction,
-    clickTargetAndType,
+    //typeAction,
+    //clickTargetAndType,
     scrollTargetAction
 ] as const;
