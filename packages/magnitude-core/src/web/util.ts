@@ -23,3 +23,72 @@ export function parseTypeContent(content: string): (string | KeypressIndicator)[
 
     return result;
 }
+
+export function renderMinimalAccessibilityTree(node: any): string {
+    // Escapes newlines for safe inline printing, and trims whitespace.
+    const sanitize = (text: string | number | boolean): string => {
+        return String(text).trim().replace(/\n/g, '\\n');
+    }
+
+    // Inner recursive function to handle state like indentation
+    function recursiveFlatten(node: any, indent: string): string {
+        const isTextLike = (n: any) =>
+            n && (n.role === 'StaticText' || n.role === 'text') && n.name && n.name.trim();
+
+        let childrenOutput = '';
+        if (node.children) {
+            const newChildren = [];
+            let currentTextBuffer = [];
+
+            for (const child of node.children) {
+                if (isTextLike(child)) {
+                    currentTextBuffer.push(sanitize(child.name));
+                } else {
+                    if (currentTextBuffer.length > 0) {
+                        newChildren.push({ role: 'coalesced-text', name: currentTextBuffer.join(' ') });
+                        currentTextBuffer = [];
+                    }
+                    newChildren.push(child);
+                }
+            }
+            if (currentTextBuffer.length > 0) {
+                newChildren.push({ role: 'coalesced-text', name: currentTextBuffer.join(' ') });
+            }
+
+            for (const child of newChildren) {
+                if (child.role === 'coalesced-text') {
+                    childrenOutput += `${indent}  ${child.name}\n`;
+                } else {
+                    childrenOutput += recursiveFlatten(child, indent + '  ');
+                }
+            }
+        }
+
+        const isBoringContainer = (node.role === 'generic' || node.role === 'div') && !node.name;
+        if (isBoringContainer) {
+            return childrenOutput;
+        }
+
+        let line = '';
+        if (node.role && !['StaticText', 'text', 'RootWebArea'].includes(node.role)) {
+            line = `${indent}[${node.role}]`;
+            
+            if (node.name && sanitize(node.name)) {
+                line += ` ${sanitize(node.name)}`;
+            }
+            
+            if (node.value !== undefined && sanitize(node.value)) {
+                line += ` (value: ${sanitize(node.value)})`;
+            }
+
+            if (node.checked !== undefined) line += ` (checked: ${node.checked})`;
+            if (node.disabled) line += ` (disabled)`;
+            line += '\n';
+        }
+
+        return line + childrenOutput;
+    }
+    
+    const rawFlattened = recursiveFlatten(node, '');
+    return rawFlattened.split('\n').filter(line => line.trim() !== '').join('\n');
+}

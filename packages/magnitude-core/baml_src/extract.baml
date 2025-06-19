@@ -9,7 +9,7 @@ function ExtractData (instructions: string, screenshot: image, domContent: strin
     client GeminiPro
     prompt #"
         {{ _.role("system") }}
-        Based on the browser screenshot and HTML content, extract data according to these instructions:
+        Based on the browser screenshot and page content, extract data according to these instructions:
         <instructions>{{ instructions }}</instructions>
         
         {{ ctx.output_format }}

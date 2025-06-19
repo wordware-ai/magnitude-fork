@@ -5,6 +5,7 @@ import { buildDefaultBrowserAgentOptions } from "@/ai/util";
 import { LLMClient } from "@/ai/types";
 import { Schema } from "zod";
 import z from "zod";
+import { renderMinimalAccessibilityTree } from "@/web/util";
 
 // export interface StartAgentWithWebOptions {
 //     agentBaseOptions?: Partial<AgentOptions>;
@@ -45,10 +46,11 @@ export class BrowserAgent extends Agent {
     }
 
     async extract<T extends Schema>(instructions: string, schema: T): Promise<z.infer<T>> {
-        // TODO: Implement
-        const htmlContent = await this.page.content();
+        //const htmlContent = await this.page.content();
+        const accessibilityTree = await this.page.accessibility.snapshot({ interestingOnly: true });
+        const pageRepr = renderMinimalAccessibilityTree(accessibilityTree);
         const screenshot = await this.require(BrowserConnector).getHarness().screenshot();
-        return await this.model.extract(instructions, schema, screenshot, htmlContent);
+        return await this.model.extract(instructions, schema, screenshot, pageRepr);
     }
 
     // async check(description: string): Promise<boolean> {
