@@ -16,9 +16,9 @@ const DEFAULT_BROWSER_AGENT_TEMP = 0.2;
 
 // Helper function to start a web agent
 export async function startBrowserAgent(
-    options: AgentOptions & BrowserConnectorOptions //StartAgentWithWebOptions = {}
+    options?: AgentOptions & BrowserConnectorOptions //StartAgentWithWebOptions = {}
 ): Promise<BrowserAgent> {
-    const { agentOptions, browserOptions } = buildDefaultBrowserAgentOptions({ agentOptions: options, browserOptions: options });
+    const { agentOptions, browserOptions } = buildDefaultBrowserAgentOptions({ agentOptions: options ?? {}, browserOptions: options ?? {} });
 
     const agent = new BrowserAgent({
         agentOptions: agentOptions,
@@ -43,6 +43,10 @@ export class BrowserAgent extends Agent {
 
     get context(): BrowserContext {
         return this.require(BrowserConnector).getHarness().context;
+    }
+
+    async nav(url: string): Promise<void> {
+        await this.require(BrowserConnector).getHarness().navigate(url);
     }
 
     async extract<T extends Schema>(instructions: string, schema: T): Promise<z.infer<T>> {

@@ -104,10 +104,10 @@ export class WebHarness { // implements StateComponent
         // };
     }
  
-    async goto(url: string) {
-        // No need to redraw here anymore, the 'load' event listener handles it
-        await this.page.goto(url);
-    }
+    // async goto(url: string) {
+    //     // No need to redraw here anymore, the 'load' event listener handles it
+    //     await this.page.goto(url);
+    // }
 
     async _type(content: string) {
         /** Util for typing + keypresses */
@@ -197,7 +197,8 @@ export class WebHarness { // implements StateComponent
     }
 
     async navigate(url: string) {
-        await this.goto(url);
+        // Only wait for DOM content on goto since we handle waiting for network idle etc ourselves
+        await this.page.goto(url, { waitUntil: 'domcontentloaded' });
         await this.waitForStability();
     }
 
