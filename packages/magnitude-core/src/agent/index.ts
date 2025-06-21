@@ -1,25 +1,19 @@
-import { WebAction, ClickWebAction, TypeWebAction, ScrollWebAction, SwitchTabWebAction } from "@/web/types";
-import { ActionIntent, ClickIntent, TypeIntent, ScrollIntent, SwitchTabIntent, Action } from "@/actions/types";
-import { GroundingService } from "@/ai/grounding";
-import { ModelHarness } from "@/ai/modelHarness";
-import { Page } from "playwright"; 
-import { WebHarness } from "@/web/harness";
-import { AgentEvents } from "../common/events";
-import logger from '../logger';
-import { AgentConnector } from '@/connectors';
-import { BrowserConnector, BrowserConnectorOptions } from '@/connectors/browserConnector';
-import { Observation } from '@/memory/observation';
-
-import { LLMClient, GroundingClient } from "@/ai/types";
+import logger from '@/logger';
 import EventEmitter from "eventemitter3";
-import { AgentError } from "./errors";
-import { ActionDescriptor, FailureDescriptor, retryOnError } from "../common";
-import { AgentMemory } from "../memory";
+import z from "zod";
+
+import { Action } from "@/actions/types";
+import { ModelHarness } from "@/ai/modelHarness";
+import { AgentEvents } from "@/common/events";
+import { AgentConnector } from '@/connectors';
+import { Observation } from '@/memory/observation';
+import { LLMClient } from "@/ai/types";
+import { AgentError } from "@/agent/errors";
+import { AgentMemory } from "@/memory";
 import { ActionDefinition } from "@/actions";
-import { ZodObject } from "zod";
 import { taskActions } from "@/actions/taskActions";
 import { traceAsync } from "@/ai/baml_client";
-import z from "zod";
+
 
 export interface AgentOptions {
     llm?: LLMClient;
@@ -111,10 +105,6 @@ export class Agent {
         return connector;
     }
 
-    // Access to page now goes through WebInteractionConnector
-    // TODO: Move to a WebAgent subclass
-    
-
     async start(): Promise<void> { 
         logger.info("Agent: Starting connectors...");
         for (const connector of this.connectors) {
@@ -128,9 +118,7 @@ export class Agent {
         // logger.info("Initial observations recorded");
         // Initial observations are handled by the first getObservations call in exec
     }
-
-    // captureState is removed as state is now captured by connectors and surfaced via observations/renderCurrentStateToBaml
-
+    
     async exec(action: Action, memory?: AgentMemory): Promise<void> {
         /**
          * Execute an action that belongs to this Agent's action space.
@@ -145,7 +133,7 @@ export class Agent {
         }
         
         let input: any;
-        if (actionDefinition.schema instanceof ZodObject) {
+        if (actionDefinition.schema instanceof z.ZodObject) {
             let variant: string;
             ({ variant, ...input } = action);
         } else {
@@ -275,7 +263,7 @@ export class Agent {
             try {
                 const memoryContext = await memory.buildContext(this.connectors);
                 ({ reasoning, actions } = await this.model.createPartialRecipe(
-                    memoryContext, 
+                    memoryContext,
                     description,
                     this.actions 
                 ));
