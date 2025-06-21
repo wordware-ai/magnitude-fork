@@ -1,0 +1,59 @@
+{
+  "name": "create-magnitude-app",
+  "version": "0.0.1",
+  "description": "Create Magnitude apps quickly",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.cts",
+  "bin": {
+    "create-magnitude-app": "dist/cli.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/magnitudedev/magnitude.git"
+  },
+  "homepage": "https://github.com/magnitudedev/magnitude#readme",
+  "bugs": {
+    "url": "https://github.com/magnitudedev/magnitude/issues"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "ai",
+    "agent",
+    "testing",
+    "ui-testing",
+    "automation",
+    "magnitude",
+    "typescript"
+  ],
+  "scripts": {
+    "build": "baml-cli generate && tsc && pkgroll",
+    "check": "tsc --noEmit",
+    "cli": "bun ./src/cli.ts"
+  },
+  "author": {
+    "name": "Magnitude",
+    "email": "founders@magnitude.run",
+    "url": "https://magnitude.run"
+  },
+  "contributors": [
+    "Anders Lie <anders@magnitude.run>"
+  ],
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "pkgroll": "^2.10.0",
+    "typescript": "~5.7.2"
+  },
+  "dependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "commander": "^13.1.0",
+    "fs-extra": "^11.3.0",
+    "inquirer": "^12.6.3"
+  }
+}
