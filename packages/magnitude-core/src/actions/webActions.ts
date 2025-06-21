@@ -70,6 +70,44 @@ export const clickCoordAction = createAction({
     }
 });
 
+export const mouseDoubleClickAction = createAction({
+    name: 'mouse:double_click',
+    schema: z.object({
+        x: z.number().int(),
+        y: z.number().int(),
+    }),
+    resolver: async ({ input: { x, y }, agent }) => {
+        const web = agent.require(BrowserConnector);
+        const harness = web.getHarness();
+        await harness.doubleClick({ x, y });
+    }
+});
+
+export const mouseRightClickAction = createAction({
+    name: 'mouse:right_click',
+    schema: z.object({
+        x: z.number().int(),
+        y: z.number().int(),
+    }),
+    resolver: async ({ input: { x, y }, agent }) => {
+        await agent.require(BrowserConnector).getHarness().rightClick({ x, y });
+    }
+});
+
+export const mouseDragAction = createAction({
+    name: 'mouse:drag',
+    description: "Click and hold mouse in one location and release in another",
+    schema: z.object({
+        from: z.object({ x: z.number().int(), y: z.number().int() }),
+        to: z.object({ x: z.number().int(), y: z.number().int() })
+    }),
+    resolver: async ({ input: { from, to }, agent }) => {
+        const web = agent.require(BrowserConnector);
+        const harness = web.getHarness();
+        await harness.drag({ x1: from.x, y1: from.y, x2: to.x, y2: to.y });
+    }
+});
+
 export const typeAction = createAction({
     name: 'keyboard:type',
     description: "Make sure to click where you need to type first", // make sure you click into it first
@@ -188,7 +226,7 @@ export const waitAction = createAction({
     resolver: async ({ input: { seconds }, agent }) => {
         await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
     }
-})
+});
 
 // export const webActions = [
 //     clickTargetAction,
@@ -212,7 +250,10 @@ export const agnosticWebActions = [
 
 export const coordWebActions = [
     clickCoordAction,
+    mouseDoubleClickAction,
+    mouseRightClickAction,
     scrollCoordAction,
+    mouseDragAction,
     //typeAction
 ] as const;
 
