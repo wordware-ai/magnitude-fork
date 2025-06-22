@@ -6,7 +6,7 @@ import fs from "fs-extra";
 import path from "path";
 import os from "os";
 import { bold, blueBright, greenBright, gray } from "ansis";
-import { intro, outro, spinner, log, text, select, confirm, isCancel } from '@clack/prompts';
+import { intro, outro, spinner, log, text, select, confirm, isCancel, multiselect } from '@clack/prompts';
 import boxen from "boxen";
 
 const REPO_URL = "https://github.com/magnitudedev/magnitude-scaffold";
@@ -26,7 +26,14 @@ interface ProjectInfo {
     projectName: string;
     model: 'claude' | 'qwen',
     provider: 'anthropic' | 'openrouter',
-    apiKey: string
+    apiKey: string,
+    assistants: ('cursor' | 'claudecode' | 'cline' | 'windsurf')[]
+    // assistants: {
+    //     cursor: boolean,
+    //     cline: boolean,
+    //     windsurf: boolean
+    // }
+    //assistant: 'cursor' | 'cline' | 'windsurf' | null
 };
 
 async function establishProjectInfo(info: Partial<ProjectInfo>): Promise<ProjectInfo> {
@@ -135,60 +142,115 @@ async function establishProjectInfo(info: Partial<ProjectInfo>): Promise<Project
         }
     }
 
+    let assistants = await multiselect({
+        message: 'Are you using any code assistants?',
+        options: [
+            { value: 'claudecode', label: 'Claude Code' }, // claude.md
+            { value: 'cline', label: 'Cline' }, // .clinerules
+            { value: 'cursor', label: 'Cursor' }, // .cursorrules
+            { value: 'windsurf', label: 'Windsurf' } // .windsurfrules
+        ],
+        required: false
+    });
+
+    if (isCancel(assistants)) {
+        assistants = [];
+    }
+
     //return {...info, ...answers} as ProjectInfo;
-    return { projectName, model, provider, apiKey: apiKey! }
+    return { projectName, model, provider, apiKey: apiKey!, assistants };
 }
 
-async function createProject(project: ProjectInfo) {
+async function createProject(tempDir: string, projectDir: string, project: ProjectInfo) {
     //console.log(`Creating a new project in ./${project.projectName}...`);
+    fs.ensureDirSync(tempDir);
 
-    const projectDir = path.resolve(process.cwd(), project.projectName);
-    const tempDir = path.join(
-        os.tmpdir(),
-        "scaffold-clone-" + Math.random().toString(36).substr(2, 9)
+    //log.info(`temp dir ${tempDir} created`);
+
+    // Make sure project dir is still available
+    if (fs.existsSync(projectDir)) {
+        throw new Error(`Directory ${project.projectName} already exists.`);
+    }
+
+    // Clone scaffold into temp dir
+    execSync(
+        `git clone --depth 1 -b ${REPO_BRANCH} ${REPO_URL} ${tempDir}`,
+        { stdio: "ignore" }
     );
 
-    if (fs.existsSync(projectDir)) {
-        console.error(`Error: Directory ${project.projectName} already exists.`);
-        process.exit(1);
+    //log.info(`temp dir ${tempDir} cloned`);
+
+    // === Configure scaffold project ===
+    // Remove existing git in scaffold and init git
+    const gitDir = path.join(tempDir, ".git");
+    if (fs.existsSync(gitDir)) {
+        fs.rmSync(gitDir, { recursive: true, force: true });
+    }
+    execSync("git init", { stdio: "ignore", cwd: tempDir });
+
+    // Configure package name
+    const packageJsonPath = path.join(tempDir, "package.json");
+    if (fs.existsSync(packageJsonPath)) {
+        const packageJson = fs.readJsonSync(packageJsonPath);
+        packageJson.name = project.projectName;
+        fs.writeJsonSync(packageJsonPath, packageJson, { spaces: 2 });
     }
 
-    try {
-        //console.log(`Cloning template from ${REPO_URL}...`);
-        execSync(
-            `git clone --depth 1 -b ${REPO_BRANCH} ${REPO_URL} ${tempDir}`,
-            { stdio: "ignore" }
-        );
-
-        fs.copySync(tempDir, projectDir);
-        //console.log("Template copied successfully.");
-
-        const gitDir = path.join(projectDir, ".git");
-        if (fs.existsSync(gitDir)) {
-            fs.rmSync(gitDir, { recursive: true, force: true });
+    // Configure assistant files
+    const assistantMarkdown = fs.readFileSync(path.join(tempDir, '.cursorrules'), 'utf-8');
+    for (const assistant of project.assistants) {
+        if (assistant === 'cursor') {
+            continue;
+        } else if (assistant === 'cline') {
+            fs.writeFileSync(path.join(tempDir, '.clinerules'), assistantMarkdown);
+        } else if (assistant === 'claudecode') {
+            fs.writeFileSync(path.join(tempDir, 'claude.md'), assistantMarkdown);
+        } else if (assistant === 'windsurf') {
+            fs.writeFileSync(path.join(tempDir, '.windsurfrules'), assistantMarkdown);
         }
-        execSync("git init", { stdio: "ignore", cwd: projectDir });
-
-        const packageJsonPath = path.join(projectDir, "package.json");
-        if (fs.existsSync(packageJsonPath)) {
-            const packageJson = fs.readJsonSync(packageJsonPath);
-            packageJson.name = project.projectName;
-            fs.writeJsonSync(packageJsonPath, packageJson, { spaces: 2 });
-        }
-
-        // console.log("\nProject setup complete!");
-        // console.log(blueBright`Next steps:`);
-        // console.log(`  cd ${project.projectName}`);
-        // console.log("  npm install");
-        // console.log("  npm start");
-    } catch (error) {
-        log.error("\nAn error occurred while creating the project:");
-        log.error((error as Error).message);
-        fs.rmSync(projectDir, { recursive: true, force: true });
-        process.exit(1);
-    } finally {
-        fs.rmSync(tempDir, { recursive: true, force: true });
     }
+    if (!(project.assistants.includes('cursor'))) {
+        fs.rmSync(path.join(tempDir, '.cursorrules'));
+    }
+
+    // Configure LLM client via codegen
+    //const provider = project.provider === 'anthropic' ? 'anthropic' : 'openai-generic';
+    const model = project.provider === 'anthropic' ? 'claude-sonnet-4-20250514' :
+        project.model === 'claude' ? 'anthropic/claude-sonnet-4' : 'qwen/qwen2.5-vl-72b-instruct';
+    const envVarName = project.provider === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'OPENROUTER_API_KEY';
+
+    let clientSnippet;
+    if (project.provider === 'anthropic') {
+        clientSnippet=`llm: {
+            provider: 'anthropic',
+            options: {
+                model: '${model}',
+                apiKey: process.env.${envVarName}
+            }
+        }`;
+    } else {
+        clientSnippet=`llm: {
+            provider: 'openai-generic',
+            options: {
+                baseUrl: 'https://openrouter.ai/api/v1',
+                model: '${model}',
+                apiKey: process.env.${envVarName}
+            }
+        }`;
+    }
+    
+
+    const code = fs.readFileSync(path.join(tempDir, 'src', 'index.ts'), 'utf-8');
+
+    const newCode = code.replace(`url: 'https://news.ycombinator.com/show'`, `url: 'https://news.ycombinator.com/show',\n        ${clientSnippet}`);
+    fs.writeFileSync(path.join(tempDir, 'src', 'index.ts'), newCode);
+
+    // Configure .env with API key
+    
+
+    // Finally, copy to project dir
+    fs.copySync(tempDir, projectDir);
+
     return projectDir;
 }
 
@@ -201,10 +263,11 @@ program
         // console.log("process.argv:", process.argv);
         // console.log("project name:", projectName);
         
-        console.log(bold(blueBright`${title}`));
+        if (process.stdout.columns >= 50) console.log(bold(blueBright`${title}`));
 
         intro('create-magnitude-app');
         const projectInfo = await establishProjectInfo({ projectName });
+        //console.log(projectInfo);
 
         // const s = spinner();
         // s.start('Cloning project template');
@@ -213,10 +276,25 @@ program
         //outro('Time to build browser automations!');
         const createProjectSpinner = spinner();
         createProjectSpinner.start('Creating project');
-        const projectDir = await createProject(projectInfo);
+
+        const projectDir = path.resolve(process.cwd(), projectInfo.projectName);
+        const tempDir = path.join(
+            os.tmpdir(),
+            "scaffold-clone-" + Math.random().toString(36).substr(2, 9)
+        );
+
+        try {
+            await createProject(tempDir, projectDir, projectInfo);
+        } catch (error) {
+            log.error("\nAn error occurred while creating the project:");
+            log.error((error as Error).message);
+            fs.rmSync(tempDir, { recursive: true, force: true });
+            fs.rmSync(projectDir, { recursive: true, force: true });
+            process.exit(1);
+        }
         createProjectSpinner.stop(`Project created in ${projectDir}`);
         outro(`You're all set!`);
         // boxen(`Next steps:\n  cd ${projectName}\n  npm install\n  npm run`
-        console.log(boxen(`cd ${projectInfo.projectName}\nnpm install\nnpm run`, { padding: 1, margin: 1, title: 'Next steps', borderStyle: 'round', borderColor: 'blueBright'}));
+        console.log(boxen(`cd ${projectInfo.projectName}\nnpm install\nnpm start`, { padding: 1, margin: 1, title: 'Next steps', borderStyle: 'round', borderColor: 'blueBright'}));
     })
     .parse(process.argv);
