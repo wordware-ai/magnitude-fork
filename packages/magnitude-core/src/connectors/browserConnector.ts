@@ -115,8 +115,8 @@ export class BrowserConnector implements AgentConnector {
 
         if (this.options.url) {
             this.logger.info(`Navigating to initial URL: ${this.options.url}`);
-            await this.harness.goto(this.options.url);
-            await this.harness.waitForStability();
+            await this.harness.navigate(this.options.url);
+            //await this.harness.waitForStability();
         }
         this.logger.info("Started successfully.");
     }

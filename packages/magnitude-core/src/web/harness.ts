@@ -104,10 +104,10 @@ export class WebHarness { // implements StateComponent
         // };
     }
  
-    async goto(url: string) {
-        // No need to redraw here anymore, the 'load' event listener handles it
-        await this.page.goto(url);
-    }
+    // async goto(url: string) {
+    //     // No need to redraw here anymore, the 'load' event listener handles it
+    //     await this.page.goto(url);
+    // }
 
     async _type(content: string) {
         /** Util for typing + keypresses */
@@ -156,7 +156,43 @@ export class WebHarness { // implements StateComponent
         // console.log("x:", x);
         // console.log("y:", y);
         await this.visualizer.visualizeAction(x, y);
-        this.page.mouse.click(x, y);
+        await this.page.mouse.click(x, y);
+        await this.waitForStability();
+        //await this.visualizer.removeActionVisuals();
+    }
+
+    async rightClick({ x, y }: { x: number, y: number }) {
+        ({ x, y } = this.transformCoordinates({ x, y }));
+        await this.visualizer.visualizeAction(x, y);
+        await this.page.mouse.click(x, y, { button: "right" });
+        await this.waitForStability();
+    }
+
+    async doubleClick({ x, y }: { x: number, y: number }) {
+        ({ x, y } = this.transformCoordinates({ x, y }));
+        await this.visualizer.visualizeAction(x, y);
+        await this.page.mouse.dblclick(x, y);
+        await this.waitForStability();
+    }
+
+    async drag({ x1, y1, x2, y2 }: { x1: number, y1: number, x2: number, y2: number }) {
+        ({ x: x1, y: y1 } = this.transformCoordinates({ x: x1, y: y1 }));
+        ({ x: x2, y: y2 } = this.transformCoordinates({ x: x2, y: y2 }));
+
+        //console.log(`Dragging: (${x1}, ${y1}) -> (${x2}, ${y2})`);
+        
+        await this.page.mouse.move(x1, y1, { steps: 1 });
+        await this.page.mouse.down();
+        await this.visualizer.visualizeAction(x1, y1);
+        await this.page.waitForTimeout(500);
+        
+        await Promise.all([
+            this.page.mouse.move(x2, y2, { steps: 20 }),
+            this.visualizer.visualizeAction(x2, y2)
+        ]);
+        // await this.page.mouse.move(x2, y2, { steps: 100 });
+        // await this.visualizer.visualizeAction(x2, y2);
+        await this.page.mouse.up();
         await this.waitForStability();
         //await this.visualizer.removeActionVisuals();
     }
@@ -197,7 +233,8 @@ export class WebHarness { // implements StateComponent
     }
 
     async navigate(url: string) {
-        await this.goto(url);
+        // Only wait for DOM content on goto since we handle waiting for network idle etc ourselves
+        await this.page.goto(url, { waitUntil: 'domcontentloaded' });
         await this.waitForStability();
     }
 

@@ -1,5 +1,17 @@
 # magnitude-core
 
+## 0.2.6
+
+### Patch Changes
+
+- impl drag, double click, right click actions
+
+## 0.2.5
+
+### Patch Changes
+
+- impl nav
+
 ## 0.2.4
 
 ### Patch Changes
