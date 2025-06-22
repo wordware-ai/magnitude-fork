@@ -5,9 +5,8 @@ import { execSync } from "child_process";
 import fs from "fs-extra";
 import path from "path";
 import os from "os";
-import { bold, blueBright, greenBright, gray, cyanBright } from "ansis";
+import { bold, blueBright, gray, cyanBright } from "ansis";
 import { intro, outro, spinner, log, text, select, confirm, isCancel, multiselect } from '@clack/prompts';
-import boxen from "boxen";
 
 const REPO_URL = "https://github.com/magnitudedev/magnitude-scaffold";
 const REPO_BRANCH = "main";
@@ -92,7 +91,7 @@ async function establishProjectInfo(info: Partial<ProjectInfo>): Promise<Project
         if (process.env.ANTHROPIC_API_KEY) {
             log.info(gray`Detected ANTHROPIC_API_KEY, using that`);
             provider = 'anthropic';
-            apiKey = process.env.ANTHROPIC_API_KEY//`ANTHROPIC_API_KEY=${process.env.ANTHROPIC_API_KEY}`;
+            apiKey = process.env.ANTHROPIC_API_KEY
         }
         else if (process.env.OPENROUTER_API_KEY) {
             let useOpenRouter = await confirm({ message: 'Detected OPENROUTER_API_KEY, use Claude via OpenRouter?' });
@@ -290,7 +289,7 @@ program
         }
         createProjectSpinner.stop(`Project created in ${projectDir}`);
         
-
+        // Detect node runtime to derive preferred install / run commands
         const exe = path.parse(process.argv[0]).base;
         let installCommand: string;
         let runCommand: string;
@@ -317,6 +316,7 @@ program
             runCommand = 'npm start';
         }
 
+        // Install dependencies in the project
         const installSpinner = spinner();
         installSpinner.start(`Installing dependencies with '${installCommand}'`);
         execSync(
