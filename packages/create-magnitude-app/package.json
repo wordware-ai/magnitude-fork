@@ -1,6 +1,6 @@
 {
   "name": "create-magnitude-app",
-  "version": "0.0.2-beta.7",
+  "version": "0.0.2-beta.13",
   "description": "Create Magnitude apps quickly",
   "type": "module",
   "publishConfig": {
@@ -33,7 +33,7 @@
     "typescript"
   ],
   "scripts": {
-    "build": "tsc && pkgroll",
+    "build": "tsup",
     "check": "tsc --noEmit",
     "cli": "bun ./src/cli.ts"
   },
@@ -48,14 +48,15 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/node": "^22.13.4",
-    "pkgroll": "^2.10.0",
+    "tsup": "^8.5.0",
     "typescript": "~5.7.2"
   },
   "dependencies": {
-    "@types/fs-extra": "^11.0.4",
     "@clack/prompts": "^0.11.0",
+    "@types/fs-extra": "^11.0.4",
+    "ansis": "^4.1.0",
     "commander": "^13.1.0",
-    "fs-extra": "^11.3.0",
-    "ansis": "^4.1.0"
+    "execa": "^9.6.0",
+    "fs-extra": "^11.3.0"
   }
 }

@@ -1,7 +1,6 @@
-#!/usr/bin/env node
-
 import { program } from "commander";
-import { execSync } from "child_process";
+//import { execSync } from "child_process";
+import { execa } from 'execa';
 import fs from "fs-extra";
 import path from "path";
 import os from "os";
@@ -172,10 +171,11 @@ async function createProject(tempDir: string, projectDir: string, project: Proje
     }
 
     // Clone scaffold into temp dir
-    execSync(
-        `git clone --depth 1 -b ${REPO_BRANCH} ${REPO_URL} ${tempDir}`,
-        { stdio: "ignore" }
-    );
+    // execSync(
+    //     `git clone --depth 1 -b ${REPO_BRANCH} ${REPO_URL} ${tempDir}`,
+    //     { stdio: "ignore" }
+    // );
+    await execa('git', ['clone', '--depth', '1', '-b', REPO_BRANCH, REPO_URL, tempDir]);
 
     //log.info(`temp dir ${tempDir} cloned`);
 
@@ -185,7 +185,8 @@ async function createProject(tempDir: string, projectDir: string, project: Proje
     if (fs.existsSync(gitDir)) {
         fs.rmSync(gitDir, { recursive: true, force: true });
     }
-    execSync("git init", { stdio: "ignore", cwd: tempDir });
+    //execSync("git init", { stdio: "ignore", cwd: tempDir });
+    await execa('git', ['init'], { cwd: tempDir });
 
     // Configure package name
     const packageJsonPath = path.join(tempDir, "package.json");
@@ -249,12 +250,51 @@ async function createProject(tempDir: string, projectDir: string, project: Proje
     return projectDir;
 }
 
+function detectRuntime(): { installCommand: string, runCommand: string } {
+    const userAgent = process.env.npm_config_user_agent;
+
+    if (userAgent?.startsWith('bun')) {
+        return {
+            installCommand: 'bun install',
+            runCommand: 'bun start',
+        };
+    }
+    if (userAgent?.startsWith('pnpm')) {
+        return {
+            installCommand: 'pnpm install',
+            runCommand: 'pnpm start',
+        };
+    }
+    if (userAgent?.startsWith('yarn')) {
+        return {
+            installCommand: 'yarn install',
+            runCommand: 'yarn start',
+        };
+    }
+    if (userAgent?.startsWith('deno')) {
+        // Deno does not have a standard "install" command like npm/bun.
+        // It caches dependencies automatically on the first run.
+        // We can suggest `deno cache` which pre-downloads and caches dependencies.
+        return {
+            installCommand: 'deno cache src/index.ts',
+            runCommand: 'deno task start',
+        };
+    }
+    
+    // Fallback to npm, which is the most common case
+    return {
+        installCommand: 'npm install',
+        runCommand: 'npm start',
+    };
+}
+
 program
     .name("create-my-app")
     .description("Create a new project from a template.")
     .argument("[project-name]", "The name for the new project.")
     //.option('-n, --name', 'project name')
     .action(async (projectName) => {
+        //console.log(`[DIAGNOSTIC] Is TTY? ${process.stdout.isTTY}`);
         // console.log("process.argv:", process.argv);
         // console.log("project name:", projectName);
         
@@ -290,39 +330,19 @@ program
         createProjectSpinner.stop(`Project created in ${projectDir}`);
         
         // Detect node runtime to derive preferred install / run commands
-        const exe = path.parse(process.argv[0]).base;
-        let installCommand: string;
-        let runCommand: string;
-
-        if (exe === 'bun' || exe === 'bunx') {
-            // bun or bunx
-            installCommand = 'bun install';
-            runCommand = 'bun start';
-        } else if (exe === 'yarn') {
-            // yarn or yarn dlx
-            installCommand = 'yarn install';
-            runCommand = 'yarn start';
-        } else if (exe === 'pnpm') {
-            // pnpm or pnpm dlx
-            installCommand = 'pnpm install';
-            runCommand = 'pnpm start';
-        } else if (exe === 'deno') {
-            // deno or deno run
-            installCommand = 'deno install';
-            runCommand = 'deno task start';
-        } else {
-            // npm, npx, or failed to detect
-            installCommand = 'npm install';
-            runCommand = 'npm start';
-        }
+        const { installCommand, runCommand } = detectRuntime();
 
         // Install dependencies in the project
         const installSpinner = spinner();
         installSpinner.start(`Installing dependencies with '${installCommand}'`);
-        execSync(
-            installCommand,
-            { cwd: projectDir, stdio: "ignore" }
-        );
+        
+        // execSync(
+        //     installCommand,
+        //     { cwd: projectDir, stdio: "ignore" }
+        // );
+        const [command, ...args] = installCommand.split(' ');
+        await execa(command, args, { cwd: projectDir });
+
         installSpinner.stop(`Installed dependencies with '${installCommand}'`);
 
         outro('Project is ready!');
