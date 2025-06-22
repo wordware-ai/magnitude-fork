@@ -128,8 +128,8 @@ async function establishProjectInfo(info: Partial<ProjectInfo>): Promise<Project
         if (!provider) {
             provider = 'openrouter';
             const key = await text({
-                message: 'Please provide a valid ANTHROPIC_API_KEY',
-                placeholder: 'sk-ant-...',
+                message: 'Please provide a valid OPENROUTER_API_KEY',
+                placeholder: 'sk-or-...',
                 validate(value) {
                     if (value.trim().length === 0) return "API key cannot be empty";
                 }
@@ -214,39 +214,35 @@ async function createProject(tempDir: string, projectDir: string, project: Proje
     }
 
     // Configure LLM client via codegen
-    //const provider = project.provider === 'anthropic' ? 'anthropic' : 'openai-generic';
-    const model = project.provider === 'anthropic' ? 'claude-sonnet-4-20250514' :
-        project.model === 'claude' ? 'anthropic/claude-sonnet-4' : 'qwen/qwen2.5-vl-72b-instruct';
-    const envVarName = project.provider === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'OPENROUTER_API_KEY';
 
     let clientSnippet;
     if (project.provider === 'anthropic') {
+        const model = 'claude-sonnet-4-20250514';
         clientSnippet=`llm: {
             provider: 'anthropic',
             options: {
                 model: '${model}',
-                apiKey: process.env.${envVarName}
+                apiKey: process.env.ANTHROPIC_API_KEY
             }
         }`;
     } else {
+        const model = project.model === 'claude' ? 'anthropic/claude-sonnet-4' : 'qwen/qwen2.5-vl-72b-instruct';
         clientSnippet=`llm: {
             provider: 'openai-generic',
             options: {
                 baseUrl: 'https://openrouter.ai/api/v1',
                 model: '${model}',
-                apiKey: process.env.${envVarName}
+                apiKey: process.env.OPENROUTER_API_KEY
             }
         }`;
     }
-    
-
-    const code = fs.readFileSync(path.join(tempDir, 'src', 'index.ts'), 'utf-8');
-
+    // Replace code
+    const code = fs.readFileSync(path.join(tempDir, 'src', 'index.ts'), 'utf-8')
     const newCode = code.replace(`url: 'https://news.ycombinator.com/show'`, `url: 'https://news.ycombinator.com/show',\n        ${clientSnippet}`);
     fs.writeFileSync(path.join(tempDir, 'src', 'index.ts'), newCode);
 
     // Configure .env with API key
-    
+    fs.writeFileSync(path.join(tempDir, '.env'), project.provider === 'anthropic' ? `ANTHROPIC_API_KEY=${project.apiKey}\n` : `OPENROUTER_API_KEY=${project.apiKey}\n`);
 
     // Finally, copy to project dir
     fs.copySync(tempDir, projectDir);
@@ -294,7 +290,7 @@ program
         }
         createProjectSpinner.stop(`Project created in ${projectDir}`);
         outro(`You're all set!`);
-        // boxen(`Next steps:\n  cd ${projectName}\n  npm install\n  npm run`
+
         console.log(boxen(`cd ${projectInfo.projectName}\nnpm install\nnpm start`, { padding: 1, margin: 1, title: 'Next steps', borderStyle: 'round', borderColor: 'blueBright'}));
     })
     .parse(process.argv);
