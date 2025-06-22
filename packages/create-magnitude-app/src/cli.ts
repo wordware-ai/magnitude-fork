@@ -204,7 +204,7 @@ async function createProject(tempDir: string, projectDir: string, project: Proje
         } else if (assistant === 'cline') {
             fs.writeFileSync(path.join(tempDir, '.clinerules'), assistantMarkdown);
         } else if (assistant === 'claudecode') {
-            fs.writeFileSync(path.join(tempDir, 'claude.md'), assistantMarkdown);
+            fs.writeFileSync(path.join(tempDir, 'CLAUDE.md'), assistantMarkdown);
         } else if (assistant === 'windsurf') {
             fs.writeFileSync(path.join(tempDir, '.windsurfrules'), assistantMarkdown);
         }
