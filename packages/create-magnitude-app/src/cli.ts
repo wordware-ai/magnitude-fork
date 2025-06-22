@@ -5,7 +5,7 @@ import { execSync } from "child_process";
 import fs from "fs-extra";
 import path from "path";
 import os from "os";
-import { bold, blueBright, greenBright, gray } from "ansis";
+import { bold, blueBright, greenBright, gray, cyanBright } from "ansis";
 import { intro, outro, spinner, log, text, select, confirm, isCancel, multiselect } from '@clack/prompts';
 import boxen from "boxen";
 
@@ -289,8 +289,48 @@ program
             process.exit(1);
         }
         createProjectSpinner.stop(`Project created in ${projectDir}`);
-        outro(`You're all set!`);
+        
 
-        console.log(boxen(`cd ${projectInfo.projectName}\nnpm install\nnpm start`, { padding: 1, margin: 1, title: 'Next steps', borderStyle: 'round', borderColor: 'blueBright'}));
+        const exe = path.parse(process.argv[0]).base;
+        let installCommand: string;
+        let runCommand: string;
+
+        if (exe === 'bun' || exe === 'bunx') {
+            // bun or bunx
+            installCommand = 'bun install';
+            runCommand = 'bun start';
+        } else if (exe === 'yarn') {
+            // yarn or yarn dlx
+            installCommand = 'yarn install';
+            runCommand = 'yarn start';
+        } else if (exe === 'pnpm') {
+            // pnpm or pnpm dlx
+            installCommand = 'pnpm install';
+            runCommand = 'pnpm start';
+        } else if (exe === 'deno') {
+            // deno or deno run
+            installCommand = 'deno install';
+            runCommand = 'deno task start';
+        } else {
+            // npm, npx, or failed to detect
+            installCommand = 'npm install';
+            runCommand = 'npm start';
+        }
+
+        const installSpinner = spinner();
+        installSpinner.start(`Installing dependencies with '${installCommand}'`);
+        execSync(
+            installCommand,
+            { cwd: projectDir, stdio: "ignore" }
+        );
+        installSpinner.stop(`Installed dependencies with '${installCommand}'`);
+
+        outro('Project is ready!');
+
+        console.log(bold(blueBright`Next steps:`));
+        console.log(`◆ Run the example automation: ` + cyanBright`cd ${projectInfo.projectName} && ${runCommand}`);
+        console.log(`◆ Check out our docs: ${blueBright('https://docs.magnitude.run')}`);
+        console.log(`◆ Join our Discord: ${blueBright('https://discord.gg/VcdpMh9tTy')}`);
+        console.log();
     })
     .parse(process.argv);
