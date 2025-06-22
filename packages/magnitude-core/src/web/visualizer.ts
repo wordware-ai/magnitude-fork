@@ -32,6 +32,9 @@ export class ActionVisualizer {
         this.lastPosition = { x, y };
         // Create or update the mouse pointer visual, showing the click effect
         await this._drawVisual(x, y, true);
+        // The pointer visual takes 0.3s on the transition, but awaiting script evaluation does not wait for this to complete.
+        // So we wait 300ms manually.
+        await this.page.waitForTimeout(300);
     }
 
     async redrawLastPosition(): Promise<void> {
@@ -92,6 +95,7 @@ export class ActionVisualizer {
                         pointerElement.style.position = 'absolute';
                         pointerElement.style.zIndex = '9999';
                         pointerElement.style.pointerEvents = 'none'; // Don't interfere with actual clicks
+                        // Notice that transition is 300ms
                         pointerElement.style.transition = 'left 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), top 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)';
 
                         // Set the innerHTML to the new SVG
