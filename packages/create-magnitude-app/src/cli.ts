@@ -25,7 +25,8 @@ interface ProjectInfo {
     model: 'claude' | 'qwen',
     provider: 'anthropic' | 'openrouter',
     apiKey: string,
-    assistants: ('cursor' | 'claudecode' | 'cline' | 'windsurf')[]
+    assistant: 'cursor' | 'claudecode' | 'cline' | 'windsurf' | 'none',
+    //assistants: ('cursor' | 'claudecode' | 'cline' | 'windsurf')[]
     // assistants: {
     //     cursor: boolean,
     //     cline: boolean,
@@ -140,23 +141,23 @@ async function establishProjectInfo(info: Partial<ProjectInfo>): Promise<Project
         }
     }
 
-    let assistants = await multiselect({
-        message: 'Are you using any code assistants?',
+    let assistant = await select({
+        message: 'Are you using a code assistant?',
         options: [
             { value: 'claudecode', label: 'Claude Code' }, // claude.md
             { value: 'cline', label: 'Cline' }, // .clinerules
             { value: 'cursor', label: 'Cursor' }, // .cursorrules
-            { value: 'windsurf', label: 'Windsurf' } // .windsurfrules
+            { value: 'windsurf', label: 'Windsurf' }, // .windsurfrules
+            { value: 'none', label: 'None' },
         ],
-        required: false
+        
     });
 
-    if (isCancel(assistants)) {
-        assistants = [];
+    if (isCancel(assistant)) {
+        assistant = 'none';
     }
 
-    //return {...info, ...answers} as ProjectInfo;
-    return { projectName, model, provider, apiKey: apiKey!, assistants };
+    return { projectName, model, provider, apiKey: apiKey!, assistant };
 }
 
 async function createProject(tempDir: string, projectDir: string, project: ProjectInfo) {
@@ -198,18 +199,16 @@ async function createProject(tempDir: string, projectDir: string, project: Proje
 
     // Configure assistant files
     const assistantMarkdown = fs.readFileSync(path.join(tempDir, '.cursorrules'), 'utf-8');
-    for (const assistant of project.assistants) {
-        if (assistant === 'cursor') {
-            continue;
-        } else if (assistant === 'cline') {
-            fs.writeFileSync(path.join(tempDir, '.clinerules'), assistantMarkdown);
-        } else if (assistant === 'claudecode') {
-            fs.writeFileSync(path.join(tempDir, 'CLAUDE.md'), assistantMarkdown);
-        } else if (assistant === 'windsurf') {
-            fs.writeFileSync(path.join(tempDir, '.windsurfrules'), assistantMarkdown);
-        }
+    //for (const assistant of project.assistants) {
+    if (project.assistant === 'cline') {
+        fs.writeFileSync(path.join(tempDir, '.clinerules'), assistantMarkdown);
+    } else if (project.assistant === 'claudecode') {
+        fs.writeFileSync(path.join(tempDir, 'CLAUDE.md'), assistantMarkdown);
+    } else if (project.assistant === 'windsurf') {
+        fs.writeFileSync(path.join(tempDir, '.windsurfrules'), assistantMarkdown);
     }
-    if (!(project.assistants.includes('cursor'))) {
+
+    if (project.assistant !== 'cursor') {
         fs.rmSync(path.join(tempDir, '.cursorrules'));
     }
 
