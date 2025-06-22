@@ -1,15 +1,16 @@
 {
   "name": "create-magnitude-app",
-  "version": "0.0.1",
+  "version": "0.0.2-beta.4",
   "description": "Create Magnitude apps quickly",
+  "type": "module",
   "publishConfig": {
     "access": "public"
   },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.cts",
   "bin": {
     "create-magnitude-app": "dist/cli.js"
+  },
+  "exports": {
+    ".": "./dist/cli.js"
   },
   "repository": {
     "type": "git",
@@ -32,7 +33,7 @@
     "typescript"
   ],
   "scripts": {
-    "build": "baml-cli generate && tsc && pkgroll",
+    "build": "tsc && pkgroll",
     "check": "tsc --noEmit",
     "cli": "bun ./src/cli.ts"
   },
