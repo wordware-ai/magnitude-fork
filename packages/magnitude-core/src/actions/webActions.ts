@@ -202,7 +202,7 @@ export const newTabAction = createAction({
         const harness = webConnector.getHarness();
         await harness.newTab();
     },
-    render: () => `⊞ opened new tab`
+    render: () => `⊞ open new tab`
 });
 
 export const navigateAction = createAction({
@@ -216,7 +216,7 @@ export const navigateAction = createAction({
         const harness = webConnector.getHarness();
         await harness.navigate(url);
     },
-    render: ({ url }) => `⛓︎ navigated to ${url}`
+    render: ({ url }) => `⛓︎ navigate to ${url}`
 });
 
 export const goBackAction = createAction({
@@ -228,7 +228,7 @@ export const goBackAction = createAction({
         const harness = webConnector.getHarness();
         await harness.goBack();
     },
-    render: () => `← navigated back`
+    render: () => `← navigate back`
 });
 
 // gets overused currently if we include this
@@ -241,7 +241,7 @@ export const waitAction = createAction({
     resolver: async ({ input: { seconds }, agent }) => {
         await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
     },
-    render: ({ seconds }) => `◴ waited for ${seconds}s`
+    render: ({ seconds }) => `◴ wait for ${seconds}s`
 });
 
 // export const webActions = [

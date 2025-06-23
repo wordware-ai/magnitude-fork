@@ -3,10 +3,11 @@ import { Agent, AgentOptions } from ".";
 import { BrowserConnector, BrowserConnectorOptions } from "@/connectors/browserConnector";
 import { buildDefaultBrowserAgentOptions } from "@/ai/util";
 import { LLMClient } from "@/ai/types";
-import { Schema } from "zod";
+import { Schema, ZodSchema } from "zod";
 import z from "zod";
 import { renderMinimalAccessibilityTree } from "@/web/util";
-import { narrateAgent } from "./narrator";
+import { narrateAgent, narrateBrowserAgent } from "./narrator";
+import EventEmitter from "eventemitter3";
 
 // export interface StartAgentWithWebOptions {
 //     agentBaseOptions?: Partial<AgentOptions>;
@@ -27,7 +28,7 @@ export async function startBrowserAgent(
     });
 
     if (options?.narrate || process.env.MAGNITUDE_NARRATE) {
-        narrateAgent(agent);
+        narrateBrowserAgent(agent);
         //agent.events.on('actionStarted', (action: any) => { console.log(action) })
     }
 
@@ -35,7 +36,27 @@ export async function startBrowserAgent(
     return agent;
 }
 
+// Anything that could be extracted with a zod schema
+type ExtractedOutput =
+    | string
+    | number
+    | boolean
+    | bigint
+    | Date
+    | null
+    | undefined
+    | { [key: string]: ExtractedOutput }
+    | ExtractedOutput[];
+
+export interface BrowserAgentEvents {
+    'nav': (url: string) => void;
+    'extractStarted': (instructions: string, schema: ZodSchema) => void;
+    'extractDone': (instructions: string, data: ExtractedOutput) => void;
+}
+
 export class BrowserAgent extends Agent {
+    public readonly browserAgentEvents: EventEmitter<BrowserAgentEvents> = new EventEmitter();
+
     constructor({ agentOptions, browserOptions }: { agentOptions?: Partial<AgentOptions>, browserOptions?: BrowserConnectorOptions }) {
         //console.log("agent options:", agent);
         super({
@@ -53,15 +74,21 @@ export class BrowserAgent extends Agent {
     }
 
     async nav(url: string): Promise<void> {
+        this.browserAgentEvents.emit('nav', url);
         await this.require(BrowserConnector).getHarness().navigate(url);
     }
 
     async extract<T extends Schema>(instructions: string, schema: T): Promise<z.infer<T>> {
+        this.browserAgentEvents.emit('extractStarted', instructions, schema);
         //const htmlContent = await this.page.content();
         const accessibilityTree = await this.page.accessibility.snapshot({ interestingOnly: true });
         const pageRepr = renderMinimalAccessibilityTree(accessibilityTree);
         const screenshot = await this.require(BrowserConnector).getHarness().screenshot();
-        return await this.model.extract(instructions, schema, screenshot, pageRepr);
+        const data = await this.model.extract(instructions, schema, screenshot, pageRepr);
+
+        this.browserAgentEvents.emit('extractDone', instructions, data);
+
+        return data;
     }
 
     // async check(description: string): Promise<boolean> {
