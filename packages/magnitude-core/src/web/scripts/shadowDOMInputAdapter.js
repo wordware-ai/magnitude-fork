@@ -15,6 +15,9 @@ module.exports = function getShadowDOMInputAdapterScript() {
       boundHandleDocumentMousedown: null,
       boundHandleDocumentClick: null, // For click event prevention
       boundHandleOutsidePopupClick: null,
+      boundHandleDocumentKeydown: null, // For select typeahead
+      searchString: '', // For select typeahead
+      searchTimeoutId: null, // For select typeahead
 
       // --- Initialization and Cleanup ---
       init: function() {
@@ -23,12 +26,14 @@ module.exports = function getShadowDOMInputAdapterScript() {
         
         this.boundHandleDocumentClick = this.handleDocumentClick.bind(this);
         document.addEventListener('click', this.boundHandleDocumentClick, true);
+        
+        this.boundHandleDocumentKeydown = this.handleDocumentKeydown.bind(this); // Added for select typeahead
 
-        console.log('Shadow DOM Input Adapter mousedown and click listeners added.');
+        console.log('Shadow DOM Input Adapter mousedown, click, and keydown listeners prepared.');
       },
 
       cleanup: function() {
-        this.closeActivePopup();
+        this.closeActivePopup(); // This will also remove keydown listener if active
         if (this.boundHandleDocumentMousedown) {
           document.removeEventListener('mousedown', this.boundHandleDocumentMousedown, true);
           this.boundHandleDocumentMousedown = null;
@@ -36,6 +41,10 @@ module.exports = function getShadowDOMInputAdapterScript() {
         if (this.boundHandleDocumentClick) {
           document.removeEventListener('click', this.boundHandleDocumentClick, true);
           this.boundHandleDocumentClick = null;
+        }
+        // Ensure keydown listener is removed if it was somehow left active
+        if (this.boundHandleDocumentKeydown && this.activePopupType !== 'select') { // Only if not handled by closeActivePopup
+             document.removeEventListener('keydown', this.boundHandleDocumentKeydown, true);
         }
         console.log('Shadow DOM Input Adapter cleaned up.');
       },
@@ -101,6 +110,12 @@ module.exports = function getShadowDOMInputAdapterScript() {
           document.removeEventListener('mousedown', this.boundHandleOutsidePopupClick, true);
           this.boundHandleOutsidePopupClick = null;
         }
+        if (this.activePopupType === 'select' && this.boundHandleDocumentKeydown) {
+          document.removeEventListener('keydown', this.boundHandleDocumentKeydown, true);
+        }
+        clearTimeout(this.searchTimeoutId);
+        this.searchString = '';
+        this.searchTimeoutId = null;
       },
 
       _setupOutsideClickListener: function() {
@@ -223,9 +238,94 @@ module.exports = function getShadowDOMInputAdapterScript() {
         this.activePopupOriginalElement = select;
         select.blur();
         this._setupOutsideClickListener();
+
+        // For typeahead
+        this.searchString = '';
+        clearTimeout(this.searchTimeoutId);
+        document.addEventListener('keydown', this.boundHandleDocumentKeydown, true);
+
         console.log('Custom select dropdown created for:', select.id || select.name);
       },
 
+      // --- Keydown Handler for Select Typeahead ---
+      handleDocumentKeydown: function(e) {
+        if (!this.activePopup || this.activePopupType !== 'select' || !this.activePopupOriginalElement) {
+          return;
+        }
+
+        // Ignore modifier keys, navigation keys, Escape, Tab (but handle Enter)
+        if (e.metaKey || e.ctrlKey || e.altKey || 
+            ['Shift', 'Control', 'Alt', 'Meta', 'Escape', 'Tab', 
+             'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 
+             'Home', 'End', 'PageUp', 'PageDown'].includes(e.key)) {
+          if (e.key === 'Escape') {
+            this.closeActivePopup();
+          }
+          return;
+        }
+
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          e.stopImmediatePropagation(); // Changed to stopImmediatePropagation
+          const options = Array.from(this.activePopup.querySelectorAll('[data-index]'));
+          const highlightedOption = options.find(opt => opt.style.backgroundColor === 'rgb(173, 216, 230)'); // Light blue in rgb
+
+          if (highlightedOption) {
+            const index = parseInt(highlightedOption.getAttribute('data-index'));
+            const select = this.activePopupOriginalElement;
+            select.selectedIndex = index;
+            select.dispatchEvent(new Event('input', { bubbles: true }));
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+            this.closeActivePopup();
+          }
+          return;
+        }
+        
+        // Prevent default browser behavior for printable characters when dropdown is open
+        // e.g. page search
+        if (e.key.length === 1) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+
+        clearTimeout(this.searchTimeoutId);
+        this.searchString += e.key.toLowerCase();
+
+        this.searchTimeoutId = setTimeout(() => {
+          this.searchString = '';
+        }, 800); // Reset search string after 800ms of inactivity
+
+        const options = Array.from(this.activePopup.querySelectorAll('[data-index]'));
+        let matchedOption = null;
+
+        for (const optionElement of options) {
+          if (optionElement.textContent.toLowerCase().startsWith(this.searchString)) {
+            matchedOption = optionElement;
+            break;
+          }
+        }
+
+        if (matchedOption) {
+          options.forEach(opt => {
+            // Reset background for all options, considering original selected state
+            const optIndex = parseInt(opt.getAttribute('data-index'));
+            const originalSelect = this.activePopupOriginalElement;
+            opt.style.backgroundColor = optIndex === originalSelect.selectedIndex ? '#e0e0e0' : 'white';
+            // Reset hover effect styles if any were applied directly
+            opt.onmouseenter = function() { this.style.backgroundColor = optIndex === originalSelect.selectedIndex ? '#d0d0d0' : '#f0f0f0'; };
+            opt.onmouseleave = function() { this.style.backgroundColor = optIndex === originalSelect.selectedIndex ? '#e0e0e0' : 'white'; };
+          });
+          
+          // Highlight the matched option
+          matchedOption.style.backgroundColor = '#add8e6'; // Light blue for highlight
+          // Temporarily override hover for matched item to keep highlight
+          matchedOption.onmouseenter = function() { this.style.backgroundColor = '#add8e6'; }; 
+          
+          matchedOption.scrollIntoView({ block: 'nearest' });
+        }
+      },
+      
       // --- DATE Input Specific Logic ---
       handleDateInputInteraction: function(dateInputElement, event) {
         event.preventDefault();
