@@ -6,6 +6,7 @@ import path from "path";
 import os from "os";
 import { bold, blueBright, gray, cyanBright } from "ansis";
 import { intro, outro, spinner, log, text, select, confirm, isCancel, multiselect } from '@clack/prompts';
+import { VERSION } from "./version";
 
 const REPO_URL = "https://github.com/magnitudedev/magnitude-scaffold";
 const REPO_BRANCH = "main";
@@ -223,7 +224,7 @@ async function createProject(tempDir: string, projectDir: string, project: Proje
                 model: '${model}',
                 apiKey: process.env.ANTHROPIC_API_KEY
             }
-        }`;
+        },`;
     } else {
         const model = project.model === 'claude' ? 'anthropic/claude-sonnet-4' : 'qwen/qwen2.5-vl-72b-instruct';
         clientSnippet=`llm: {
@@ -233,11 +234,11 @@ async function createProject(tempDir: string, projectDir: string, project: Proje
                 model: '${model}',
                 apiKey: process.env.OPENROUTER_API_KEY
             }
-        }`;
+        },`;
     }
     // Replace code
     const code = fs.readFileSync(path.join(tempDir, 'src', 'index.ts'), 'utf-8')
-    const newCode = code.replace(`url: 'https://news.ycombinator.com/show'`, `url: 'https://news.ycombinator.com/show',\n        ${clientSnippet}`);
+    const newCode = code.replace(`narrate: true,`, `narrate: true,\n        // LLM configuration\n        ${clientSnippet}`);
     fs.writeFileSync(path.join(tempDir, 'src', 'index.ts'), newCode);
 
     // Configure .env with API key
@@ -288,8 +289,8 @@ function detectRuntime(): { installCommand: string, runCommand: string } {
 }
 
 program
-    .name("create-my-app")
-    .description("Create a new project from a template.")
+    .name("create-magnitude-app")
+    .description("Create a new Magnitude project from a template.")
     .argument("[project-name]", "The name for the new project.")
     //.option('-n, --name', 'project name')
     .action(async (projectName) => {
@@ -299,7 +300,7 @@ program
         
         if (process.stdout.columns >= 50) console.log(bold(blueBright`${title}`));
 
-        intro('create-magnitude-app');
+        intro(`create-magnitude-app@${VERSION}`);
         const projectInfo = await establishProjectInfo({ projectName });
         //console.log(projectInfo);
 
