@@ -1,5 +1,13 @@
 # magnitude-test
 
+## 0.2.8
+
+### Patch Changes
+
+- narrate mode, auto pipe to pino pretty, disable logging by default for core, fix playground env, pretty action output in test runner
+- Updated dependencies
+  - magnitude-core@0.2.7
+
 ## 0.2.7
 
 ### Patch Changes
