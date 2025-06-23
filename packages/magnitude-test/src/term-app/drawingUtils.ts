@@ -1,4 +1,4 @@
-import { ActionDescriptor, FailureDescriptor } from 'magnitude-core';
+//import { ActionDescriptor, FailureDescriptor } from 'magnitude-core';
 import { ANSI_RESET, ANSI_GREEN, ANSI_BRIGHT_BLUE, ANSI_GRAY, ANSI_RED } from './constants';
 import { TestState } from '@/runner/state';
 
@@ -18,42 +18,6 @@ export const str = (s: string): number => {
 // createBoxAnsi was here
 // insertLineIntoBoxAnsi was here
 
-/**
- * Format a description of an action.
- * @param action The action descriptor
- * @returns Plain string description
- */
-export function describeAction(action: ActionDescriptor): string {
-    // Returns plain string
-    switch (action.variant) {
-        case 'load': return `navigated to URL: ${action.url}`;
-        case 'click': return `clicked ${action.target}`;
-        case 'type': return `typed "${action.content}" into ${action.target}`;
-        case 'scroll': return `scrolled (${action.deltaX}, ${action.deltaY})`;
-        case 'tab': return `switched to tab ${action.index}`;
-        default: return `unknown action: ${(action as any).variant}`;
-    }
-}
-
-/**
- * Get a symbol representing an action type.
- * @param variant The action variant
- * @returns Plain character symbol
- */
-export function getActionSymbol(variant: string): string {
-    // Returns plain char
-    switch (variant) {
-        case "load": return "↻";
-        case "click": return "⊙";
-        //case "hover": return "◉";
-        case "type": return "⏎";
-        case "scroll": return "⇅";
-        case "tab": return "⇆";
-        //case "wait": return "◴";
-        //case "back": return "←";
-        default: return "?";
-    }
-}
 
 /**
  * Get the status indicator character for a test.

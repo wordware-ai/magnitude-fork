@@ -87,7 +87,7 @@ export async function sendTelemetry(state: TestState) {
         if (item.variant === 'step') {
             numSteps += 1;
             for (const action of item.actions) {
-                if (action.variant.startsWith("browser") || action.variant.startsWith("keyboard") || action.variant.startsWith("mouse")) {
+                if (action.action.variant.startsWith("browser") || action.action.variant.startsWith("keyboard") || action.action.variant.startsWith("mouse")) {
                     browserActionCount += 1;
                 }
             }

@@ -1,6 +1,5 @@
 import logUpdate from 'log-update';
 import { RegisteredTest } from '@/discovery/types';
-import { Action } from 'magnitude-core';
 import { TestFailure, TestState as RunnerTestState, StepDescriptor as RunnerStepDescriptor, CheckDescriptor as RunnerCheckDescriptor } from '@/runner/state';
 import { AllTestStates } from './types';
 import { VERSION } from '@/version';
@@ -96,11 +95,11 @@ export function generateTestString(test: RegisteredTest, state: RunnerTestState,
             output.push(UI_LEFT_PADDING + ' '.repeat(stepIndent) + `${styledChar} ${itemDesc}`);
 
             if (renderSettings.showActions && item.variant === 'step' && (item as RunnerStepDescriptor).actions.length > 0) {
-                (item as RunnerStepDescriptor).actions.forEach((action: Action) => {
-                    const actionSymbol = `${ANSI_GRAY}▶${ANSI_RESET}`; 
-                    const actionDesc = JSON.stringify(action);
+                (item as RunnerStepDescriptor).actions.forEach((action) => {
+                    // const actionSymbol = `${ANSI_GRAY}▶${ANSI_RESET}`; 
+                    // const actionDesc = JSON.stringify(action);
                     // No wrapping for action description
-                    output.push(UI_LEFT_PADDING + ' '.repeat(actionIndent) + `${actionSymbol} ${ANSI_GRAY}${actionDesc}${ANSI_RESET}`);
+                    output.push(UI_LEFT_PADDING + ' '.repeat(actionIndent) + `${ANSI_GRAY}${action.pretty}${ANSI_RESET}`);//`${actionSymbol} ${ANSI_GRAY}${actionDesc}${ANSI_RESET}`);
                 });
             }
         });

@@ -2,10 +2,16 @@ import { TestCaseAgent } from "@/agent"
 import { Action, LLMClient, LLMClientIdentifier, ModelUsage } from "magnitude-core"
 import EventEmitter from "eventemitter3";
 
+export interface ActionDescriptor {
+    action: Action,
+    pretty: string
+}
+
 export interface StepDescriptor {
     variant: 'step',
     description: string,
-    actions: Action[]
+    actions: ActionDescriptor[],
+    //actions: Action[]
     status: 'pending' | 'running' | 'passed' | 'failed' | 'cancelled'
 }
 
@@ -161,7 +167,10 @@ export class TestStateTracker {
         if (!this.lastStepOrCheck || this.lastStepOrCheck.variant !== 'step') {
             throw new Error('Action reported without preceding step');
         }
-        this.lastStepOrCheck.actions.push(action);
+        this.lastStepOrCheck.actions.push({
+            action: action,
+            pretty: this.agent.identifyAction(action).render(action)
+        });
         this.events.emit('stateChanged', this.state);
     }
 
