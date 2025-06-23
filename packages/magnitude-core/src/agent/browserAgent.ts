@@ -16,7 +16,7 @@ const DEFAULT_BROWSER_AGENT_TEMP = 0.2;
 
 // Helper function to start a web agent
 export async function startBrowserAgent(
-    options?: AgentOptions & BrowserConnectorOptions //StartAgentWithWebOptions = {}
+    options?: AgentOptions & BrowserConnectorOptions & { show?: boolean }//StartAgentWithWebOptions = {}
 ): Promise<BrowserAgent> {
     const { agentOptions, browserOptions } = buildDefaultBrowserAgentOptions({ agentOptions: options ?? {}, browserOptions: options ?? {} });
 
@@ -24,6 +24,11 @@ export async function startBrowserAgent(
         agentOptions: agentOptions,
         browserOptions: browserOptions,
     });
+
+    if (options?.show) {
+        //agent.events.on('actionStarted', (action: any) => { console.log(action) })
+    }
+
     await agent.start();
     return agent;
 }

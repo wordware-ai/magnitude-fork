@@ -40,7 +40,7 @@
         "magnus": "dist/cli.js",
       },
       "dependencies": {
-        "@boundaryml/baml": "^0.86.0",
+        "@boundaryml/baml": "^0.90.2",
         "@types/object-hash": "^3.0.6",
         "commander": "^13.1.0",
         "eventemitter3": "^5.0.1",
@@ -108,21 +108,21 @@
   "packages": {
     "@babel/runtime": ["@babel/runtime@7.27.1", "", {}, "sha512-1x3D2xEk2fRo3PAhwQwu5UubzgiVWSXTBfWpVd2Mx2AzRqJuDJCsgaDVZ7HB5iGzDW1Hl1sWN2mFyKjmR9uAog=="],
 
-    "@boundaryml/baml": ["@boundaryml/baml@0.86.1", "", { "dependencies": { "@scarf/scarf": "^1.3.0" }, "optionalDependencies": { "@boundaryml/baml-darwin-arm64": "0.86.1", "@boundaryml/baml-darwin-x64": "0.86.1", "@boundaryml/baml-linux-arm64-gnu": "0.86.1", "@boundaryml/baml-linux-arm64-musl": "0.86.1", "@boundaryml/baml-linux-x64-gnu": "0.86.1", "@boundaryml/baml-linux-x64-musl": "0.86.1", "@boundaryml/baml-win32-x64-msvc": "0.86.1" }, "bin": { "baml-cli": "cli.js" } }, "sha512-Yk6Ria8wPTQ3hlpSMV7jBuzCtWUOgQWFnVc/c+HyXfvkBYQ/PO0KbZfjGsZ38nN/BvQ0jp/fIzGQiPuEM2k2uw=="],
+    "@boundaryml/baml": ["@boundaryml/baml@0.90.2", "", { "dependencies": { "@scarf/scarf": "^1.3.0" }, "optionalDependencies": { "@boundaryml/baml-darwin-arm64": "0.90.2", "@boundaryml/baml-darwin-x64": "0.90.2", "@boundaryml/baml-linux-arm64-gnu": "0.90.2", "@boundaryml/baml-linux-arm64-musl": "0.90.2", "@boundaryml/baml-linux-x64-gnu": "0.90.2", "@boundaryml/baml-linux-x64-musl": "0.90.2", "@boundaryml/baml-win32-x64-msvc": "0.90.2" }, "bin": { "baml-cli": "cli.js" } }, "sha512-l15bRRCn7ysdlU0WRRr3csN9ROVaRiRK8KAEm+9k439LBMnB0o/bMy8jYlKS5jIuH6uvwZ8mQnMCe/2o2tSgyg=="],
 
-    "@boundaryml/baml-darwin-arm64": ["@boundaryml/baml-darwin-arm64@0.86.1", "", { "os": "darwin", "cpu": "arm64" }, "sha512-YpBhYJAoO3AiRcosE99gwozxarKizlbH3C+yjJB855Zgi/XOT1NWTPoR47kAJZEEvFn7Shr08zhtEccbjOegMw=="],
+    "@boundaryml/baml-darwin-arm64": ["@boundaryml/baml-darwin-arm64@0.90.2", "", { "os": "darwin", "cpu": "arm64" }, "sha512-jQR9Cx5N8CIgRTI7Muaofpj85+KqtAfUEWWVUvbbT6s4BHydDiaOXhEZb8+wm6mqITpB9PuLlRCmY+W5WuAtxw=="],
 
-    "@boundaryml/baml-darwin-x64": ["@boundaryml/baml-darwin-x64@0.86.1", "", { "os": "darwin", "cpu": "x64" }, "sha512-tvXpU8Ui2/rl7q5XvZnZhusmN/PmUQzaxeBRRY0gyosw7pECblk8vT62lBKGqYab3pYC29Vn2TqxJM1piHTwDw=="],
+    "@boundaryml/baml-darwin-x64": ["@boundaryml/baml-darwin-x64@0.90.2", "", { "os": "darwin", "cpu": "x64" }, "sha512-jAWa2SBvDDkJIsCgv7AWstYZJY3vBnFafpP//I5xBN50w1cfHEm9ssY7VD3sAeqOBUjQqq5cg/adDPyaqHAC5Q=="],
 
-    "@boundaryml/baml-linux-arm64-gnu": ["@boundaryml/baml-linux-arm64-gnu@0.86.1", "", { "os": "linux", "cpu": "arm64" }, "sha512-W5WNAwvSA2OckdXVG9zZMUl6onqLLurzCcgO3LQTZoZOR2ffgMTRLki1DtPM6OhF1bOf/I1kFLWDmLXOC8t2Pg=="],
+    "@boundaryml/baml-linux-arm64-gnu": ["@boundaryml/baml-linux-arm64-gnu@0.90.2", "", { "os": "linux", "cpu": "arm64" }, "sha512-lz4WyRzzLfaaCo8sJtTm8A5BWgk3lkPztcXShXFC11vpOFaqYZsYPhRJ95jjpD3DmfBr3wn1LxEj+CHvZw62bQ=="],
 
-    "@boundaryml/baml-linux-arm64-musl": ["@boundaryml/baml-linux-arm64-musl@0.86.1", "", { "os": "linux", "cpu": "arm64" }, "sha512-+UO6OnlwS1x8ZMTZtWihT2O1MSp5k4cORXeVvW/9AdCdtbea0pcsmSkn/Wgoma7W5VVSRtrDipQlxs7M5JGtwA=="],
+    "@boundaryml/baml-linux-arm64-musl": ["@boundaryml/baml-linux-arm64-musl@0.90.2", "", { "os": "linux", "cpu": "arm64" }, "sha512-kBKePP20bA5scV7n6j00BKs7q2Xv4/gmp75vXMxagEg8okKdRDb+8MwLy7ArqTyzN8kCePUy2kHUAWCGl5TJBQ=="],
 
-    "@boundaryml/baml-linux-x64-gnu": ["@boundaryml/baml-linux-x64-gnu@0.86.1", "", { "os": "linux", "cpu": "x64" }, "sha512-mCmAYWjgiTYN+Jso+Fy8BnCil1RLWsu79LIONk4AyKIXzcvkcN9Abors0KxRA4HOFFeypJ9gotls3bITlDMZ/w=="],
+    "@boundaryml/baml-linux-x64-gnu": ["@boundaryml/baml-linux-x64-gnu@0.90.2", "", { "os": "linux", "cpu": "x64" }, "sha512-9pqBACie0Kxbx4Bx7CPFeao5v1g2BQGsvcc/vyu5Wd8JQi7CJfpUuzA5E8+YSEdLn7cRV76p4QzHdorq5/kNNw=="],
 
-    "@boundaryml/baml-linux-x64-musl": ["@boundaryml/baml-linux-x64-musl@0.86.1", "", { "os": "linux", "cpu": "x64" }, "sha512-NyE9QUmWlp5BUJG9PvUrxqR5vU/yADZ0YF07ntWNFDkl8YwGkdbmbgQFCxQv1iSkVOgC6voix7rfRecS9B1m+w=="],
+    "@boundaryml/baml-linux-x64-musl": ["@boundaryml/baml-linux-x64-musl@0.90.2", "", { "os": "linux", "cpu": "x64" }, "sha512-LF75E6ubHCVBQh/V3ikGsWBnC6+TNn1GL3yjsaKRwii/7zzbXeIwofQtTuBC8QMRXhsG/w4b3MRqQHZDsQg+KQ=="],
 
-    "@boundaryml/baml-win32-x64-msvc": ["@boundaryml/baml-win32-x64-msvc@0.86.1", "", { "os": "win32", "cpu": "x64" }, "sha512-2E+zNKB2rKUpOJD/E0pueKw5f35f+KpFb3l/hxBePnDNAVPP9LOoSOP2AKE/st53ZywTdSr1LyueWZrV173U5g=="],
+    "@boundaryml/baml-win32-x64-msvc": ["@boundaryml/baml-win32-x64-msvc@0.90.2", "", { "os": "win32", "cpu": "x64" }, "sha512-GnCya0as25MRi9uW5DRar+sIkmUPJ9r0rlP/fTvOFGQ2+/0cplYPmMA/XvzGxLdbD8dnfAGStsNYfxHHicMKVw=="],
 
     "@changesets/apply-release-plan": ["@changesets/apply-release-plan@7.0.12", "", { "dependencies": { "@changesets/config": "^3.1.1", "@changesets/get-version-range-type": "^0.4.0", "@changesets/git": "^3.0.4", "@changesets/should-skip-package": "^0.1.2", "@changesets/types": "^6.1.0", "@manypkg/get-packages": "^1.1.3", "detect-indent": "^6.0.0", "fs-extra": "^7.0.1", "lodash.startcase": "^4.4.0", "outdent": "^0.5.0", "prettier": "^2.7.1", "resolve-from": "^5.0.0", "semver": "^7.5.3" } }, "sha512-EaET7As5CeuhTzvXTQCRZeBUcisoYPDDcXvgTE/2jmmypKp0RC7LxKj/yzqeh/1qFTZI7oDGFcL1PHRuQuketQ=="],
 

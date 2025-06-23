@@ -1,3 +1,4 @@
+process.env.BAML_LOG='off';
 import { setLogLevel } from '@/ai/baml_client/config';
 
 export { Agent } from "@/agent";

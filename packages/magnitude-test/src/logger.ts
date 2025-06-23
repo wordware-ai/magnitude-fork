@@ -1,7 +1,7 @@
 import pino from 'pino';
 
 export const logger = pino({
-    level: process.env.MAGNITUDE_LOG_LEVEL || 'info',
+    level: process.env.MAGNITUDE_LOG_LEVEL || 'warn',
     transport: process.stdout.isTTY ? {
         target: 'pino-pretty',
         options: {

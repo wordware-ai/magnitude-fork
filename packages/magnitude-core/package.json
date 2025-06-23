@@ -51,7 +51,7 @@
     "typescript": "~5.7.2"
   },
   "dependencies": {
-    "@boundaryml/baml": "^0.86.0",
+    "@boundaryml/baml": "^0.90.2",
     "@types/object-hash": "^3.0.6",
     "commander": "^13.1.0",
     "eventemitter3": "^5.0.1",
