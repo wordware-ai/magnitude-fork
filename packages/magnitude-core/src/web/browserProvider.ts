@@ -92,10 +92,25 @@ export class BrowserProvider {
 
     public async newContext(options?: BrowserOptions): Promise<BrowserContext> {
         if (process.env.MAGNTIUDE_PLAYGROUND) {
-            this.logger.trace("MAGNITUDE_PLAYGROUND environment detected, connecting to browser via CDP");
+            // this.logger.trace("MAGNITUDE_PLAYGROUND environment detected, connecting to browser via CDP");
             // Playground environment - force use CDP on 9222
-            const browser = await chromium.connectOverCDP('http://localhost:9222');
-            return browser.newContext(options?.contextOptions);
+            //const browser = await chromium.connectOverCDP('http://localhost:9222');
+            //return browser.newContext(options?.contextOptions);
+            this.logger.trace("MAGNITUDE_PLAYGROUND environment detected, applying playground launch options");
+            const playgroundLaunchOptions = {
+                args: [
+                    '--remote-debugging-port=9222',
+                    '--no-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu'
+                ]
+            };
+            // Overwrite any launch options, instance, or cdp configuration with playground launch options
+            // Passthrough context options (?)
+            options = {
+                launchOptions: playgroundLaunchOptions,
+                contextOptions: options?.contextOptions,
+            };
         }
 
         if (options) {
