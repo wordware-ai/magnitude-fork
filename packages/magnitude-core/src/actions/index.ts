@@ -7,6 +7,7 @@ export interface ActionDefinition<T> {
     description?: string;
     schema: Schema<T>;
     resolver: ({ input, agent }: { input: T, agent: Agent }) => Promise<void | ObservableData>;
+    render: (action: T) => string
 }
 
 export function createAction<S extends ZodTypeAny>(
@@ -15,6 +16,7 @@ export function createAction<S extends ZodTypeAny>(
         description?: string;
         schema?: S;
         resolver: ({ input, agent }: { input: z.infer<S>; agent: Agent }) => Promise<void | ObservableData>;
+        render?: (action: z.infer<S>) => string
     }
 ): ActionDefinition<z.infer<S>> {
     // Just a helper for automatic schema typing
@@ -22,7 +24,8 @@ export function createAction<S extends ZodTypeAny>(
         name: action.name,
         description: action.description,
         schema: action.schema ?? z.object({}),
-        resolver: action.resolver
+        resolver: action.resolver,
+        render: action.render ?? ((action) => JSON.stringify(action))
     };
 }
 

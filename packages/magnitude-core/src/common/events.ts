@@ -3,6 +3,7 @@
 // Goal is not to expose internals but provide all necessary info in events
 
 import { Action } from "@/actions/types";
+import { ActOptions } from "@/agent";
 import { ModelUsage } from "@/ai/types";
 import { LLMClient } from "@/ai/types";
 
@@ -10,8 +11,10 @@ export interface AgentEvents {
     'start': () => void;
     'stop': () => void;
 
-    'actStarted': (task: string) => void;
-    'actDone': (task: string) => void;
+    'thought': (thought: string) => void; // todo: impl
+
+    'actStarted': (task: string, options: ActOptions) => void;
+    'actDone': (task: string,  options: ActOptions) => void;
     
     'actionStarted': (action: Action) => void;
     'actionDone': (action: Action) => void;

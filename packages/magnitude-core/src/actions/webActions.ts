@@ -17,7 +17,8 @@ export const clickTargetAction = createAction({
         const screenshot = await web.getLastScreenshot();
         const { x, y } = await web.requireGrounding().locateTarget(screenshot, target);
         await harness.click({ x, y });
-    }
+    },
+    //render: ({ x, y}) => `⊙ Clicked (${})`
 });
 
 // For separate grounding
@@ -67,7 +68,8 @@ export const clickCoordAction = createAction({
         const web = agent.require(BrowserConnector);
         const harness = web.getHarness();
         await harness.click({ x, y });
-    }
+    },
+    render: ({ x, y }) => `⊙ click (${x}, ${y})`
 });
 
 export const mouseDoubleClickAction = createAction({
@@ -80,7 +82,8 @@ export const mouseDoubleClickAction = createAction({
         const web = agent.require(BrowserConnector);
         const harness = web.getHarness();
         await harness.doubleClick({ x, y });
-    }
+    },
+    render: ({ x, y }) => `⊙ double click (${x}, ${y})`
 });
 
 export const mouseRightClickAction = createAction({
@@ -91,7 +94,8 @@ export const mouseRightClickAction = createAction({
     }),
     resolver: async ({ input: { x, y }, agent }) => {
         await agent.require(BrowserConnector).getHarness().rightClick({ x, y });
-    }
+    },
+    render: ({ x, y }) => `⊙ right click (${x}, ${y})`
 });
 
 export const mouseDragAction = createAction({
@@ -105,7 +109,8 @@ export const mouseDragAction = createAction({
         const web = agent.require(BrowserConnector);
         const harness = web.getHarness();
         await harness.drag({ x1: from.x, y1: from.y, x2: to.x, y2: to.y });
-    }
+    },
+    render: ({ from, to }) => `⤡ drag (${from.x}, ${from.y}) -> (${to.x}, ${to.y})`
 });
 
 export const typeAction = createAction({
@@ -118,28 +123,32 @@ export const typeAction = createAction({
         const webConnector = agent.require(BrowserConnector);
         const harness = webConnector.getHarness();
         await harness.type({ content });
-    }
+    },
+    render: ({ content }) => `⌨︎ type "${content}"`
 });
 
 export const keyboardEnterAction = createAction({
     name: 'keyboard:enter',
     resolver: async ({ agent }) => {
         await agent.require(BrowserConnector).getHarness().enter();
-    }
+    },
+    render: () => `⏎ press enter`
 });
 
 export const keyboardTabAction = createAction({
     name: 'keyboard:tab',
     resolver: async ({ agent }) => {
         await agent.require(BrowserConnector).getHarness().tab();
-    }
+    },
+    render: () => `⇥ press tab`
 });
 
 export const keyboardBackspaceAction = createAction({
     name: 'keyboard:backspace',
     resolver: async ({ agent }) => {
         await agent.require(BrowserConnector).getHarness().backspace();
-    }
+    },
+    render: () => `⌫ press backspace`
 });
 
 export const keyboardSelectAllAction = createAction({
@@ -164,7 +173,8 @@ export const scrollCoordAction = createAction({
         const webConnector = agent.require(BrowserConnector);
         const harness = webConnector.getHarness();
         await harness.scroll({ x, y, deltaX, deltaY });
-    }
+    },
+    render: ({ x, y, deltaX, deltaY }) => `↕ scroll (${deltaX}px, ${deltaY}px)`
 });
 
 // Grounding agnostic
@@ -178,7 +188,8 @@ export const switchTabAction = createAction({
         const webConnector = agent.require(BrowserConnector);
         const harness = webConnector.getHarness();
         await harness.switchTab({ index });
-    }
+    },
+    render: ({ index }) => `⧉ switch to tab ${index}`
 });
 
 export const newTabAction = createAction({
@@ -189,7 +200,8 @@ export const newTabAction = createAction({
         const webConnector = agent.require(BrowserConnector);
         const harness = webConnector.getHarness();
         await harness.newTab();
-    }
+    },
+    render: () => `⊞ opened new tab`
 });
 
 export const navigateAction = createAction({
@@ -202,7 +214,8 @@ export const navigateAction = createAction({
         const webConnector = agent.require(BrowserConnector);
         const harness = webConnector.getHarness();
         await harness.navigate(url);
-    }
+    },
+    render: ({ url }) => `⛓︎ navigated to ${url}`
 });
 
 export const goBackAction = createAction({
@@ -213,7 +226,8 @@ export const goBackAction = createAction({
         const webConnector = agent.require(BrowserConnector);
         const harness = webConnector.getHarness();
         await harness.goBack();
-    }
+    },
+    render: () => `← navigated back`
 });
 
 // gets overused currently if we include this
@@ -225,7 +239,8 @@ export const waitAction = createAction({
     }),
     resolver: async ({ input: { seconds }, agent }) => {
         await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
-    }
+    },
+    render: ({ seconds }) => `◴ waited for ${seconds}s`
 });
 
 // export const webActions = [

@@ -118,19 +118,25 @@ export class Agent {
         // logger.info("Initial observations recorded");
         // Initial observations are handled by the first getObservations call in exec
     }
-    
-    async exec(action: Action, memory?: AgentMemory): Promise<void> {
-        /**
-         * Execute an action that belongs to this Agent's action space.
-         * Provide memory to record the action taken, its results, and any connector observations to that memory.
-         */
-        let actionDefinition = this.actions.find(def => def.name === action.variant);
+
+    identifyAction(action: Action) {
+        // Get definition corresponding to an action
+        const actionDefinition = this.actions.find(def => def.name === action.variant);
 
         if (!actionDefinition) {
             // It's possible the action name was from a connector that is no longer active,
             // or the action space was not correctly aggregated.
             throw new AgentError(`Undefined action type '${action.variant}'. Ensure agent is configured with appropriate action definitions from connectors.`);
         }
+        return actionDefinition;
+    }
+    
+    async exec(action: Action, memory?: AgentMemory): Promise<void> {
+        /**
+         * Execute an action that belongs to this Agent's action space.
+         * Provide memory to record the action taken, its results, and any connector observations to that memory.
+         */
+        let actionDefinition = this.identifyAction(action);
         
         let input: any;
         if (actionDefinition.schema instanceof z.ZodObject) {
@@ -198,23 +204,25 @@ export class Agent {
         if (Array.isArray(taskOrSteps)) {
             const steps = taskOrSteps;
 
-            this.events.emit('actStarted', steps.join(', '));
+            //this.events.emit('actStarted', steps.join(', '));
 
             // trace overall task
             await (traceAsync('multistep', async (steps: string[], options: ActOptions) => {
                 for (const step of steps) {
+                    this.events.emit('actStarted', step, options);
                     await this._traceAct(step, taskMemory, options);
+                    this.events.emit('actDone', step, options);
                 }
             })(steps, options));
 
-            this.events.emit('actDone', steps.join(', '));
+            //this.events.emit('actDone', steps.join(', '));
         } else {
             const task = taskOrSteps;
 
-            this.events.emit('actStarted', task);
+            this.events.emit('actStarted', task, options);
 
             await this._traceAct(task, taskMemory, options);
-            this.events.emit('actDone', task);
+            this.events.emit('actDone', task, options);
         }
     }
 
@@ -284,7 +292,9 @@ export class Agent {
             }
 
             logger.info({ reasoning, actions }, `Partial recipe created`);
-
+            
+            // Could be emitted in memory and bubbled up instead of recordThought was called in more places
+            this.events.emit('thought', reasoning);
             memory.recordThought(reasoning);
 
             // Execute partial recipe

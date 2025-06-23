@@ -11,6 +11,7 @@ export const doneAction = createAction({
     resolver: async ({ agent }) => {
         agent.queueDone();
     },
+    render: () => `✓ done`
 });
 
 export const failAction = createAction({
@@ -20,6 +21,7 @@ export const failAction = createAction({
     resolver: async ({ agent }) => {
         throw new AgentError(`Task failed: ${agent.memory.getLastThoughtMessage() ?? "No thought recorded"}`);
     },
+    render: () => `✕ fail`
 });
 
 export const taskActions = [

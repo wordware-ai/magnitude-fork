@@ -9,8 +9,14 @@ import {
 import { Observation, renderObservations } from './observation';
 import { BamlRenderable, observableDataToContext } from './context';
 import z from 'zod';
+import EventEmitter from 'eventemitter3';
+
+// export interface AgentMemoryEvents {
+//     'thought': (thought: string) => void;
+// }
 
 export class AgentMemory {
+    //public readonly events: EventEmitter<AgentMemoryEvents> = new EventEmitter();
     //private options: Required<MemoryOptions>;
     //private history: StoredHistoryEntry[] = [];
 
@@ -43,6 +49,7 @@ export class AgentMemory {
         this.observations.push(
             Observation.fromThought(content)
         );
+        //this.events.emit('thought', content);
     }
 
     public recordObservation(obs: Observation): void {

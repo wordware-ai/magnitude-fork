@@ -6,6 +6,7 @@ import { LLMClient } from "@/ai/types";
 import { Schema } from "zod";
 import z from "zod";
 import { renderMinimalAccessibilityTree } from "@/web/util";
+import { narrateAgent } from "./narrator";
 
 // export interface StartAgentWithWebOptions {
 //     agentBaseOptions?: Partial<AgentOptions>;
@@ -26,6 +27,7 @@ export async function startBrowserAgent(
     });
 
     if (options?.show) {
+        narrateAgent(agent);
         //agent.events.on('actionStarted', (action: any) => { console.log(action) })
     }
 
