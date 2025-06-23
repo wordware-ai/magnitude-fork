@@ -156,7 +156,8 @@ export const keyboardSelectAllAction = createAction({
     description: "Select all content in the active text area (CTRL+A)",
     resolver: async ({ input: { content }, agent }) => {
         await agent.require(BrowserConnector).getHarness().selectAll();
-    }
+    },
+    render: () => `⬚ select all`
 });
 
 // For grounded planner
