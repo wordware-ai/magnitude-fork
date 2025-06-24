@@ -5,6 +5,14 @@ import { BrowserAgent } from './browserAgent';
 import { z } from 'zod';
 
 export function narrateAgent(agent: Agent) {
+    agent.events.on('start', () => {
+        console.log(bold(blueBright(`▶ [start] agent started`)));
+    });
+
+    agent.events.on('stop', () => {
+        console.log(bold(blueBright(`■ [stop] agent stopped`)));
+    });
+
     agent.events.on('thought', (thought: string) => {
         //➤◆ 
         console.log(gray`${thought}`);
@@ -13,7 +21,7 @@ export function narrateAgent(agent: Agent) {
 
     agent.events.on('actStarted', (task: string, options: ActOptions) => {
         //➤◆ 
-        console.log(bold(cyanBright(`▶ [act] ${task}`)));
+        console.log(bold(cyanBright(`◆ [act] ${task}`)));
     });
 
     agent.events.on('actionStarted', (action: Action) => {
