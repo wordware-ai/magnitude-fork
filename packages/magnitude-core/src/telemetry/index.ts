@@ -5,7 +5,6 @@ import * as os from 'node:os';
 import { execSync } from 'node:child_process';
 import cuid2 from '@paralleldrive/cuid2';
 import { PostHog } from 'posthog-node';
-import { Agent, LLMClientIdentifier } from 'magnitude-core';
 import { VERSION } from '@/version';
 import { createHash } from 'crypto';
 
