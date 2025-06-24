@@ -102,6 +102,7 @@ async function runTask(taskToRun: Task | string) {
             //     }
             // })
         ],
+        //narrate: true
         // browserContextOptions: {
         //     viewport: { width: 1920, height: 1080 }
         // },
@@ -115,9 +116,22 @@ async function runTask(taskToRun: Task | string) {
         // }
     });
 
+    agent.events.on('actionDone', async () => {
+        const memory = await agent.memory.toJSON();
+        console.log('Memory:', memory);
+
+        fs.writeFileSync(path.join('results', `${task.id}.json`), JSON.stringify(memory, null, 4));
+    });
+
     await agent.act(task.ques);
 
     await agent.stop();
+
+    // const memory = await agent.memory.toJSON();
+    // console.log('Memory:', memory);
+
+    // fs.writeFileSync(path.join('results', task.id), memory);
+
     console.log(`Finished task: ${task.id}`);
 }
 

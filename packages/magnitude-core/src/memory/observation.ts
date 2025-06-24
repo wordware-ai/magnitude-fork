@@ -26,7 +26,7 @@ export interface ObservationOptions {
 }
 
 // consider limiting media based on source - e.g. thought is only text
-type ObservationSource = `connector:${string}` | `action:taken:${string}` | `action:result:${string}` | `thought`;
+export type ObservationSource = `connector:${string}` | `action:taken:${string}` | `action:result:${string}` | `thought`;
 
 export class Observation {
     public readonly source: ObservationSource;

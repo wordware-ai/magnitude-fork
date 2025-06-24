@@ -6,14 +6,25 @@ import {
     // BamlTurn, 
     ConnectorInstructions 
 } from '@/ai/baml_client';
-import { Observation, renderObservations } from './observation';
+import { Observation, ObservationOptions, ObservationSource, renderObservations } from './observation';
 import { BamlRenderable, observableDataToContext } from './context';
 import z from 'zod';
 import EventEmitter from 'eventemitter3';
+import { MultiMediaJson, observableDataToJson } from './serde';
 
 // export interface AgentMemoryEvents {
 //     'thought': (thought: string) => void;
 // }
+
+export interface SerializedAgentMemory {
+    instructions?: string;
+    observations: {
+        source: ObservationSource,
+        timestamp: number,
+        data: MultiMediaJson,
+        options?: ObservationOptions,
+    }[];
+}
 
 export class AgentMemory {
     //public readonly events: EventEmitter<AgentMemoryEvents> = new EventEmitter();
@@ -88,6 +99,22 @@ export class AgentMemory {
             instructions: this.instructions,
             observationContent: content,
             connectorInstructions: connectorInstructions
+        };
+    }
+
+    public async toJSON(): Promise<SerializedAgentMemory> {
+        const observations = [];
+        for (const observation of this.observations) {
+            observations.push({
+                source: observation.source,
+                timestamp: observation.timestamp,
+                data: await observableDataToJson(observation.data),
+                options: observation.options,
+            });
+        }
+        return {
+            ...(this.instructions ? { instructions: this.instructions } : {}),
+            observations: observations
         };
     }
 }

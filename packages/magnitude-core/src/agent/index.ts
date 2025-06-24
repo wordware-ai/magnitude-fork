@@ -353,4 +353,8 @@ export class Agent {
         logger.info("Agent: All connectors stopped.");
         logger.info("Agent: Stopped successfully.");
     }
+
+    // async dumpMemoryJSON() {
+    //     return await this.memory.toJSON();
+    // }
 }
