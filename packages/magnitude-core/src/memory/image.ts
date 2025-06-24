@@ -95,13 +95,12 @@ export class Image {
         // const metadata = await img.metadata();
         
         // if (!metadata.width || !metadata.height)
-
         return new Image(await this.img.resize({
-            width: width,
-            height: height,
+            // Round width/height since sometimes they are floats due to rounding errors - sharp will throw if not integers
+            width: Math.round(width),
+            height: Math.round(height),
             fit: 'fill', // exact size, no cropping
             kernel: sharp.kernel.lanczos3
         }));
-
     }
 }
