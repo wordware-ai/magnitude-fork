@@ -1,5 +1,11 @@
 # magnitude-core
 
+## 0.2.9
+
+### Patch Changes
+
+- fix screenshot flash, fix sharp rounding err crash
+
 ## 0.2.8
 
 ### Patch Changes
