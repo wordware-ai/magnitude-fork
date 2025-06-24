@@ -89,8 +89,6 @@ export async function sendTelemetry(eventName: string, properties: Record<string
             ...properties,
         };
 
-        console.log("Capturing:", props);
-
         posthog.capture({
             distinctId: userId,
             event: eventName,
