@@ -34,7 +34,8 @@
   "scripts": {
     "build": "baml-cli generate && tsc && pkgroll",
     "check": "tsc --noEmit",
-    "cli": "bun ./src/cli.ts"
+    "cli": "bun ./src/cli.ts",
+    "pubdev": "bun run build && yalc publish --force --push"
   },
   "author": {
     "name": "Magnitude",
