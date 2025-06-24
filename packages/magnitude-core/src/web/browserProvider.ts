@@ -1,4 +1,4 @@
-import { Browser, BrowserContext, BrowserContextOptions, chromium, LaunchOptions, Page } from "playwright";
+import { Browser, BrowserContext, BrowserContextOptions, chromium, LaunchOptions, CDPSession } from "playwright";
 import objectHash from 'object-hash';
 import crypto from 'node:crypto';
 import logger from "@/logger";
@@ -79,6 +79,16 @@ export class BrowserProvider {
         // FROM HERE
         const context = await browser.newContext(options.contextOptions);
 
+        // Get viewport dimensions from context options or use defaults
+        const viewport = options.contextOptions?.viewport || { width: 1024, height: 768 };
+        const deviceScaleFactor = options.contextOptions?.deviceScaleFactor || 1;
+
+        // Apply emulation settings to any new pages created
+        context.on('page', async (page) => {
+            const cdpSession = await page.context().newCDPSession(page);
+            await this._applyEmulationSettings(cdpSession, viewport.width, viewport.height, deviceScaleFactor);
+        });
+
         activeBrowserEntry.activeContextsCount++;
 
         context.on('close', async () => {
@@ -132,5 +142,19 @@ export class BrowserProvider {
             this.logger.trace('Creating context for default browser options');
             return await this._createAndTrackContext({});
         }
+    }
+
+    private async _applyEmulationSettings(cdpSession: CDPSession, width: number, height: number, deviceScaleFactor: number) {
+        await cdpSession.send('Emulation.setDeviceMetricsOverride', {
+            width: width,
+            height: height,
+            deviceScaleFactor: deviceScaleFactor,
+            mobile: false,
+            screenWidth: width,
+            screenHeight: height,
+            positionX: 0,
+            positionY: 0,
+            screenOrientation: { angle: 0, type: 'portraitPrimary' }
+        });
     }
 }
