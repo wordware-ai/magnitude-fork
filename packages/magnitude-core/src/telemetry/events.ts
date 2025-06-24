@@ -1,5 +1,5 @@
-import { Agent } from "@/agent";
-import { BrowserAgent } from "@/agent/browserAgent";
+import type { Agent } from "@/agent";
+import type { BrowserAgent } from "@/agent/browserAgent";
 import { LLMClientIdentifier, ModelUsage } from "@/ai/types";
 import { createId, sendTelemetry } from "@/telemetry";
 
@@ -70,22 +70,25 @@ export function telemetrifyAgent(agent: Agent) {
         });
     });
 
-    if (agent instanceof BrowserAgent) {
+    //if (agent instanceof BrowserAgent) {
+    if (agent.hasOwnProperty('browserAgentEvents')) {
         // Report nav and extract telemetry if browser agent
-        agent.browserAgentEvents.on('nav', async () => {
+        const browserAgent = agent as BrowserAgent;
+
+        browserAgent.browserAgentEvents.on('nav', async () => {
             await sendTelemetry('agent-nav', { agentId }); 
         });
 
-        agent.browserAgentEvents.on('extractStarted', async () => {
+        browserAgent.browserAgentEvents.on('extractStarted', async () => {
             const startedAt = Date.now();
             const report: UsageReport = [];
             const tokenListener = (usage: ModelUsage) => {
                 addUsageToReport(report, usage);
             }
-            agent.events.on('tokensUsed', tokenListener);
+            browserAgent.events.on('tokensUsed', tokenListener);
 
-            agent.browserAgentEvents.once('extractDone', async () => {
-                agent.events.removeListener('tokensUsed', tokenListener);
+            browserAgent.browserAgentEvents.once('extractDone', async () => {
+                browserAgent.events.removeListener('tokensUsed', tokenListener);
                 const doneAt = Date.now();
 
                 await sendTelemetry('agent-extract', {
