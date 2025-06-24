@@ -78,7 +78,8 @@ export class TestRunner {
         });
 
         const agent = new TestCaseAgent({
-            agentOptions: agentOptions,
+            // disable telemetry to keep test run telemetry seperate from general automation telemetry
+            agentOptions: { ...agentOptions, telemetry: false },
             browserOptions: browserOptions,
         });
         const tracker = new TestStateTracker(agent);

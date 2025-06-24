@@ -1,20 +1,8 @@
-/**
- * telemetryVersion: string, // telemetry payload version will prob be nice in the future
-    packageVersion: string,
-    codebase?: string,
- */
-
 import { Agent } from "@/agent";
 import { BrowserAgent } from "@/agent/browserAgent";
 import { LLMClientIdentifier, ModelUsage } from "@/ai/types";
-import { createId, getCodebaseId, getMachineId, posthog, sendTelemetry } from "@/telemetry";
+import { createId, sendTelemetry } from "@/telemetry";
 
-
-// export interface ModelUsage {
-//     llm: LLMClientIdentifier,
-//     inputTokens: number,
-//     outputTokens: number
-// }[];
 
 export type UsageReport = {
     llm: LLMClientIdentifier,
@@ -22,37 +10,6 @@ export type UsageReport = {
     outputTokens: number,
     numCalls: number
 }[]
-
-export interface CommonEventProperties {
-    telemetryVersion: string;
-    packageVersion: string;
-    codebase?: string;
-    agentId: string; // each Agent creates a unique CUID2 sent on all events
-}
-
-export interface AgentStartEventProperties extends CommonEventProperties {
-    //agentId: string; // each Agent creates a unique CUID2 sent on all events
-}
-
-export interface AgentStopEventProperties extends CommonEventProperties {
-
-};
-
-export interface AgentActEventProperies extends CommonEventProperties {
-    startedAt: number,
-	doneAt: number,
-    actionCount: number;
-    modelUsage: UsageReport
-};
-
-export interface AgentExtractEventProperies extends CommonEventProperties {
-    startedAt: number,
-	doneAt: number,
-    modelUsage: UsageReport
-};
-
-export interface AgentNavEventProperies extends CommonEventProperties {
-};
 
 // kinda jank
 function addUsageToReport(report: UsageReport, usage: ModelUsage) {
