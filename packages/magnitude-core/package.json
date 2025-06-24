@@ -52,6 +52,7 @@
   },
   "dependencies": {
     "@boundaryml/baml": "^0.90.2",
+    "@paralleldrive/cuid2": "^2.2.2",
     "@types/object-hash": "^3.0.6",
     "ansis": "^4.1.0",
     "commander": "^13.1.0",
@@ -61,6 +62,7 @@
     "pino": "^9.6.0",
     "pino-pretty": "^13.0.0",
     "playwright": "npm:rebrowser-playwright@^1.52.0",
+    "posthog-node": "^5.1.1",
     "sharp": "^0.33.5",
     "zod": "^3.24.4",
     "zod-to-json-schema": "^3.24.5"

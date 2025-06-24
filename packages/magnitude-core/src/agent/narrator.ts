@@ -14,13 +14,11 @@ export function narrateAgent(agent: Agent) {
     });
 
     agent.events.on('thought', (thought: string) => {
-        //➤◆ 
         console.log(gray`${thought}`);
         //console.log(gray`⚙︎ ${thought}`);
     });
 
     agent.events.on('actStarted', (task: string, options: ActOptions) => {
-        //➤◆ 
         console.log(bold(cyanBright(`◆ [act] ${task}`)));
     });
 
@@ -45,12 +43,4 @@ export function narrateBrowserAgent(agent: BrowserAgent) {
         console.log(data);
         //console.log(blueBright`${JSON.stringify(data, null, 2)}`);
     });
-
-    /**
-     * TODO: Add:
-     * - Start
-     * - Stop
-     * - Nav
-     * - Extract
-     */
 }

@@ -91,6 +91,7 @@ export interface MoondreamClient {
     }
 }
 
+
 export interface LLMClientIdentifier {
     provider: string,
     model: string,
@@ -102,6 +103,6 @@ export interface ModelUsage {
     llm: LLMClientIdentifier,
     inputTokens: number,
     outputTokens: number,
-    inputCost?: number,
-    outputCost?: number,
+    // inputCost?: number,
+    // outputCost?: number,
 }

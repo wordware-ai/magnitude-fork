@@ -4,14 +4,20 @@
 
 import { Action } from "@/actions/types";
 import { ActOptions } from "@/agent";
-import { ModelUsage } from "@/ai/types";
+import { LLMClientIdentifier, ModelUsage } from "@/ai/types";
 import { LLMClient } from "@/ai/types";
+
+// export interface ModelUsage {
+//     llm: LLMClientIdentifier,
+//     inputTokens: number,
+//     outputTokens: number
+// }[];
 
 export interface AgentEvents {
     'start': () => void;
     'stop': () => void;
 
-    'thought': (thought: string) => void; // todo: impl
+    'thought': (thought: string) => void;
 
     'actStarted': (task: string, options: ActOptions) => void;
     'actDone': (task: string,  options: ActOptions) => void;

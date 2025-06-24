@@ -17,6 +17,7 @@ export * from "@/ai/types";
 export * from "@/web/types";
 export * from "@/actions/types";
 export * from '@/common';
+export * from "@/telemetry";
 export { buildDefaultBrowserAgentOptions } from "@/ai/util";
 export { logger } from './logger';
 //export { ModelUsage } from '@/ai/modelHarness';

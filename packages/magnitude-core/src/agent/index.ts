@@ -13,6 +13,7 @@ import { AgentMemory } from "@/memory";
 import { ActionDefinition } from "@/actions";
 import { taskActions } from "@/actions/taskActions";
 import { traceAsync } from "@/ai/baml_client";
+import { telemetrifyAgent } from '@/telemetry/events';
 
 
 export interface AgentOptions {
@@ -20,7 +21,7 @@ export interface AgentOptions {
     connectors?: AgentConnector[];
     actions?: ActionDefinition<any>[]; // any additional actions not provided by connectors
     prompt?: string | null; // additional agent-level system prompt instructions
-    
+    telemetry?: boolean;
     //executor?: GroundingClient;
 }
 
@@ -43,6 +44,7 @@ const DEFAULT_CONFIG: Required<Omit<AgentOptions, 'actions'> & { actions: Action
         }
     } as LLMClient,
     prompt: null,
+    telemetry: true,
 };
 
 export class Agent {
@@ -106,6 +108,9 @@ export class Agent {
     }
 
     async start(): Promise<void> { 
+        // Register telemetry if enabled - do on start instead of cons to prevent weird subclass event issues
+        if (this.options.telemetry) telemetrifyAgent(this);
+
         logger.info("Agent: Starting connectors...");
         for (const connector of this.connectors) {
             if (connector.onStart) await connector.onStart(); 
