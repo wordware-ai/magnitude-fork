@@ -1,5 +1,11 @@
 # magnitude-core
 
+## 0.2.11
+
+### Patch Changes
+
+- fix image sharp get dimensions bug
+
 ## 0.2.9
 
 ### Patch Changes

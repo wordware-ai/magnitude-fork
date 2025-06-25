@@ -1,5 +1,12 @@
 # magnitude-test
 
+## 0.2.12
+
+### Patch Changes
+
+- Updated dependencies
+  - magnitude-core@0.2.11
+
 ## 0.2.10
 
 ### Patch Changes
