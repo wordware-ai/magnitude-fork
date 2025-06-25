@@ -63,14 +63,8 @@
                         "pages": [
                             "core-concepts/browser-interaction",
                             "core-concepts/data-extraction",
-                            "core-concepts/agent-options"
-                        ]
-                    },
-                    {
-                        "group": "Customizing",
-                        "pages": [
-                            
-                            "customizing/llm-configuration"
+                            "core-concepts/agent-options",
+                            "core-concepts/compatible-llms"
                         ]
                     },
                     {
