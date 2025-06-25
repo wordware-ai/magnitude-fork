@@ -76,6 +76,7 @@ export class GroundingService {
     }
 
     async _locateTarget(screenshot: Image, target: string): Promise<PixelCoordinate> {
+        //console.log("_locateTarget dims:", await screenshot.getDimensions());
         const start = Date.now();
 
         const response = await this.moondream.point({
@@ -98,9 +99,15 @@ export class GroundingService {
 
         // Convert from [0,1] to screen space
         const { width, height } = await screenshot.getDimensions();
-        return {
+        const pixelCoords = {
             x: relCoords.x * width,
             y: relCoords.y * height
         }
+
+        // console.log("Screenshot dims:", { width, height });
+        // console.log("Relative coords:", relCoords);
+        // console.log("Pixel coords:", pixelCoords);
+
+        return pixelCoords;
     }
 }

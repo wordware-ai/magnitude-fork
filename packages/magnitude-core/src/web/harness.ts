@@ -76,6 +76,7 @@ export class WebHarness { // implements StateComponent
          * Get b64 encoded string of screenshot (PNG) with screen dimensions
          */
         const dpr = await this.page.evaluate(() => window.devicePixelRatio);
+        //console.log("DPR:", dpr);
         //const viewportSize = this.page.viewportSize();
         const buffer = await this.page.screenshot({ type: 'png', ...options }, );
 
@@ -93,7 +94,13 @@ export class WebHarness { // implements StateComponent
         // (2) More importantly, clicks happen in the standard resolution space, so need to do this for coordinates to be correct
         //     for any agent not using a virtual screen space (e.g. those that aren't Claude)
         const { width, height } = await image.getDimensions();
-        return image.resize(width / dpr, height / dpr);
+        //console.log("Original screenshot dims:", { width, height });
+        //console.log("DPR-scaled dims:", { width: width / dpr, height: height / dpr });
+        const rescaledImage = await image.resize(width / dpr, height / dpr);
+        //console.log("screenshot() final dims:", await rescaledImage.getDimensions());
+
+        //console.log("_locateTarget dims:", await screenshot.getDimensions());
+        return rescaledImage;
 
         // return {
         //     image: `data:image/png;base64,${base64data}`,//buffer.toString('base64'),

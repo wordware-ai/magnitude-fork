@@ -9,6 +9,7 @@ export class Image {
     /**
      * Wrapper for a Sharp image with conveniences to go to/from base64, convert to BAML, or serialize as JSON
      */
+    // represents the start of a pipeline
     private img: Sharp;
     // Cached metadata property for sync access + required width/height properties
     //private metadata: Sharp['metadata'] & { width: number, height: number };
@@ -34,7 +35,7 @@ export class Image {
     }
 
     async getFormat(): Promise<keyof sharp.FormatEnum> {
-        const format = (await this.img.metadata()).format;
+        const format = (await this.img.clone().metadata()).format;
         if (!format) throw new Error("Unable to get image format");
         return format;
     }
@@ -62,7 +63,7 @@ export class Image {
     }
 
     async toBase64(): Promise<string> {
-       const base64data = (await this.img.toBuffer()).toString('base64');
+       const base64data = (await this.img.clone().toBuffer()).toString('base64');
        //console.log("DATA (Image):", base64data.substring(0, 100));
        return base64data;
        //return `data:image/png;base64,${base64data}`;
@@ -83,8 +84,16 @@ export class Image {
 
     }
 
+    async saveToFile(filepath: string): Promise<void> {
+        // We clone here to ensure the original sharp instance remains usable for other operations
+        await this.img.clone().toFile(filepath);
+        //console.log(`Image saved to ${filepath}`);
+    }
+
     async getDimensions(): Promise<{ width: number, height: number }> {
-        const { width, height } = await this.img.metadata();
+        //const { width, height } = await this.img.clone().metadata();
+        // Need to convert to buffer in order for metadata to be updated - otherwise it returns metadata of the original image
+        const { info: { width, height } } = await this.img.clone().toBuffer({ resolveWithObject: true });
         if (!width || !height) throw new Error("Unable to get dimensions from image");
         return { width, height };
     }
@@ -93,14 +102,23 @@ export class Image {
         // if (this.type != 'base64') throw new Error("Only base64 images can be resized");
         // const img = sharp(Buffer.from(this.content));
         // const metadata = await img.metadata();
+        //console.log(`resizing to: ${width}, ${height}`);
+
+        //console.log("Before resizing:", await this.getDimensions());
         
         // if (!metadata.width || !metadata.height)
-        return new Image(await this.img.resize({
+        const resizedImage = new Image(await this.img.clone().resize({
             // Round width/height since sometimes they are floats due to rounding errors - sharp will throw if not integers
             width: Math.round(width),
             height: Math.round(height),
             fit: 'fill', // exact size, no cropping
             kernel: sharp.kernel.lanczos3
         }));
+
+        //resizedImage.saveToFile('foo.png');
+
+        //console.log("After resizing:", await resizedImage.getDimensions());
+
+        return resizedImage
     }
 }
