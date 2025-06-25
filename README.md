@@ -15,31 +15,25 @@
 </p>
 
 <hr style="height: 1px; border: none; background-color: #e1e4e8; margin: 24px 0;">
-Magnitude provides the following building blocks...
 
-- 🧭 **Navigate** - Understands your interface and how to navigate through it
-- 🖱️ **Interact** - Translates natural language instructions into concrete click, type, scroll, drag, etc. actions
-- 🔍 **Extract** - Intelligently parses the page and extracts relevant data based on your instructions
-- ✅ **Verify** - Using the built-in test runner, verifies that the correct actions have been taken
+- 🧭 **Navigate** - Sees and understands any interface to plan out actions
+- 🖱️ **Interact** - Executes precise actions using mouse and keyboard
+- 🔍 **Extract** - Intelligently extracts useful structured data
+- ✅ **Verify** - Built-in test runner with powerful visual assertions
 
 
-![Video showing Magnitude tests running in a terminal and agent taking actions in the browser](assets/demo.gif)
+![Video showing Magnitude tests running in a terminal and agent taking actions in the browser](assets/hero.gif)
 
-↕️ Magnitude test case in action! ↕️
+↕️ Magnitude in action! ↕️
 ```ts
-test('can add and complete todos', { url: 'https://magnitodo.com' }, async (agent) => {
-    await agent.act('create 3 todos', {
-        data: 'Take out the trash, Buy groceries, Build more test cases with Magnitude'
-    });
-    await agent.check('should see all 3 todos');
-    await agent.act('mark each todo complete');
-    await agent.check('says 0 items left');
-});
+await agent.act('Create a task', { data: { title: 'Example task', description: 'This is an example task' } });
+
+await agent.act('Drag "Example task" to the in progress column');
+
+const numTasks = await agent.extract('Extract the following information for the in progress tasks', z.object({ numTasks: z.number(), taskNames: z.array(z.string())})); 
 ```
 
 ## Get started
-
-> 🛝 Try it out right away in the [playground](https://pg.magnitude.run) (no signup required)!
 
 Get up and running with one command:
 ```bash
@@ -48,7 +42,7 @@ npx create-magnitude-app
 
 This will create a new project and walk you through the steps to initialize it with Magnitude. It will also create an example script that you can run right away!
 
-If you would like to install the test runner in an existing node project, please run:
+If you would like to install the test runner in an **existing** web app, please run:
 ```bash
 npm i --save-dev magnitude-test && npx magnitude init
 ```
@@ -60,7 +54,7 @@ This will create a basic tests directory `tests/magnitude` with:
 For information on how to run tests and integrate into CI/CD see [here](https://docs.magnitude.run/core-concepts/running-tests).
 
 > [!NOTE]
-> By default, Magnitude will look for an `ANTHROPIC_API_KEY` environment variable and use Claude Sonnet 4. Magnitude requires a model that is good at instruction following/planning **and** visually grounded. See [docs](https://docs.magnitude.run/customizing/llm-configuration) for more information and alternative models.
+> Magnitude requires a large **visually grounded** model. We recommend Claude 4 Sonnet for the best performance, but are also compatabile with Qwen-2.5VL 72B. See [docs](https://docs.magnitude.run/customizing/llm-configuration) for more information.
 
 
 ## Why Magnitude?
