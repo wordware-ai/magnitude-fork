@@ -61,23 +61,31 @@
                     {
                         "group": "Core Concepts",
                         "pages": [
-                            "core-concepts/building-test-cases",
-                            "core-concepts/running-tests"
+                            "core-concepts/browser-interaction",
+                            "core-concepts/data-extraction",
+                            "core-concepts/agent-options"
                         ]
                     },
                     {
                         "group": "Customizing",
                         "pages": [
-                            "customizing/test-configuration",
+                            
                             "customizing/llm-configuration"
+                        ]
+                    },
+                    {
+                        "group": "Testing Web Apps",
+                        "pages": [
+                            "testing/test-setup",
+                            "testing/running-tests",
+                            "testing/test-configuration",
+                            "testing/ci"
                         ]
                     },
                     {
                         "group": "Integrations",
                         "pages": [
-                            "integrations/playwright",
-                            "integrations/github-actions",
-                            "integrations/mcp"
+                            "integrations/playwright"
                         ]
                     },
                     {
