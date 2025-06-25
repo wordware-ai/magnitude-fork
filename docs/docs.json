@@ -64,7 +64,8 @@
                             "core-concepts/browser-interaction",
                             "core-concepts/data-extraction",
                             "core-concepts/agent-options",
-                            "core-concepts/compatible-llms"
+                            "core-concepts/compatible-llms",
+                            "core-concepts/playwright"
                         ]
                     },
                     {
@@ -74,12 +75,6 @@
                             "testing/running-tests",
                             "testing/test-configuration",
                             "testing/ci"
-                        ]
-                    },
-                    {
-                        "group": "Integrations",
-                        "pages": [
-                            "integrations/playwright"
                         ]
                     },
                     {
