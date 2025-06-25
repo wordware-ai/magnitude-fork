@@ -15,12 +15,12 @@
 </p>
 
 <hr style="height: 1px; border: none; background-color: #e1e4e8; margin: 24px 0;">
+Magnitude provides the following building blocks...
 
-**🤖 General purpose automation:** Use Magnitude for tasks like extracting hard-to-reach data, automating repetitive data entry, generating custom reports, monitoring website changes, end-to-end process automation, and more.
-
-**🧪 Test automation:** Complete with a native test runner, powerful visual assertions, parallel test execution, access to the Playwright page and context objects, and easy integration into your CI/CD pipelines.
-
-**🛠️ Build your own browser agent:** Use Magnitude for reliable web interaction and data extraction then layer your own business logic on top.
+- 🧭 **Navigate** - Understands your interface and how to navigate through it
+- 🖱️ **Interact** - Translates natural language instructions into concrete click, type, scroll, drag, etc. actions
+- 🔍 **Extract** - Intelligently parses the page and extracts relevant data based on your instructions
+- ✅ **Verify** - Using the built-in test runner, verifies that the correct actions have been taken
 
 
 ![Video showing Magnitude tests running in a terminal and agent taking actions in the browser](assets/demo.gif)
@@ -67,15 +67,15 @@ For information on how to run tests and integrate into CI/CD see [here](https://
 
 ❌ **Problem #1:** Most browser agents follow "high-level prompt + tools = work until done" - works for demos, not production  
 ✅ **Solution: Controllable & repeatable automation**
-* Flexible abstraction levels from explicit clicks to high-level flows
-* Custom actions + prompts at agent and step levels
-* Deterministic runs via native caching
+* Flexible abstraction levels (granular actions vs. flows)
+* Custom actions + prompts at agent and action level
+* Deterministic runs via native caching system
 
-❌ **Problem #2:** Most browser agents draw numbered boxes around DOM elements - doesn't generalize due to canvas, alerts, iframes, shadow DOM  
+❌ **Problem #2:** Most browser agents draw numbered boxes around page elements - doesn't generalize well due to complex modern sites
 ✅ **Solution: Vision-first architecture**
-* Dual-agent vision system (planner + executor)
+* Visually grounded LLM specifies pixel coordinates
 * True generalization independent of DOM structure
-* Future-proof architecture for desktop apps/VMs/file systems
+* Future-proof architecture for desktop apps, VMs, etc.
 
 ## Additional info
 
