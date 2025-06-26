@@ -32,7 +32,7 @@ export function narrateBrowserAgent(agent: BrowserAgent) {
     narrateAgent(agent);
 
     agent.browserAgentEvents.on('nav', (url: string) => {
-        console.log(bold(cyanBright`⮊ [nav] ${url}`));
+        console.log(bold(cyanBright`⛓︎ [nav] ${url}`));
     });
 
     agent.browserAgentEvents.on('extractStarted', (instructions: string, schema: z.ZodSchema) => {
