@@ -28,24 +28,26 @@ You can use it to automate tasks on the web, integrate between apps without APIs
 ↕️ Magnitude in action! ↕️
 ```ts
 // Magnitude can handle high-level tasks
-await agent.act("Create a task", {
-  // Optionally pass data that the agent will use where appropriate
-  data: {
-    title: "Use Magnitude",
-    description: 'Run "npx create-magnitude-app" and follow the instructions',
-  },
+await agent.act('Create a task', {
+    // Optionally pass data that the agent will use where appropriate
+    data: {
+        title: 'Use Magnitude',
+        description: 'Run "npx create-magnitude-app" and follow the instructions',
+    },
 });
 
 // It can also handle low-level actions
 await agent.act('Drag "Use Magnitude" to the top of the in progress column');
 
 // Intelligently extract data based on the DOM content matching a provided zod schema
-const numTasks = await agent.extract(
-  "Extract the following information for the in progress tasks",
-  z.object({
-    numTasks: z.number(),
-    taskNames: z.array(z.string()),
-  }),
+const tasks = await agent.extract(
+    'List in progress tasks',
+    z.array(z.object({
+        title: z.string(),
+        description: z.string(),
+        // Agent can extract existing data or new insights
+        difficulty: z.number().describe('Rate the difficulty between 1-5')
+    })),
 );
 ```
 
