@@ -72,6 +72,7 @@
                         "group": "Testing Web Apps",
                         "pages": [
                             "testing/test-setup",
+                            "testing/building-test-cases",
                             "testing/running-tests",
                             "testing/test-configuration",
                             "testing/ci"

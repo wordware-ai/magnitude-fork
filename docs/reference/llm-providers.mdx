@@ -177,8 +177,8 @@ import { type MagnitudeConfig } from 'magnitude-test';
 
 export default {
     url: "http://localhost:5173",
-    executor: {
-        provider: 'moondream', // only moondream currently supported
+    grounding: {
+        provider: 'moondream',
         options: {
             baseUrl: 'your-self-hosted-moondream-endpoint',
             apiKey: process.env.MOONDREAM_API_KEY // not necessary if self-hosted
