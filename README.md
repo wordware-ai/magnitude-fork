@@ -93,7 +93,7 @@ For information on how to run tests and integrate into CI/CD see [here](https://
 
 ## Additional info
 
-Please see [our docs](https://docs.magnitude.run/core-concepts/building-test-cases) for more information on how to best build Magnitude automations and test cases.
+Please see [our docs](https://docs.magnitude.run) for more information on how to best build Magnitude automations and test cases.
 
 ## Contact
 If you are an enterprise and want more features or support, feel free to reach out to us at founders@magnitude.run or schedule a call [here](https://cal.com/tom-greenwald/30min) to discuss your needs.
