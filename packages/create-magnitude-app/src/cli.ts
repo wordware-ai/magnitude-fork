@@ -7,6 +7,9 @@ import os from "os";
 import { bold, blueBright, gray, cyanBright } from "ansis";
 import { intro, outro, spinner, log, text, select, confirm, isCancel, multiselect } from '@clack/prompts';
 import { VERSION } from "./version";
+import cuid2 from '@paralleldrive/cuid2';
+
+const createId = cuid2.init({ length: 12 });
 
 const REPO_URL = "https://github.com/magnitudedev/magnitude-scaffold";
 const REPO_BRANCH = "main";
@@ -26,7 +29,7 @@ interface ProjectInfo {
     model: 'claude' | 'qwen',
     provider: 'anthropic' | 'openrouter',
     apiKey: string,
-    assistant: 'cursor' | 'claudecode' | 'cline' | 'windsurf' | 'none',
+    assistant: 'cursor' | 'claudecode' | 'cline' | 'gemini' | 'windsurf' | 'none',
     //assistants: ('cursor' | 'claudecode' | 'cline' | 'windsurf')[]
     // assistants: {
     //     cursor: boolean,
@@ -55,7 +58,7 @@ async function establishProjectInfo(info: Partial<ProjectInfo>): Promise<Project
         log.warn("Come back soon!");
         process.exit(0);
     }
-    
+
     let model;
     while (true) {
         model = await select({
@@ -145,13 +148,14 @@ async function establishProjectInfo(info: Partial<ProjectInfo>): Promise<Project
     let assistant = await select({
         message: 'Are you using a code assistant?',
         options: [
-            { value: 'claudecode', label: 'Claude Code' }, // claude.md
+            { value: 'claudecode', label: 'Claude Code' }, // CLAUDE.md
             { value: 'cline', label: 'Cline' }, // .clinerules
             { value: 'cursor', label: 'Cursor' }, // .cursorrules
+            { value: 'gemini', label: 'Gemini CLI' }, // GEMINI.md
             { value: 'windsurf', label: 'Windsurf' }, // .windsurfrules
             { value: 'none', label: 'None' },
         ],
-        
+
     });
 
     if (isCancel(assistant)) {
@@ -205,6 +209,8 @@ async function createProject(tempDir: string, projectDir: string, project: Proje
         fs.writeFileSync(path.join(tempDir, '.clinerules'), assistantMarkdown);
     } else if (project.assistant === 'claudecode') {
         fs.writeFileSync(path.join(tempDir, 'CLAUDE.md'), assistantMarkdown);
+    } else if (project.assistant === 'gemini') {
+        fs.writeFileSync(path.join(tempDir, 'GEMINI.md'), assistantMarkdown);
     } else if (project.assistant === 'windsurf') {
         fs.writeFileSync(path.join(tempDir, '.windsurfrules'), assistantMarkdown);
     }
@@ -218,7 +224,7 @@ async function createProject(tempDir: string, projectDir: string, project: Proje
     let clientSnippet;
     if (project.provider === 'anthropic') {
         const model = 'claude-sonnet-4-20250514';
-        clientSnippet=`llm: {
+        clientSnippet = `llm: {
             provider: 'anthropic',
             options: {
                 model: '${model}',
@@ -227,7 +233,7 @@ async function createProject(tempDir: string, projectDir: string, project: Proje
         },`;
     } else {
         const model = project.model === 'claude' ? 'anthropic/claude-sonnet-4' : 'qwen/qwen2.5-vl-72b-instruct';
-        clientSnippet=`llm: {
+        clientSnippet = `llm: {
             provider: 'openai-generic',
             options: {
                 baseUrl: 'https://openrouter.ai/api/v1',
@@ -248,6 +254,49 @@ async function createProject(tempDir: string, projectDir: string, project: Proje
     fs.copySync(tempDir, projectDir);
 
     return projectDir;
+}
+
+export function getMachineId(): string {
+    const dir = path.join(os.homedir(), '.magnitude');
+    const filePath = path.join(dir, 'user.json');
+    try {
+        // Read existing ID if available
+        if (fs.existsSync(filePath)) {
+            const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            if (data.id) return data.id;
+        }
+        // Generate new ID if needed
+        fs.mkdirSync(dir, { recursive: true });
+        const id = createId();
+        fs.writeFileSync(filePath, JSON.stringify({ id }));
+        return id;
+    } catch {
+        // Fallback to temporary ID if storage fails
+        return createId();
+    }
+}
+
+async function sendEvent() {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    try {
+        await fetch('https://us.i.posthog.com/i/v0/e/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "api_key": "phc_BTdnTtG68V5QG6sqUNGqGfmjXk8g0ePBRu9FIr9upNu",
+                "distinct_id": getMachineId(),
+                "event": "create-magnitude-app"
+            }),
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+    } catch (error) {
+        clearTimeout(timeoutId);
+        console.warn("Failed to send event");
+    }
 }
 
 function detectRuntime(): { installCommand: string, runCommand: string } {
@@ -280,7 +329,7 @@ function detectRuntime(): { installCommand: string, runCommand: string } {
             runCommand: 'deno task start',
         };
     }
-    
+
     // Fallback to npm, which is the most common case
     return {
         installCommand: 'npm install',
@@ -297,7 +346,7 @@ program
         //console.log(`[DIAGNOSTIC] Is TTY? ${process.stdout.isTTY}`);
         // console.log("process.argv:", process.argv);
         // console.log("project name:", projectName);
-        
+
         if (process.stdout.columns >= 50) console.log(bold(blueBright`${title}`));
 
         intro(`create-magnitude-app@${VERSION}`);
@@ -328,14 +377,14 @@ program
             process.exit(1);
         }
         createProjectSpinner.stop(`Project created in ${projectDir}`);
-        
+
         // Detect node runtime to derive preferred install / run commands
         const { installCommand, runCommand } = detectRuntime();
 
         // Install dependencies in the project
         const installSpinner = spinner();
         installSpinner.start(`Installing dependencies with '${installCommand}'`);
-        
+
         // execSync(
         //     installCommand,
         //     { cwd: projectDir, stdio: "ignore" }
@@ -352,5 +401,7 @@ program
         console.log(`◆ Check out our docs: ${blueBright('https://docs.magnitude.run')}`);
         console.log(`◆ Join our Discord: ${blueBright('https://discord.gg/VcdpMh9tTy')}`);
         console.log();
+
+        await sendEvent();
     })
     .parse(process.argv);
