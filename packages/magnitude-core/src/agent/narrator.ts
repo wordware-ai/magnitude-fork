@@ -5,12 +5,31 @@ import { BrowserAgent } from './browserAgent';
 import { z } from 'zod';
 
 export function narrateAgent(agent: Agent) {
+    let totalInputTokens = 0;
+    let totalOutputTokens = 0;
+    let totalInputTokenCost = 0.0;
+    let totalOutputTokenCost = 0.0;
+
+    agent.events.on('tokensUsed', (usage) => {
+        totalInputTokens += usage.inputTokens;
+        totalOutputTokens += usage.outputTokens;
+        totalInputTokenCost += usage.inputCost ?? 0.0;
+        totalOutputTokenCost += usage.outputCost ?? 0.0;
+    });
+
     agent.events.on('start', () => {
         console.log(bold(blueBright(`▶ [start] agent started`)));
     });
 
     agent.events.on('stop', () => {
         console.log(bold(blueBright(`■ [stop] agent stopped`)));
+
+        // Show token usage and cost if available
+        if (totalInputTokenCost > 0 || totalOutputTokenCost > 0) {
+            console.log(`  Total usage: ` + bold`${totalInputTokens}` + ` input tokens (` + `$${totalInputTokenCost.toFixed(3)}` + `)` + ` / ` + bold`${totalOutputTokens}` + ` output tokens (` + `$${totalOutputTokenCost.toFixed(3)}` + `)`);
+        } else {
+            console.log(`  Total usage: ` + bold`${totalInputTokens}` + ` input tokens` + ` / ` + bold`${totalOutputTokens}` + ` output tokens`);
+        }
     });
 
     agent.events.on('thought', (thought: string) => {

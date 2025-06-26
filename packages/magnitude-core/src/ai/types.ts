@@ -103,6 +103,6 @@ export interface ModelUsage {
     llm: LLMClientIdentifier,
     inputTokens: number,
     outputTokens: number,
-    // inputCost?: number,
-    // outputCost?: number,
+    inputCost?: number,
+    outputCost?: number,
 }

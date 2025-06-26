@@ -76,14 +76,45 @@ export class ModelHarness {
         const inputTokens = (this.collector.usage.inputTokens ?? 0) - this.prevTotalInputTokens;
         const outputTokens = (this.collector.usage.outputTokens ?? 0) - this.prevTotalOutputTokens;
 
+        const model = (this.options.llm.options as any).model ?? 'unknown';
+
+        // Get cost if known
+        const knownCostMap: Record<string, number[]> = {
+            'gemini-2.5-pro': [1.25, 10.0],
+            'gemini-2.5-flash': [0.15, 0.60],
+            'claude-3.5-sonnet': [3.00, 15.00],
+            'claude-3.7-sonnet': [3.00, 15.00],
+            'claude-sonnet-4': [3.00, 15.00],
+            'claude-opus-4': [15.00, 75.00],
+            'gpt-4.1': [2.00, 8.00],
+            'gpt-4.1-mini': [0.40, 1.60],
+            'gpt-4.1-nano': [0.10, 0.40],
+            'gpt-4o': [3.75, 15.00],
+            // Assuming Nebius prices, may be higher
+            'qwen2.5-vl-72b': [0.25, 0.75]
+        };
+
+        let inputTokenCost: number | undefined;
+        let outputTokenCost: number | undefined;
+
+        for (const [name, costs] of Object.entries(knownCostMap)) {
+            if (model.includes(name)) {
+                inputTokenCost = costs[0] / 1_000_000;
+                outputTokenCost = costs[0] / 1_000_000;
+            }
+        }
+
         const usage: ModelUsage = {
             llm: {
                 provider: this.options.llm.provider,
-                model: (this.options.llm.options as any).model ?? 'unknown'
+                model: model
             },//this.options.llm,
             inputTokens: inputTokens,
-            outputTokens: outputTokens
+            outputTokens: outputTokens,
+            ...(inputTokenCost ? { inputCost: inputTokens * inputTokenCost } : {}),
+            ...(outputTokenCost ? { outputCost: outputTokens * outputTokenCost } : {})
         };
+
         this.events.emit('tokensUsed', usage);
 
         this.prevTotalInputTokens = inputTokens;
