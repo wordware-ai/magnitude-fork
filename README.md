@@ -21,6 +21,7 @@
 - 🔍 **Extract** - Intelligently extracts useful structured data
 - ✅ **Verify** - Built-in test runner with powerful visual assertions
 
+You can use it to automate tasks on the web, integrate between apps without APIs, extract data, test your web apps, or as a building block for your own browser agents.
 
 ![Video showing Magnitude tests running in a terminal and agent taking actions in the browser](assets/readme.gif)
 
