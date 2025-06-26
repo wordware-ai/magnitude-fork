@@ -81,9 +81,9 @@
                         "group": "Reference",
                         "pages": [
                             "reference/llm-providers",
-                            "reference/test-declaration",
-                            "reference/ai-steps-checks",
-                            "reference/playwright-access"
+                            "reference/browser-agent",
+                            "reference/test-case-agent",
+                            "reference/test-declaration"
                         ]
                     }
                 ]
