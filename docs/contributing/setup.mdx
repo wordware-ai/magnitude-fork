@@ -56,15 +56,16 @@ Install yalc:
 bun i -g yalc
 ```
 
+Then in the monorepo:
+```sh
+cd packages/magnitude-test
+bun run pubdev
+```
+
 In your other project:
 ```sh
 yalc add magnitude-test
 ```
 This will add the yalc (local) version of magnitude-test instead of the one published on npm
 
-Then back in the monorepo:
-```sh
-cd packages/magnitude-test
-bun run pubdev
-```
-This will update your other project with your modified version of Magnitude
+Run `pubdev` again as needed to update your other project with your modified version of Magnitude.

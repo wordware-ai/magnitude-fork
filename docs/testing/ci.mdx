@@ -1,5 +1,5 @@
 ---
-title: 'GitHub Actions'
+title: 'Testing in CI'
 description: 'Run Magnitude tests with GitHub Actions'
 icon: github
 ---
@@ -8,7 +8,7 @@ You can kick off Magnitude tests from GitHub actions by:
 1. Ensuring that your development server is accessible in the test runner
 2. Ensuring `magnitude-test` gets installed on the test runner
 3. Running the appropriate `npx magnitude` CLI command
-4. Including the appropriate LLM client credentials (MOONDREAM_API_KEY + whatever you need for your planner LLM of choice).
+4. Including the appropriate LLM client credentials
 
 Here's an example `.githhub/workflows/magnitude.yaml`, from our our [example repo](https://github.com/magnitudedev/magnitude-demo-repo/blob/main/.github/workflows/magnitude.yaml):
 ```yaml
@@ -23,7 +23,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      MOONDREAM_API_KEY: ${{ secrets.MOONDREAM_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js

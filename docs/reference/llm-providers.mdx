@@ -1,6 +1,7 @@
 ---
 title: LLM Providers
 description: "Instructions for configuring LLMs with different providers"
+icon: "cloudy"
 ---
 
 You can specify which LLM to use in `magnitude.config.ts`. If no LLM is configured and `ANTHROPIC_API_KEY` is available, Magnitude will use Claude Sonnet 4 automatically.
@@ -176,8 +177,8 @@ import { type MagnitudeConfig } from 'magnitude-test';
 
 export default {
     url: "http://localhost:5173",
-    executor: {
-        provider: 'moondream', // only moondream currently supported
+    grounding: {
+        provider: 'moondream',
         options: {
             baseUrl: 'your-self-hosted-moondream-endpoint',
             apiKey: process.env.MOONDREAM_API_KEY // not necessary if self-hosted

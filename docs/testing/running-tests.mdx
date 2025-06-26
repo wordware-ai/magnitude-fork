@@ -22,11 +22,11 @@ If any Magnitude test fails, the CLI process will exit with status code 1. When 
 
 Unlike existing frameworks like Playwright, the criteria for test case failure is not based on whether a selector fails or some expression evaluates false.
 
-Instead, Magnitude decides to fail a test case if either **(1) any step cannot be completed** or **(2) a check does not hold true**.
+Instead, Magnitude decides to fail a test case if either **(1) any act cannot be completed** or **(2) a check does not hold true**.
 
 It will attempt to execute a test case according to the provided steps and only fail if there is no clear way to accomplish the test case, or if any check isn't satisfied.
 
 
 ## Integrating with CI/CD
 You can run Magnitude tests in CI anywhere that you could run Playwright tests, just include LLM client credentials.
-For instructions on running tests cases on GitHub actions, see [here](/integrations/github-actions).
+For instructions on running tests cases on GitHub actions, see [here](/testing/ci).
