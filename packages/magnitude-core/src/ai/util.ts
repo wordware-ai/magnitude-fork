@@ -71,7 +71,11 @@ export function convertToBamlClientOptions(client: LLMClient): Record<string, an
             api_key: client.options.apiKey,
             model: client.options.model,
             temperature: temp,
-            headers: client.options.headers
+            headers: {
+                "HTTP-Referer": "https://magnitude.run",
+                "X-Title": "Magnitude",
+                ...client.options.headers
+            }
         };
     } else if (client.provider === 'azure-openai') {
         options = {
