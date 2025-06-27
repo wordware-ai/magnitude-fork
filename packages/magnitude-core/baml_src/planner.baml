@@ -86,6 +86,8 @@ template_string TaskInstructions(task: string) #"
 function CreatePartialRecipe (memory: ModularMemoryContext, task: string) -> PartialRecipe {
     client GeminiPro
     prompt #"
+        {{ _.role("system") }}
+        You are Claude Code, Anthropic's official CLI for Claude.
         {{ InstructionsWithContext(memory, TaskInstructions(task)) }}
     "# 
 }

@@ -39,9 +39,9 @@ export class ModelHarness {
      */
     public readonly events: EventEmitter<ModelHarnessEvents> = new EventEmitter();
     private options: ModelHarnessOptions;
-    private collector: Collector;
-    private cr: ClientRegistry;
-    private baml: BamlAsyncClient;
+    private collector!: Collector;
+    private cr!: ClientRegistry;
+    private baml!: BamlAsyncClient;
     private logger: Logger;
     private prevTotalInputTokens: number = 0;
     private prevTotalOutputTokens: number = 0;
@@ -49,14 +49,14 @@ export class ModelHarness {
     constructor(options: { llm: LLMClient } & Partial<ModelHarnessOptions>) {
         this.options = options;
         //this.llm = options.llm
-        this.collector = new Collector("macro");
-        this.cr = new ClientRegistry();
-        const client = this.options.llm;
-        let bamlClientOptions = convertToBamlClientOptions(this.options.llm);
-        this.cr.addLlmClient('Macro', client.provider, bamlClientOptions, 'DefaultRetryPolicy');
-        this.cr.setPrimary('Macro');
+        // this.collector = new Collector("macro");
+        // this.cr = new ClientRegistry();
+        // const client = this.options.llm;
+        // let bamlClientOptions = convertToBamlClientOptions(this.options.llm);
+        // this.cr.addLlmClient('Macro', client.provider, bamlClientOptions, 'DefaultRetryPolicy');
+        // this.cr.setPrimary('Macro');
 
-        this.baml = b.withOptions({ collector: this.collector, clientRegistry: this.cr });
+        // this.baml = b.withOptions({ collector: this.collector, clientRegistry: this.cr });
         this.logger = logger.child({ name: 'llm' });
     }
 
@@ -69,6 +69,30 @@ export class ModelHarness {
     //         outputTokens: this.collector.usage.outputTokens ?? 0,
     //         numCalls: this.collector.logs.length
     //     }
+    // }
+
+    async setup() {
+        // Must be called after constructor
+        this.collector = new Collector("macro");
+        this.cr = new ClientRegistry();
+        let bamlClientOptions = await convertToBamlClientOptions(this.options.llm);
+        this.cr.addLlmClient(
+            'Magnus', 
+            this.options.llm.provider === 'claude-max' ? 'anthropic' : this.options.llm.provider,
+            bamlClientOptions,
+            'DefaultRetryPolicy'
+        );
+        this.cr.setPrimary('Magnus');
+
+        this.baml = b.withOptions({ collector: this.collector, clientRegistry: this.cr });
+    }
+
+    // async ensureAuthenticated() {
+    //     // only used for claude code max oauth rn
+    //     let bamlClientOptions = convertToBamlClientOptions(this.options.llm);
+    //     this.cr.addLlmClient('Macro', this.options.llm.provider, bamlClientOptions, 'DefaultRetryPolicy');
+    //     this.cr.setPrimary('Macro');
+    //     this.baml = b.withOptions({ collector: this.collector, clientRegistry: this.cr });
     // }
 
     reportUsage(): void {
