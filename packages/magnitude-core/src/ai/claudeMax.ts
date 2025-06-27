@@ -2,6 +2,8 @@ import { promises as fs } from 'fs';
 import { homedir } from 'os';
 import { join, dirname } from 'path';
 import crypto from 'crypto';
+import { bold, cyanBright } from 'ansis';
+import open from 'open';
 
 // Constants
 const CLIENT_ID = '9d1c250a-e61b-44d9-88ed-5944d1962f5e';
@@ -150,10 +152,21 @@ export async function completeClaudeCodeMaxAuthFlow(): Promise<string> {
     // Otherwise, go through auth flow
     const pkce = generatePKCE();
     const authUrl = getAuthorizationURL(pkce);
+
+    console.log(bold`Claude Code Max access token missing or expired.`);
+    //console.log(cyanBright`Accounts with Max plan can be used for API access.`)
+    console.log(cyanBright`Opening browser for authentication...`);
+    try {
+        await open(authUrl);
+    } catch (err) {
+        console.log('Could not open browser automatically');
+        console.log(err)
+    }
     
-    console.log('Open this URL in your browser:');
+    //console.log('Open this URL in your browser:');
+    console.log(bold`\nIf browser did not open, visit:`);
     console.log(authUrl);
-    console.log('\nPaste the authorization code here:');
+    console.log(bold`\nPaste the authorization code here:`);
     
     const code = await new Promise<string>((resolve) => {
         process.stdin.once('data', (data) => {
@@ -163,6 +176,8 @@ export async function completeClaudeCodeMaxAuthFlow(): Promise<string> {
 
     const creds = await exchangeCodeForTokens(code, pkce.verifier);
     await saveCredentials(creds);
+
+    console.log(bold`\nCredentials saved!`);
     
     return creds.access_token;
 }
