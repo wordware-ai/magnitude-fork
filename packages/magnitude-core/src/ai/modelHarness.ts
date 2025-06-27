@@ -95,6 +95,10 @@ export class ModelHarness {
     //     this.baml = b.withOptions({ collector: this.collector, clientRegistry: this.cr });
     // }
 
+    describeModel(): string {
+        return `${this.options.llm.provider}:${'model' in this.options.llm.options ? this.options.llm.options.model : 'unknown'}`;
+    }
+
     reportUsage(): void {
         // Get tokens used since last call to reportUsage
         const inputTokens = (this.collector.usage.inputTokens ?? 0) - this.prevTotalInputTokens;
