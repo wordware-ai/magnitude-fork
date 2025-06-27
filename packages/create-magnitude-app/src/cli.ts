@@ -175,7 +175,8 @@ async function establishProjectInfo(info: Partial<ProjectInfo>): Promise<Project
     });
 
     if (isCancel(assistant)) {
-        assistant = 'none';
+        log.warn("Come back soon!");
+        process.exit(0);
     }
 
     return { projectName, model, provider, apiKey, assistant };
