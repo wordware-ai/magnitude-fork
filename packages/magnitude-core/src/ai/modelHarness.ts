@@ -78,7 +78,7 @@ export class ModelHarness {
         let bamlClientOptions = await convertToBamlClientOptions(this.options.llm);
         this.cr.addLlmClient(
             'Magnus', 
-            this.options.llm.provider === 'claude-max' ? 'anthropic' : this.options.llm.provider,
+            this.options.llm.provider === 'claude-code' ? 'anthropic' : this.options.llm.provider,
             bamlClientOptions,
             'DefaultRetryPolicy'
         );
@@ -164,7 +164,7 @@ export class ModelHarness {
         const response = await this.baml.CreatePartialRecipe( 
             context,
             task,
-            this.options.llm.provider === 'claude-max',
+            this.options.llm.provider === 'claude-code',
             { tb }
         );
         this.logger.trace(`createPartialRecipe took ${Date.now()-start}ms`);
@@ -197,7 +197,7 @@ export class ModelHarness {
             instructions,
             await screenshot.toBaml(),
             domContent,
-            this.options.llm.provider === 'claude-max',
+            this.options.llm.provider === 'claude-code',
             { tb }
         );
         this.reportUsage();
@@ -226,7 +226,7 @@ export class ModelHarness {
         const resp = await this.baml.QueryMemory(
             context,
             query,
-            this.options.llm.provider === 'claude-max',
+            this.options.llm.provider === 'claude-code',
             { tb }
         );
         this.reportUsage();

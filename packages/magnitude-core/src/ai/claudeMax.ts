@@ -7,7 +7,7 @@ import open from 'open';
 
 // Constants
 const CLIENT_ID = '9d1c250a-e61b-44d9-88ed-5944d1962f5e';
-const CREDS_PATH = join(homedir(), '.magnitude', 'credentials', 'claudeMax.json');
+const CREDS_PATH = join(homedir(), '.magnitude', 'credentials', 'claudeCode.json');
 
 // Types
 interface Credentials {
@@ -153,7 +153,7 @@ export async function completeClaudeCodeMaxAuthFlow(): Promise<string> {
     const pkce = generatePKCE();
     const authUrl = getAuthorizationURL(pkce);
 
-    console.log(bold`Claude Code Max access token missing or expired.`);
+    console.log(bold`Claude Code Pro/Max access token missing or expired.`);
     //console.log(cyanBright`Accounts with Max plan can be used for API access.`)
     console.log(cyanBright`Opening browser for authentication...`);
     try {

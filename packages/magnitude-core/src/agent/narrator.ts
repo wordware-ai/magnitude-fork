@@ -26,8 +26,8 @@ export function narrateAgent(agent: Agent) {
 
         console.log(`  Total usage: ` + bold`${totalInputTokens}` + ` input tokens` + ` / ` + bold`${totalOutputTokens}` + ` output tokens`);
         if (totalInputTokenCost > 0 || totalOutputTokenCost > 0) {
-            if (agent.model.describeModel().startsWith('claude-max')) {
-                console.log(`  Cost: ` + cyanBright`None - using Claude Max subscription`)
+            if (agent.model.describeModel().startsWith('claude-code')) {
+                console.log(`  Cost: ` + cyanBright`None - using Claude Pro or Max subscription`)
             } else {
                 console.log(`  Cost: $${(totalInputTokenCost + totalOutputTokenCost).toFixed(3)}`);
             }

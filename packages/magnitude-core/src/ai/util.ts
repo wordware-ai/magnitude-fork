@@ -1,7 +1,7 @@
 import { GroundingClient, type LLMClient } from '@/ai/types';
 import { Agent, AgentOptions } from "@/agent";
 import { BrowserConnector, BrowserConnectorOptions } from "@/connectors/browserConnector";
-import { completeClaudeCodeMaxAuthFlow } from './claudeMax';
+import { completeClaudeCodeMaxAuthFlow as completeClaudeCodeAuthFlow } from './claudeMax';
 
 function cleanNestedObject(obj: object): object {
     // Remove null/undefined key values entirely
@@ -26,9 +26,9 @@ export async function convertToBamlClientOptions(client: LLMClient): Promise<Rec
         (client.options.temperature ?? 0.0) : 0.0;
 
     let options: object;
-    if (client.provider === 'claude-max') {
+    if (client.provider === 'claude-code') {
         // Special case - oauth with claude code max anthropic account
-        const oauthToken = await completeClaudeCodeMaxAuthFlow();
+        const oauthToken = await completeClaudeCodeAuthFlow();
         options = {
             model: client.options.model,
             temperature: temp,
