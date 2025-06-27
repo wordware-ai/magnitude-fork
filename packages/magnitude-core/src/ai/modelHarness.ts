@@ -160,6 +160,7 @@ export class ModelHarness {
         const response = await this.baml.CreatePartialRecipe( 
             context,
             task,
+            this.options.llm.provider === 'claude-max',
             { tb }
         );
         this.logger.trace(`createPartialRecipe took ${Date.now()-start}ms`);
@@ -188,7 +189,13 @@ export class ModelHarness {
 
         // }
 
-        const resp = await this.baml.ExtractData(instructions, await screenshot.toBaml(), domContent, { tb });
+        const resp = await this.baml.ExtractData(
+            instructions,
+            await screenshot.toBaml(),
+            domContent,
+            this.options.llm.provider === 'claude-max',
+            { tb }
+        );
         this.reportUsage();
 
         if (schema instanceof z.ZodObject) {
@@ -215,6 +222,7 @@ export class ModelHarness {
         const resp = await this.baml.QueryMemory(
             context,
             query,
+            this.options.llm.provider === 'claude-max',
             { tb }
         );
         this.reportUsage();
