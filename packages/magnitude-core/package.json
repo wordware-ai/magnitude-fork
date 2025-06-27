@@ -1,6 +1,6 @@
 {
   "name": "magnitude-core",
-  "version": "0.2.12",
+  "version": "0.2.13",
   "description": "Magnitude e2e testing agent",
   "publishConfig": {
     "access": "public"
@@ -60,6 +60,7 @@
     "eventemitter3": "^5.0.1",
     "moondream": "^0.1.0",
     "object-hash": "^3.0.0",
+    "open": "^10.1.2",
     "pino": "^9.6.0",
     "pino-pretty": "^13.0.0",
     "playwright": "npm:rebrowser-playwright@^1.52.0",

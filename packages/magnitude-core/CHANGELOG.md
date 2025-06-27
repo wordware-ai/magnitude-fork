@@ -1,5 +1,11 @@
 # magnitude-core
 
+## 0.2.13
+
+### Patch Changes
+
+- claude code pro max support
+
 ## 0.2.12
 
 ### Patch Changes

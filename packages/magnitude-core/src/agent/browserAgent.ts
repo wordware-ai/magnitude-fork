@@ -32,7 +32,9 @@ export async function startBrowserAgent(
         //agent.events.on('actionStarted', (action: any) => { console.log(action) })
     }
 
+    //console.log('starting agent')
     await agent.start();
+    //console.log('agent started');
     return agent;
 }
 
