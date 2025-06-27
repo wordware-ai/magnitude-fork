@@ -34,7 +34,9 @@ export async function convertToBamlClientOptions(client: LLMClient): Promise<Rec
             temperature: temp,
             headers: {
                 'Authorization': `Bearer ${oauthToken}`,
-                'anthropic-beta': 'oauth-2025-04-20'
+                'anthropic-beta': 'oauth-2025-04-20',
+                // Overrides this header from being automatically derived from ANTHROPIC_API_KEY
+                'X-API-Key': ''
             }
         };
     } else if (client.provider === 'anthropic') {
@@ -42,6 +44,9 @@ export async function convertToBamlClientOptions(client: LLMClient): Promise<Rec
             api_key: client.options.apiKey,
             model: client.options.model,
             temperature: temp,
+            // headers: {
+            //     'X-API-Key': ''//'something-invalid'
+            // }
         };
     } else if (client.provider === 'aws-bedrock') {
         options = {
