@@ -4,12 +4,11 @@ import { join, dirname } from 'path';
 import crypto from 'crypto';
 import { bold, cyanBright } from 'ansis';
 import open from 'open';
+import { intro, outro, spinner, log, text, select, confirm, isCancel, multiselect } from '@clack/prompts';
 
-// Constants
 const CLIENT_ID = '9d1c250a-e61b-44d9-88ed-5944d1962f5e';
 const CREDS_PATH = join(homedir(), '.magnitude', 'credentials', 'claudeCode.json');
 
-// Types
 interface Credentials {
     access_token: string;
     refresh_token: string;
@@ -106,14 +105,12 @@ async function refreshAccessToken(refreshToken: string): Promise<Credentials> {
     };
 }
 
-// 5. Save credentials
 async function saveCredentials(creds: Credentials): Promise<void> {
     await fs.mkdir(dirname(CREDS_PATH), { recursive: true });
     await fs.writeFile(CREDS_PATH, JSON.stringify(creds, null, 2));
     await fs.chmod(CREDS_PATH, 0o600); // Read/write for owner only
 }
 
-// 6. Load credentials
 async function loadCredentials(): Promise<Credentials | null> {
     try {
         const data = await fs.readFile(CREDS_PATH, 'utf-8');
@@ -123,8 +120,7 @@ async function loadCredentials(): Promise<Credentials | null> {
     }
 }
 
-// 7. Get valid access token (refresh if needed)
-async function getValidAccessToken(): Promise<string | null> {
+export async function getValidClaudeCodeAccessToken(): Promise<string | null> {
     const creds = await loadCredentials();
     if (!creds) return null;
 
@@ -143,61 +139,42 @@ async function getValidAccessToken(): Promise<string | null> {
     }
 }
 
-// SIMPLIFIED: Get token or authenticate
-export async function completeClaudeCodeMaxAuthFlow(): Promise<string> {
+export async function completeClaudeCodeAuthFlow(): Promise<string> {
     // Try to get existing valid token
-    const existingToken = await getValidAccessToken();
+    const existingToken = await getValidClaudeCodeAccessToken();
     if (existingToken) return existingToken;
 
     // Otherwise, go through auth flow
     const pkce = generatePKCE();
     const authUrl = getAuthorizationURL(pkce);
 
-    console.log(bold`Claude Code Pro/Max access token missing or expired.`);
-    //console.log(cyanBright`Accounts with Max plan can be used for API access.`)
-    console.log(cyanBright`Opening browser for authentication...`);
+    log.message(cyanBright`Opening browser for authentication...`);
     try {
         await open(authUrl);
     } catch (err) {
-        console.log('Could not open browser automatically');
-        console.log(err)
+        log.message('Could not open browser automatically');
     }
     
-    //console.log('Open this URL in your browser:');
-    console.log(bold`\nIf browser did not open, visit:`);
-    console.log(authUrl);
-    console.log(bold`\nPaste the authorization code here:`);
+
+    log.message(bold`If browser did not open, visit:`);
+    log.message(authUrl);
+    //console.log(bold`\nPaste the authorization code here:`);
     
-    const code = await new Promise<string>((resolve) => {
-        process.stdin.once('data', (data) => {
-            resolve(data.toString().trim());
-        });
-    });
+    // const code = await new Promise<string>((resolve) => {
+    //     process.stdin.once('data', (data) => {
+    //         resolve(data.toString().trim());
+    //     });
+    // });
+    const code = await text({ message: 'Paste authorization code here:'});
+
+    if (isCancel(code)) {
+        throw new Error("Authorization cancelled");
+    }
 
     const creds = await exchangeCodeForTokens(code, pkce.verifier);
     await saveCredentials(creds);
 
-    console.log(bold`\nCredentials saved!`);
+    log.success(bold`\nCredentials saved!`);
     
     return creds.access_token;
 }
-
-
-/*
-// Usage
-const response = await fetch('https://api.anthropic.com/v1/messages', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${accessToken}`,
-    'anthropic-beta': 'oauth-2025-04-20',
-    // make sure to exclude x-api-key
-  },
-  body: JSON.stringify({
-    model: 'claude-3-5-sonnet-20241022',
-    messages: [{ role: 'user', content: 'Hello!' }],
-    max_tokens: 100,
-  }),
-});
-
-*/

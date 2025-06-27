@@ -1,7 +1,7 @@
 import { GroundingClient, type LLMClient } from '@/ai/types';
 import { Agent, AgentOptions } from "@/agent";
 import { BrowserConnector, BrowserConnectorOptions } from "@/connectors/browserConnector";
-import { completeClaudeCodeMaxAuthFlow as completeClaudeCodeAuthFlow } from './claudeMax';
+import { completeClaudeCodeAuthFlow } from './claudeCode';
 
 function cleanNestedObject(obj: object): object {
     // Remove null/undefined key values entirely
