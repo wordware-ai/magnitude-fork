@@ -9,7 +9,7 @@ const DEFAULT_BROWSER_OPTIONS: LaunchOptions = {
     args: ["--disable-gpu", "--disable-blink-features=AutomationControlled"],
 };
 
-export type BrowserOptions = ({ instance: Browser } | { cdp: string } | { launchOptions?: LaunchOptions }) & {
+export type BrowserOptions = ({ instance: Browser } | { cdp: string } | { context: BrowserContext } | { launchOptions?: LaunchOptions }) & {
     contextOptions?: BrowserContextOptions;
 };
 
@@ -127,6 +127,8 @@ export class BrowserProvider {
             if ('cdp' in options) {
                 const browser = await chromium.connectOverCDP(options.cdp);
                 return browser.newContext(options.contextOptions);
+            } if ('context' in options) {
+                return options.context;
             } else if ('instance' in options) {
                 return await options.instance.newContext(options.contextOptions);
             } else if ('launchOptions' in options) {
