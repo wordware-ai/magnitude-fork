@@ -121,8 +121,6 @@ export class BrowserAgent extends Agent {
         // const accessibilityTree = await this.page.accessibility.snapshot({ interestingOnly: true });
         // const pageRepr = renderMinimalAccessibilityTree(accessibilityTree);
 
-        console.log(htmlContent);
-
         const partitionOptions: PartitionOptions = {
             extractImages: true,
             extractForms: true,
@@ -150,11 +148,6 @@ export class BrowserAgent extends Agent {
 
         // Convert to markdown
         const markdown = serializeToMarkdown(result, markdownOptions);
-
-        console.log("Markdown:")
-        console.log(markdown);
-        // console.log("Atree:");
-        // console.log(pageRepr);
 
         const screenshot = await this.require(BrowserConnector).getHarness().screenshot();
         const data = await this.model.extract(instructions, schema, screenshot, markdown);
