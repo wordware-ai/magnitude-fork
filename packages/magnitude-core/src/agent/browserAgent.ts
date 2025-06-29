@@ -57,6 +57,39 @@ export interface BrowserAgentEvents {
     'extractDone': (instructions: string, data: ExtractedOutput) => void;
 }
 
+async function getFullPageContent(page: Page): Promise<string> {
+    // 1. Get all iframe element handles
+    const iframeHandles = await page.locator('iframe').elementHandles();
+
+    // 2. Iterate through each iframe handle
+    for (const iframeHandle of iframeHandles) {
+        // 3. Get the Frame object for the iframe
+        const frame = await iframeHandle.contentFrame();
+        if (frame) {
+            // 4. Get the HTML content of the iframe
+            const iframeContent = await frame.content();
+
+            // 5. Use evaluate to replace the iframe element with its content.
+            // We pass the content as an argument to avoid issues with string escaping.
+            await iframeHandle.evaluate((iframeNode, { content }) => {
+                // Create a new div element to hold the iframe's content
+                const div = document.createElement('div');
+                div.innerHTML = content;
+
+                // Add a data-attribute to mark that this was an expanded iframe
+                div.dataset.expandedFromIframe = 'true';
+                div.dataset.iframeSrc = (iframeNode as HTMLIFrameElement).getAttribute('src') || '';
+
+                // Replace the iframeNode with the new div
+                iframeNode.parentNode?.replaceChild(div, iframeNode);
+            }, { content: iframeContent });
+        }
+    }
+
+    // 6. Return the final, modified page content
+    return page.content();
+}
+
 export class BrowserAgent extends Agent {
     public readonly browserAgentEvents: EventEmitter<BrowserAgentEvents> = new EventEmitter();
 
@@ -83,9 +116,12 @@ export class BrowserAgent extends Agent {
 
     async extract<T extends Schema>(instructions: string, schema: T): Promise<z.infer<T>> {
         this.browserAgentEvents.emit('extractStarted', instructions, schema);
-        const htmlContent = await this.page.content();
+        //const htmlContent = await this.page.content();
+        const htmlContent = await getFullPageContent(this.page);
         // const accessibilityTree = await this.page.accessibility.snapshot({ interestingOnly: true });
         // const pageRepr = renderMinimalAccessibilityTree(accessibilityTree);
+
+        console.log(htmlContent);
 
         const partitionOptions: PartitionOptions = {
             extractImages: true,
@@ -115,8 +151,8 @@ export class BrowserAgent extends Agent {
         // Convert to markdown
         const markdown = serializeToMarkdown(result, markdownOptions);
 
-        // console.log("Markdown:")
-        // console.log(markdown);
+        console.log("Markdown:")
+        console.log(markdown);
         // console.log("Atree:");
         // console.log(pageRepr);
 

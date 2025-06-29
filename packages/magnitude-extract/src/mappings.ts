@@ -195,7 +195,7 @@ export const IGNORED_TAGS = new Set([
   'meta',
   'link',
   'noscript',
-  'iframe', // Usually ads/embeds
+  'iframe', // we expand these automatically anyway before processing
   'object',
   'embed',
   'applet',
