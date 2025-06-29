@@ -31,7 +31,13 @@
     "lint": "bun run eslint src/**/*.ts",
     "prepublishOnly": "bun run build"
   },
-  "keywords": ["dom", "html", "cleaning", "parsing", "structured-data"],
+  "keywords": [
+    "dom",
+    "html",
+    "cleaning",
+    "parsing",
+    "structured-data"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
