@@ -284,6 +284,11 @@ export class Agent {
                     description,
                     this.actions 
                 ));
+                if (actions.length === 0) {
+                    // Empty action list behavior - default wait else ... err? what if not in action space?
+                    //actions.push()
+                    throw new AgentError(`No actions generated`);
+                }
             } catch (error: unknown) {
                 logger.error(`Agent: Error creating partial recipe: ${error instanceof Error ? error.message : String(error)}`);
                 /**

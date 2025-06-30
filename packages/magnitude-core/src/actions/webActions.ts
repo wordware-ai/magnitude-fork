@@ -261,7 +261,7 @@ export const agnosticWebActions = [
     keyboardTabAction,
     keyboardBackspaceAction,
     keyboardSelectAllAction,
-    //waitAction,
+    waitAction,
 ] as const;
 
 export const coordWebActions = [
