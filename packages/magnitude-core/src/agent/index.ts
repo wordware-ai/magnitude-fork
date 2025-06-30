@@ -331,6 +331,8 @@ export class Agent {
     }
 
     async query<T extends z.Schema>(query: string, schema: T): Promise<z.infer<T>> {
+        // Record observations in case no act() was used beforehand
+        await this._recordConnectorObservations(this.latestTaskMemory);
         const memoryContext = await this.memory.buildContext(this.connectors);
         return await this.model.query(memoryContext, query, schema);
     }
