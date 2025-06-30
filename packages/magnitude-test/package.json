@@ -36,7 +36,6 @@
   "scripts": {
     "build": "tsc && pkgroll",
     "check": "tsc --noEmit",
-    "prepare": "bun run build",
     "cli": "bun src/cli.ts",
     "cli-bin": "bun dist/cli.js",
     "pubdev": "bun run build && yalc publish --force --push"
