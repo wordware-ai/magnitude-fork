@@ -234,7 +234,7 @@ export const goBackAction = createAction({
 // gets overused currently if we include this
 export const waitAction = createAction({
     name: 'wait',
-    description: "Wait for some time",
+    description: "Actions include smart waiting automatically - so only use this when a significant additional wait is clearly required.",
     schema: z.object({
         seconds: z.number()
     }),
