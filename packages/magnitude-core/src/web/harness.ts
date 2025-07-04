@@ -150,12 +150,18 @@ export class WebHarness { // implements StateComponent
     }
 
     // safer might be Coordinate interface/obj tied to certain screen space dims
-    transformCoordinates({ x, y }: { x: number, y: number }): { x: number, y: number } {
+    async transformCoordinates({ x, y }: { x: number, y: number }): Promise<{ x: number, y: number }> {
         const virtual = this.options.virtualScreenDimensions;
         if (!virtual) {
             return { x, y };
         }
-        const vp = this.page.viewportSize();
+        let vp = this.page.viewportSize();
+        if (!vp) {
+            vp = await this.page.evaluate(() => ({
+                width: window.innerWidth,
+                height: window.innerHeight
+            }));
+        }
         if (!vp) throw new Error("Could not get viewport dimensions to transform coordinates");
         return {
             x: x * (vp.width / virtual.width),
@@ -164,7 +170,7 @@ export class WebHarness { // implements StateComponent
     }
 
     async click({ x, y }: { x: number, y: number }) {
-        ({ x, y } = this.transformCoordinates({ x, y }));
+        ({ x, y } = await this.transformCoordinates({ x, y }));
         // console.log("x:", x);
         // console.log("y:", y);
         await this.visualizer.visualizeAction(x, y);
@@ -174,22 +180,22 @@ export class WebHarness { // implements StateComponent
     }
 
     async rightClick({ x, y }: { x: number, y: number }) {
-        ({ x, y } = this.transformCoordinates({ x, y }));
+        ({ x, y } = await this.transformCoordinates({ x, y }));
         await this.visualizer.visualizeAction(x, y);
         await this.page.mouse.click(x, y, { button: "right" });
         await this.waitForStability();
     }
 
     async doubleClick({ x, y }: { x: number, y: number }) {
-        ({ x, y } = this.transformCoordinates({ x, y }));
+        ({ x, y } = await this.transformCoordinates({ x, y }));
         await this.visualizer.visualizeAction(x, y);
         await this.page.mouse.dblclick(x, y);
         await this.waitForStability();
     }
 
     async drag({ x1, y1, x2, y2 }: { x1: number, y1: number, x2: number, y2: number }) {
-        ({ x: x1, y: y1 } = this.transformCoordinates({ x: x1, y: y1 }));
-        ({ x: x2, y: y2 } = this.transformCoordinates({ x: x2, y: y2 }));
+        ({ x: x1, y: y1 } = await this.transformCoordinates({ x: x1, y: y1 }));
+        ({ x: x2, y: y2 } = await this.transformCoordinates({ x: x2, y: y2 }));
 
         //console.log(`Dragging: (${x1}, ${y1}) -> (${x2}, ${y2})`);
         
@@ -217,7 +223,7 @@ export class WebHarness { // implements StateComponent
     async clickAndType({ x, y, content }: { x: number, y: number, content: string }) {
         // TODO: transforms incorrect for moondream grounding with virtual screen dims (claude) - unsure why
         //console.log(`Pre transform: ${x}, ${y}`);
-        ({ x, y } = this.transformCoordinates({ x, y }));
+        ({ x, y } = await this.transformCoordinates({ x, y }));
         //console.log(`Post transform: ${x}, ${y}`);
         await this.visualizer.visualizeAction(x, y);
         await this.page.mouse.click(x, y);
@@ -226,7 +232,7 @@ export class WebHarness { // implements StateComponent
     }
     
     async scroll({ x, y, deltaX, deltaY }: { x: number, y: number, deltaX: number, deltaY: number }) {
-        ({ x, y } = this.transformCoordinates({ x, y }));
+        ({ x, y } = await this.transformCoordinates({ x, y }));
         await this.visualizer.visualizeAction(x, y);
         await this.page.mouse.move(x, y);
         await this.page.mouse.wheel(deltaX, deltaY);
