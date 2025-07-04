@@ -63,8 +63,13 @@ export class WebHarness { // implements StateComponent
     // }
 
     async start() {
-        await this.context.newPage();
-        // Other logic for page tracking is automatically handled by TabManager
+        if (this.context.pages().length > 0) {
+            // If context already contains a page, set it as active
+            this.tabs.setActivePage(this.context.pages()[0]);
+        } else {
+            await this.context.newPage();
+            // Other logic for page tracking is automatically handled by TabManager
+        }
     }
 
     get page() {
