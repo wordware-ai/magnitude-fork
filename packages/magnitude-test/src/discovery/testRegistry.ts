@@ -1,5 +1,6 @@
 import { TestOptions, TestGroup, MagnitudeConfig, TestFunction, RegisteredTest } from "./types";
 import { TestCompiler } from "@/compiler";
+import { processUrl } from "@/util";
 import cuid2 from "@paralleldrive/cuid2";
 import { pathToFileURL } from "node:url";
 
@@ -140,28 +141,12 @@ export class TestRegistry {
             url: process.env.MAGNITUDE_TEST_URL
         } : {};
 
-        //console.log("global options:", this.globalOptions)
-
-        //const configuredOptions = this.globalOptions;
-        const globalOptions = this.globalOptions.url ? {
-            url: processUrl(envOptions.url, this.globalOptions.url)
-        } : {};
-
-        const groupOptions = this.currentGroup?.options ? {
-            ...this.currentGroup.options,
-            url: processUrl(globalOptions.url, this.currentGroup.options.url)
-        } : {};
-
-
-        const combinedOptions = {
-            ...globalOptions,
+        return {
+            ...this.globalOptions,
             ...envOptions, // env options take precedence over global options
-            ...groupOptions
-        }
-
-        //console.log("combinedOptions:", combinedOptions)
-
-        return combinedOptions;
+            ...(this.currentGroup?.options ?? {}),
+            url: processUrl(envOptions.url, this.globalOptions.url, this.currentGroup?.options?.url)
+        };
     }
 
     async loadTestFile(absoluteFilePath: string, relativeFilePath: string): Promise<void> {
@@ -187,21 +172,6 @@ export class TestRegistry {
         } finally {
             // Always unset the current file path when done
             this.unsetCurrentFilePath();
-        }
-    }
-}
-
-export function processUrl(base: string | undefined, relative: string | undefined): string | undefined {
-    if (!relative) return base;
-    if (!base) return relative;
-    try {
-        return new URL(relative).toString(); // It's a full URL by itself
-    } catch {
-        try {
-            // Not a full URL on its own, try to combine with base
-            return new URL(relative, base).toString();
-        } catch (e) {
-            return relative;
         }
     }
 }

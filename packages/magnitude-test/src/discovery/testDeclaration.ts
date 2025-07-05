@@ -1,6 +1,6 @@
 import { TestDeclaration, TestOptions, TestFunction, TestGroupFunction } from './types';
-import { TestRegistry, processUrl } from './testRegistry';
-import { addProtocolIfMissing } from '@/util';
+import { TestRegistry } from './testRegistry';
+import { addProtocolIfMissing, processUrl } from '@/util';
 
 function testDecl(
     title: string,
@@ -32,7 +32,7 @@ function testDecl(
     };
 
     if (!combinedOptions.url) {
-        throw Error("URL must be provided either through (1) env var MAGNITUDE_TEST_URL, (2) via test.config, or (3) in group or test options");
+        throw Error("URL must be provided either through (1) env var MAGNITUDE_TEST_URL, (2) via magnitude.config.ts, or (3) in group or test options");
     }
 
     // Add the declared test function as a runnable to the registry 
