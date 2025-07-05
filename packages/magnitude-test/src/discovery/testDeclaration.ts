@@ -32,7 +32,7 @@ function testDecl(
     };
 
     if (!combinedOptions.url) {
-        throw Error("URL must be provided either through (1) env var MAGNITUDE_TEST_URL, (2) via test.config, or (3) in group or test options");
+        throw Error("URL must be provided either through (1) env var MAGNITUDE_TEST_URL, (2) via magnitude.config.ts, or (3) in group or test options");
     }
 
     // Add the declared test function as a runnable to the registry 
