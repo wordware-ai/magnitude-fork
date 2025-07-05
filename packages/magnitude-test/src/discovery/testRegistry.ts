@@ -141,28 +141,12 @@ export class TestRegistry {
             url: process.env.MAGNITUDE_TEST_URL
         } : {};
 
-        //console.log("global options:", this.globalOptions)
-
-        //const configuredOptions = this.globalOptions;
-        const globalOptions = this.globalOptions.url ? {
-            url: processUrl(envOptions.url, this.globalOptions.url)
-        } : {};
-
-        const groupOptions = this.currentGroup?.options ? {
-            ...this.currentGroup.options,
-            url: processUrl(globalOptions.url, this.currentGroup.options.url)
-        } : {};
-
-
-        const combinedOptions = {
-            ...globalOptions,
+        return {
+            ...this.globalOptions,
             ...envOptions, // env options take precedence over global options
-            ...groupOptions
-        }
-
-        //console.log("combinedOptions:", combinedOptions)
-
-        return combinedOptions;
+            ...(this.currentGroup?.options ?? {}),
+            url: processUrl(envOptions.url, this.globalOptions.url, this.currentGroup?.options?.url)
+        };
     }
 
     async loadTestFile(absoluteFilePath: string, relativeFilePath: string): Promise<void> {
