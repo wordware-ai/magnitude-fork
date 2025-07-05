@@ -209,17 +209,22 @@ export const knownCostMap: Record<string, number[]> = {
     'gpt-4o': [3.75, 15.00],
 }
 
-export function processUrl(base: string | undefined, relative: string | undefined): string | undefined {
-    if (!relative) return base;
-    if (!base) return relative;
+export function processUrl(...urls: (string | undefined)[]): string | undefined {
+    if (urls.length === 0) return;
+    if (urls.length === 1) return urls[0];
+
+    const [base, relative, ...rest] = urls;
+    if (!relative) return processUrl(base, ...rest);
+    if (!base) return processUrl(relative, ...rest);
+
     try {
-        return new URL(relative).toString(); // It's a full URL by itself
+        return processUrl(new URL(relative).toString(), ...rest); // It's a full URL by itself
     } catch {
         try {
             // Not a full URL on its own, try to combine with base
-            return new URL(relative, base).toString();
-        } catch (e) {
-            return relative;
+            return processUrl(new URL(relative, base).toString(), ...rest);
+        } catch (_e) {
+            return processUrl(relative, ...rest);
         }
     }
 }
