@@ -1,5 +1,6 @@
 import { TestOptions, TestGroup, MagnitudeConfig, TestFunction, RegisteredTest } from "./types";
 import { TestCompiler } from "@/compiler";
+import { processUrl } from "@/util";
 import cuid2 from "@paralleldrive/cuid2";
 import { pathToFileURL } from "node:url";
 
@@ -187,21 +188,6 @@ export class TestRegistry {
         } finally {
             // Always unset the current file path when done
             this.unsetCurrentFilePath();
-        }
-    }
-}
-
-export function processUrl(base: string | undefined, relative: string | undefined): string | undefined {
-    if (!relative) return base;
-    if (!base) return relative;
-    try {
-        return new URL(relative).toString(); // It's a full URL by itself
-    } catch {
-        try {
-            // Not a full URL on its own, try to combine with base
-            return new URL(relative, base).toString();
-        } catch (e) {
-            return relative;
         }
     }
 }

@@ -208,3 +208,19 @@ export const knownCostMap: Record<string, number[]> = {
     'gpt-4.1-nano': [0.10, 0.40],
     'gpt-4o': [3.75, 15.00],
 }
+
+export function processUrl(base: string | undefined, relative: string | undefined): string | undefined {
+    if (!relative) return base;
+    if (!base) return relative;
+    try {
+        return new URL(relative).toString(); // It's a full URL by itself
+    } catch {
+        try {
+            // Not a full URL on its own, try to combine with base
+            return new URL(relative, base).toString();
+        } catch (e) {
+            return relative;
+        }
+    }
+}
+
