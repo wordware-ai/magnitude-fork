@@ -10,7 +10,7 @@ import { Observation, ObservationOptions, ObservationSource, renderObservations 
 import { BamlRenderable, observableDataToContext } from './context';
 import z from 'zod';
 import EventEmitter from 'eventemitter3';
-import { MultiMediaJson, observableDataToJson } from './serde';
+import { jsonToObservableData, MultiMediaJson, observableDataToJson } from './serde';
 
 // export interface AgentMemoryEvents {
 //     'thought': (thought: string) => void;
@@ -26,9 +26,13 @@ export interface SerializedAgentMemory {
     }[];
 }
 
+export interface AgentMemoryOptions {
+    thoughtLimit?: number, // TTL for thoughts
+}
+
 export class AgentMemory {
     //public readonly events: EventEmitter<AgentMemoryEvents> = new EventEmitter();
-    //private options: Required<MemoryOptions>;
+    private options: Required<AgentMemoryOptions>;
     //private history: StoredHistoryEntry[] = [];
 
     // Custom instructions relating to this memory instance (e.g. agent-level and/or task-level instructions)
@@ -37,8 +41,11 @@ export class AgentMemory {
     private observations: Observation[] = [];
     //private tasks: { task: string, observations: Observation[] }[] = [];
 
-    constructor(instructions?: string) {
+    constructor(instructions?: string, options?: AgentMemoryOptions) {
         this.instructions = instructions ?? null;
+        this.options = {
+            thoughtLimit: options?.thoughtLimit ?? 20
+        };
     }
 
     // get observations(): Observation[] {
@@ -58,7 +65,7 @@ export class AgentMemory {
 
     public recordThought(content: string): void {
         this.observations.push(
-            Observation.fromThought(content)
+            Observation.fromThought(content, { type: 'thought', limit: this.options.thoughtLimit })
         );
         //this.events.emit('thought', content);
     }
@@ -116,5 +123,30 @@ export class AgentMemory {
             ...(this.instructions ? { instructions: this.instructions } : {}),
             observations: observations
         };
+    }
+
+    // TODO: turn into class static method / rework cons
+    public async loadJSON(data: SerializedAgentMemory) {
+        //jsonToObservableData(data);
+        const observations = [];
+        for (const observation of data.observations) {
+            observations.push(new Observation(
+                observation.source,
+                await jsonToObservableData(observation.data),
+                observation.options,
+                observation.timestamp
+            ));
+            
+        }
+        // nvm
+        //this.instructions = this.instructions;
+
+        this.observations = observations;
+
+
+        // return {
+        //     ...(this.instructions ? { instructions: this.instructions } : {}),
+        //     observations: observations
+        // };
     }
 }
