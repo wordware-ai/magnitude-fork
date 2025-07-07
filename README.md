@@ -10,6 +10,8 @@
 
 <hr/>
 
+> 🚀 New: Magnitude is state-of-the-art, scoring [94% on WebVoyager](https://github.com/magnitudedev/webvoyager)!
+
 Magnitude uses vision AI to enable you to control your browser with natural language.
 - 🧭 **Navigate** - Sees and understands any interface to plan out actions
 - 🖱️ **Interact** - Executes precise actions using mouse and keyboard
