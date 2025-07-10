@@ -1,8 +1,15 @@
-export async function retryOnError<T>(
-    fnToRetry: () => Promise<T>,
+import logger from "@/logger";
+
+export interface RetryOptions {
     errorSubstrings: string[],
     retryLimit: number,
-    delayMs: number = 200
+    delayMs: number,
+    warn: boolean
+}
+
+export async function retryOnError<T>(
+    fnToRetry: () => Promise<T>,
+    { errorSubstrings, retryLimit, delayMs, warn }: RetryOptions
 ): Promise<T> {
     let lastError: any;
 
@@ -21,6 +28,9 @@ export async function retryOnError<T>(
             const includesSubstring = errorSubstrings.some((substring) => errorMessage.includes(substring));
 
             if (includesSubstring) {
+                if (warn) {
+                    logger.warn(`Retrying on: ${errorMessage}`);
+                }
                 if (attempt === retryLimit) {
                     throw lastError;
                 }

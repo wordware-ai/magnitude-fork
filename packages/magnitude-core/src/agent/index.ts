@@ -15,6 +15,7 @@ import { taskActions } from "@/actions/taskActions";
 import { ConnectorInstructions, AgentContext, traceAsync } from "@/ai/baml_client";
 import { telemetrifyAgent } from '@/telemetry/events';
 import { isClaude } from '@/ai/util';
+import { retryOnError } from '@/common';
 
 
 export interface AgentOptions {
@@ -317,22 +318,29 @@ export class Agent {
             // Removed direct screenshot/tabState access here; it's part of memoryContext via connectors
             logger.info(`Creating partial recipe`);
 
-            let reasoning: string;
-            let actions: Action[];
+            let reasoning: string = "";
+            let actions: Action[] = [];
+
             try {
-                const memoryContext = await this._buildContext(memory);//await memory.buildContext(this.connectors);
-                ({ reasoning, actions } = await this.model.createPartialRecipe(
-                    memoryContext,
-                    description,
-                    this.actions 
-                ));
-                if (actions.length === 0) {
-                    // Empty action list behavior - default wait else ... err? what if not in action space?
-                    //actions.push()
-                    throw new AgentError(`No actions generated`);
-                }
+                const memoryContext = await this._buildContext(memory);
+                await retryOnError(
+                    async () => {
+                        ({ reasoning, actions } = await this.model.createPartialRecipe(
+                            memoryContext,
+                            description,
+                            this.actions 
+                        ));
+                        if (actions.length === 0) {
+                            // Empty action list behavior - default wait else ... err? what if not in action space?
+                            //actions.push()
+                            throw new AgentError(`No actions generated`);
+                        }
+                    },
+                    // HTTP body is not JSON - comes from Anthropic sometimes, weird error
+                    { errorSubstrings: ['HTTP body is not JSON', 'No actions generated'], retryLimit: 3, delayMs: 1000, warn: true }
+                );
             } catch (error: unknown) {
-                logger.error(`Agent: Error creating partial recipe: ${error instanceof Error ? error.message : String(error)}`);
+                logger.error(`Error planning actions: ${error instanceof Error ? error.message : String(error)}`);
                 /**
                  * (1) Failure to conform to JSON
                  * (2) Misconfigured BAML client / bad API key
@@ -343,7 +351,7 @@ export class Agent {
                 //     message: `Could not create partial recipe -> ${(error as Error).message}`
                 // });
                 throw new AgentError(
-                    `Could not create partial recipe -> ${(error as Error).message}`, { variant: 'misalignment' }
+                    `Error planning actions: ${(error as Error).message}`, { variant: 'misalignment' }
                 )
             }
 
