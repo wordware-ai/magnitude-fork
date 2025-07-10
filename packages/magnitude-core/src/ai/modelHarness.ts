@@ -92,10 +92,18 @@ export class ModelHarness {
             type AnthropicUsage = { input_tokens: number, cache_creation_input_tokens: number, cache_read_input_tokens: number, output_tokens: number, service_tier: string };
             const usage = this.collector.last?.calls.at(-1)?.httpResponse?.body.json().usage as AnthropicUsage;
             //console.log("Usage from Anthropic:", usage);
-            inputTokens = usage.input_tokens;
-            outputTokens = usage.output_tokens;
-            cacheWriteInputTokens = usage.cache_creation_input_tokens;
-            cacheReadInputTokens = usage.cache_read_input_tokens;
+            if (!usage) {
+                // Sometimes apparently this happens? Happened once after extract for example
+                logger.warn("No usage returned from Anthropic provider, cached cost may be inaccurate");
+                inputTokens = (this.collector.usage.inputTokens ?? 0) - this.prevTotalInputTokens;
+                outputTokens = (this.collector.usage.outputTokens ?? 0) - this.prevTotalOutputTokens;
+            } else {
+                inputTokens = usage.input_tokens;
+                outputTokens = usage.output_tokens;
+                cacheWriteInputTokens = usage.cache_creation_input_tokens;
+                cacheReadInputTokens = usage.cache_read_input_tokens;
+            }
+            
         } else {
             inputTokens = (this.collector.usage.inputTokens ?? 0) - this.prevTotalInputTokens;
             outputTokens = (this.collector.usage.outputTokens ?? 0) - this.prevTotalOutputTokens;
