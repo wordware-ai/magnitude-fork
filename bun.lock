@@ -38,7 +38,7 @@
     },
     "packages/magnitude-core": {
       "name": "magnitude-core",
-      "version": "0.2.18",
+      "version": "0.2.20",
       "bin": {
         "magnus": "dist/cli.js",
       },
@@ -55,7 +55,7 @@
         "open": "^10.1.2",
         "pino": "^9.6.0",
         "pino-pretty": "^13.0.0",
-        "playwright": "npm:rebrowser-playwright@^1.52.0",
+        "playwright": "npm:patchright@^1.52.0",
         "posthog-node": "^5.1.1",
         "sharp": "^0.33.5",
         "zod": "^3.24.4",
@@ -107,7 +107,7 @@
     },
     "packages/magnitude-test": {
       "name": "magnitude-test",
-      "version": "0.2.19",
+      "version": "0.2.21",
       "bin": {
         "magnitude": "dist/cli.js",
       },
@@ -1038,7 +1038,7 @@
 
     "pkgroll": ["pkgroll@2.13.1", "", { "dependencies": { "@rollup/plugin-alias": "^5.1.1", "@rollup/plugin-commonjs": "^28.0.5", "@rollup/plugin-dynamic-import-vars": "^2.1.5", "@rollup/plugin-inject": "^5.0.5", "@rollup/plugin-json": "^6.1.0", "@rollup/plugin-node-resolve": "^16.0.1", "@rollup/pluginutils": "^5.1.4", "esbuild": "^0.25.5", "magic-string": "^0.30.17", "rollup": "^4.43.0", "rollup-pluginutils": "^2.8.2" }, "peerDependencies": { "typescript": "^4.1 || ^5.0" }, "optionalPeers": ["typescript"], "bin": { "pkgroll": "dist/cli.mjs" } }, "sha512-SO50Oh3ycFUI26n5au3Iq/XhC1x8garmmaIF5m/8f+s8ntUWC9oZONlz0rjT12OSfY3gCkc564t3HWvuClzQNg=="],
 
-    "playwright": ["rebrowser-playwright@1.52.0", "", { "dependencies": { "playwright-core": "npm:rebrowser-playwright-core@~1.52.0" }, "optionalDependencies": { "fsevents": "2.3.2" }, "bin": { "playwright": "cli.js" } }, "sha512-UjpqfwmF9+XtOuCCxGQ2ZlLeuSaSv//4Z6ZQgYPsJovz3d7nWodCd2hSRQigAswAUnsPmVwnQUpSn+TLKaKV+A=="],
+    "playwright": ["patchright@1.52.5", "", { "dependencies": { "patchright-core": "1.52.5" }, "optionalDependencies": { "fsevents": "2.3.2" }, "bin": { "patchright": "cli.js" } }, "sha512-wmRpsF9n02j0S+YDk0U3ouuWipHbUowwxbf/4K4G9ng311vvugoo8WndbU/fCsGtme8gYNfcEGcpfF6/L1NXHg=="],
 
     "playwright-core": ["rebrowser-playwright-core@1.52.0", "", { "bin": { "playwright-core": "cli.js" } }, "sha512-gjrvLNh0RX6B/tg6pWaPNGf+9+z1Jl2EyAh5MXD5xMa2lputGRZ9V2MJ/uofcC5Np3vSOJ3SdVSRqwteC0FjfQ=="],
 
@@ -1365,6 +1365,8 @@
     "magnitude-mcp/@types/node": ["@types/node@20.19.2", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-9pLGGwdzOUBDYi0GNjM97FIA+f92fqSke6joWeBjWXllfNxZBs7qeMF7tvtOIsbY45xkWkxrdwUfUf3MnQa9gA=="],
 
     "magnitude-mcp/typescript": ["typescript@5.8.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ=="],
+
+    "magnitude-test/playwright": ["rebrowser-playwright@1.52.0", "", { "dependencies": { "playwright-core": "npm:rebrowser-playwright-core@~1.52.0" }, "optionalDependencies": { "fsevents": "2.3.2" }, "bin": { "playwright": "cli.js" } }, "sha512-UjpqfwmF9+XtOuCCxGQ2ZlLeuSaSv//4Z6ZQgYPsJovz3d7nWodCd2hSRQigAswAUnsPmVwnQUpSn+TLKaKV+A=="],
 
     "magnitude-test/posthog-node": ["posthog-node@4.18.0", "", { "dependencies": { "axios": "^1.8.2" } }, "sha512-XROs1h+DNatgKh/AlIlCtDxWzwrKdYDb2mOs58n4yN8BkGN9ewqeQwG5ApS4/IzwCb7HPttUkOVulkYatd2PIw=="],
 
