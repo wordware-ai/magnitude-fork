@@ -77,7 +77,7 @@ export class ModelHarness {
         return `${this.options.llm.provider}:${'model' in this.options.llm.options ? this.options.llm.options.model : 'unknown'}`;
     }
 
-    reportUsage(): void {
+    private _reportUsage(): void {
         // console.log('this.collector.last', this.collector.last)
         // if (this.collector.last) console.log("calls:", this.collector.last.calls)//console.log("Response: ", this.collector.last.calls[-1].httpResponse);
         //console.log('last call:', this.collector.last?.calls.at(-1)?.httpResponse?.body.json());
@@ -116,7 +116,8 @@ export class ModelHarness {
         const knownCostMap: Record<string, { inputTokens: number, outputTokens: number, cacheWriteInputTokens?: number, cacheReadInputTokens?: number }> = {
             // TODO: track cached savings on Gemini
             'gemini-2.5-pro': { inputTokens: 1.25, outputTokens: 10.0 },
-            'gemini-2.5-flash': { inputTokens: 0.15, outputTokens: 0.60 },
+            'gemini-2.5-flash': { inputTokens: 0.30, outputTokens: 2.50 },
+            'gemini-2.5-flash-lite': { inputTokens: 0.10, outputTokens: 0.40 },
             'claude-3.5-sonnet': { inputTokens: 3.00, outputTokens: 15.00, cacheWriteInputTokens: 3.75, cacheReadInputTokens: 0.30 },
             'claude-3.7-sonnet': { inputTokens: 3.00, outputTokens: 15.00, cacheWriteInputTokens: 3.75, cacheReadInputTokens: 0.30 },
             'claude-sonnet-4': { inputTokens: 3.00, outputTokens: 15.00, cacheWriteInputTokens: 3.75, cacheReadInputTokens: 0.30 },
@@ -172,7 +173,7 @@ export class ModelHarness {
         this.prevTotalOutputTokens = outputTokens;
     }
 
-    async createPartialRecipe<T>(
+    async partialAct<T>(
         context: AgentContext, // Changed to ModularMemoryContext
         task: string,
         data: MultiMediaContentPart[],
@@ -195,7 +196,7 @@ export class ModelHarness {
         this.logger.trace(`createPartialRecipe took ${Date.now()-start}ms`);
         // BAML does not carry over action type to @@dynamic of PartialRecipe, so forced cast necssary
         //return response as unknown as { actions: z.infer<ActionDefinition<T>['schema']>[] };//, finished: boolean };
-        this.reportUsage();
+        this._reportUsage();
         return {
             reasoning: response.reasoning,//(response.observations ? response.observations + " " : "") + response.meta_reasoning + " " + response.reasoning,
             actions: response.actions// as z.infer<ActionDefinition<T>['schema']>[]
@@ -225,7 +226,7 @@ export class ModelHarness {
             this.options.llm.provider === 'claude-code',
             { tb }
         );
-        this.reportUsage();
+        this._reportUsage();
 
         if (schema instanceof z.ZodObject) {
             return resp;
@@ -254,7 +255,7 @@ export class ModelHarness {
             this.options.llm.provider === 'claude-code',
             { tb }
         );
-        this.reportUsage();
+        this._reportUsage();
         
         if (schema instanceof z.ZodObject) {
             return resp;
