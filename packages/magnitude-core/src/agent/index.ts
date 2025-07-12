@@ -6,16 +6,17 @@ import { Action } from "@/actions/types";
 import { ModelHarness } from "@/ai/modelHarness";
 import { AgentEvents } from "@/common/events";
 import { AgentConnector } from '@/connectors';
-import { Observation } from '@/memory/observation';
+import { Observation, RenderableContent } from '@/memory/observation';
 import { LLMClient } from "@/ai/types";
 import { AgentError } from "@/agent/errors";
 import { AgentMemory, AgentMemoryOptions } from "@/memory";
 import { ActionDefinition } from "@/actions";
 import { taskActions } from "@/actions/taskActions";
-import { ConnectorInstructions, AgentContext, traceAsync } from "@/ai/baml_client";
+import { ConnectorInstructions, AgentContext, traceAsync, MultiMediaContentPart } from "@/ai/baml_client";
 import { telemetrifyAgent } from '@/telemetry/events';
 import { isClaude } from '@/ai/util';
 import { retryOnError } from '@/common';
+import { renderParts } from '@/memory/rendering';
 
 
 export interface AgentOptions {
@@ -30,7 +31,7 @@ export interface AgentOptions {
 export interface ActOptions {
     prompt?: string // additional task-level system prompt instructions
     // TODO: reimpl, or maybe for tc agent specifically
-	data?: string | Record<string, string>
+	data?: RenderableContent//string | Record<string, string>
 }
 
 // Options for the startAgent helper function
@@ -290,15 +291,18 @@ export class Agent {
         logger.info(`Act: ${description}`);
 
         // for now simply add data to task
+        let dataContentParts: MultiMediaContentPart[] = [];
         if (options.data) {
             //description += "\nUse the following data where appropriate:\n";
-            description += "\n<data>\n";
-            if (typeof options.data === 'string') {
-                description += options.data;
-            } else {
-                description += Object.entries(options.data).map(([k, v]) => `${k}: ${v}`).join("\n");
-            }
-            description += "\n</data>";
+            // description += "\n<data>\n";
+            // // if (typeof options.data === 'string') {
+            // //     description += options.data;
+            // // } else {
+            // //     description += Object.entries(options.data).map(([k, v]) => `${k}: ${v}`).join("\n");
+            // // }
+            // const parts = renderParts(options.data);
+            // description += "\n</data>";
+            dataContentParts = await renderParts(options.data);
         }
         //this.events.emit('stepStart', description);
 
@@ -328,6 +332,7 @@ export class Agent {
                         ({ reasoning, actions } = await this.model.createPartialRecipe(
                             memoryContext,
                             description,
+                            dataContentParts,
                             this.actions 
                         ));
                         if (actions.length === 0) {

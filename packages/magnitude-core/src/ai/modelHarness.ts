@@ -16,6 +16,7 @@ import { Schema, z } from 'zod';
 import { convertActionDefinitionsToBaml, convertZodToBaml } from "@/actions/util";
 import { Image } from '@/memory/image';
 import EventEmitter from "eventemitter3";
+import { MultiMediaContentPart } from "@/memory/rendering";
 
 interface ModelHarnessOptions {
     llm: LLMClient;
@@ -174,6 +175,7 @@ export class ModelHarness {
     async createPartialRecipe<T>(
         context: AgentContext, // Changed to ModularMemoryContext
         task: string,
+        data: MultiMediaContentPart[],
         actionVocabulary: ActionDefinition<T>[]
     ): Promise<{ reasoning: string, actions: Action[] }> {
         const tb = new TypeBuilder();
@@ -186,6 +188,7 @@ export class ModelHarness {
         const response = await this.baml.CreatePartialRecipe( 
             context,
             task,
+            data,
             this.options.llm.provider === 'claude-code',
             { tb }
         );

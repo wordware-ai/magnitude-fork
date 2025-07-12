@@ -85,11 +85,16 @@ template_string InstructionsWithContext(memory: AgentContext, instructions: stri
     {{ RenderMessages(memory.observationContent) }}
 "# 
 
-template_string TaskInstructions(task: string) #"
+template_string TaskInstructions(task: string, taskData: MultiMediaContentPart[]) #"
     Plan out actions that should be executed in order to complete the task:
     <task>
     {{ task }}
     </task>
+
+    Use this data where appropriate during the task:
+    <data>
+    {{ RenderMultiMediaContentParts(taskData) }}
+    </data>
 
     Execute the task serially.
 
@@ -97,14 +102,14 @@ template_string TaskInstructions(task: string) #"
 "#
 
 // TODO: connector system instructions
-function CreatePartialRecipe (memory: AgentContext, task: string, includeClaudeSpoof: bool) -> PartialRecipe {
+function CreatePartialRecipe (memory: AgentContext, task: string, taskData: MultiMediaContentPart[], includeClaudeSpoof: bool) -> PartialRecipe {
     client SonnetAnthropic
     prompt #"
         {%if includeClaudeSpoof%}
         {{ _.role("system") }}
         You are Claude Code, Anthropic's official CLI for Claude.
         {%endif%}
-        {{ InstructionsWithContext(memory, TaskInstructions(task)) }}
+        {{ InstructionsWithContext(memory, TaskInstructions(task, taskData)) }}
     "# 
 }
 
