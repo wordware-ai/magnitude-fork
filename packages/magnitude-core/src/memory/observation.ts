@@ -79,7 +79,7 @@ export class Observation {
         return {
             role: this.role,
             cacheControl: options?.cacheControl ?? false,
-            content: [ ...(options?.prefix ?? []), ...(await renderContentParts(this.content, { mode: 'json' })), ...(options?.postfix ?? [])]
+            content: [ ...(options?.prefix ?? []), ...(await renderContentParts(this.content, { mode: 'json', indent: 2 })), ...(options?.postfix ?? [])]
         };
     }
 

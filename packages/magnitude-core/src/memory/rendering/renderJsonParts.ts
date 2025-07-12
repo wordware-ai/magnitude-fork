@@ -6,7 +6,9 @@ import { Image as BamlImage } from '@boundaryml/baml';
 
 async function buildJsonPartsRecursive(
     data: RenderableContent,
-    partsList: MultiMediaContentPart[]
+    partsList: MultiMediaContentPart[],
+    indent: number,
+    currentLevel: number = 0
 ): Promise<void> {
     if (data instanceof Image) {
         const bamlImg = await data.toBaml();
@@ -35,6 +37,10 @@ async function buildJsonPartsRecursive(
         return;
     }
 
+    const newline = indent > 0 ? '\n' : '';
+    const spacing = indent > 0 ? ' '.repeat(currentLevel * indent) : '';
+    const nextSpacing = indent > 0 ? ' '.repeat((currentLevel + 1) * indent) : '';
+
     if (Array.isArray(data)) {
         partsList.push('[');
         
@@ -42,12 +48,20 @@ async function buildJsonPartsRecursive(
             const item = data[index];
             if (item !== undefined) { // Skip undefined values in arrays
                 if (index > 0) {
-                    partsList.push(', ');
+                    partsList.push(',');
                 }
-                await buildJsonPartsRecursive(item, partsList);
+                if (indent > 0) {
+                    partsList.push(newline + nextSpacing);
+                } else if (index > 0) {
+                    partsList.push(' ');
+                }
+                await buildJsonPartsRecursive(item, partsList, indent, currentLevel + 1);
             }
         }
         
+        if (data.length > 0 && indent > 0) {
+            partsList.push(newline + spacing);
+        }
         partsList.push(']');
         return;
     }
@@ -61,7 +75,12 @@ async function buildJsonPartsRecursive(
             const [key, value] = entries[index];
             
             if (index > 0) {
-                partsList.push(', ');
+                partsList.push(',');
+            }
+            if (indent > 0) {
+                partsList.push(newline + nextSpacing);
+            } else if (index > 0) {
+                partsList.push(' ');
             }
             
             // Add the key
@@ -69,9 +88,12 @@ async function buildJsonPartsRecursive(
             partsList.push(': ');
             
             // Add the value
-            await buildJsonPartsRecursive(value, partsList);
+            await buildJsonPartsRecursive(value, partsList, indent, currentLevel + 1);
         }
         
+        if (entries.length > 0 && indent > 0) {
+            partsList.push(newline + spacing);
+        }
         partsList.push('}');
         return;
     }
@@ -79,9 +101,9 @@ async function buildJsonPartsRecursive(
     throw new Error(`Object type not supported for JSON rendering: ${typeof data}`);
 }
 
-export async function renderJsonParts(data: RenderableContent): Promise<MultiMediaContentPart[]> {
+export async function renderJsonParts(data: RenderableContent, indent: number): Promise<MultiMediaContentPart[]> {
     const rawList: MultiMediaContentPart[] = [];
-    await buildJsonPartsRecursive(data, rawList);
+    await buildJsonPartsRecursive(data, rawList, indent);
 
     // Merge adjacent strings
     if (rawList.length === 0) {

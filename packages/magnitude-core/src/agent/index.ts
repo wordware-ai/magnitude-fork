@@ -302,7 +302,7 @@ export class Agent {
             // // }
             // const parts = renderParts(options.data);
             // description += "\n</data>";
-            dataContentParts = await renderContentParts(options.data, { mode: 'json' });
+            dataContentParts = await renderContentParts(options.data, { mode: 'json', indent: 2 });
         }
         //this.events.emit('stepStart', description);
 

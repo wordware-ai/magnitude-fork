@@ -21,38 +21,38 @@ class MockImage extends Image {
 
 describe('renderJsonParts', () => {
     test('renders primitive types correctly', async () => {
-        expect(await renderJsonParts('hello')).toEqual(['"hello"']);
-        expect(await renderJsonParts(42)).toEqual(['42']);
-        expect(await renderJsonParts(true)).toEqual(['true']);
-        expect(await renderJsonParts(false)).toEqual(['false']);
-        expect(await renderJsonParts(null)).toEqual(['null']);
+        expect(await renderJsonParts('hello', 0)).toEqual(['"hello"']);
+        expect(await renderJsonParts(42, 0)).toEqual(['42']);
+        expect(await renderJsonParts(true, 0)).toEqual(['true']);
+        expect(await renderJsonParts(false, 0)).toEqual(['false']);
+        expect(await renderJsonParts(null, 0)).toEqual(['null']);
     });
 
     test('renders empty structures', async () => {
-        expect(await renderJsonParts([])).toEqual(['[]']);
-        expect(await renderJsonParts({})).toEqual(['{}']);
+        expect(await renderJsonParts([], 0)).toEqual(['[]']);
+        expect(await renderJsonParts({}, 0)).toEqual(['{}']);
     });
 
     test('renders simple arrays', async () => {
-        expect(await renderJsonParts([1, 2, 3])).toEqual(['[1, 2, 3]']);
-        expect(await renderJsonParts(['a', 'b', 'c'])).toEqual(['["a", "b", "c"]']);
-        expect(await renderJsonParts([true, false, null])).toEqual(['[true, false, null]']);
+        expect(await renderJsonParts([1, 2, 3], 0)).toEqual(['[1, 2, 3]']);
+        expect(await renderJsonParts(['a', 'b', 'c'], 0)).toEqual(['["a", "b", "c"]']);
+        expect(await renderJsonParts([true, false, null], 0)).toEqual(['[true, false, null]']);
     });
 
     test('renders simple objects', async () => {
-        expect(await renderJsonParts({ name: 'John', age: 30 })).toEqual(['{"name": "John", "age": 30}']);
-        expect(await renderJsonParts({ a: 1, b: true, c: null })).toEqual(['{"a": 1, "b": true, "c": null}']);
+        expect(await renderJsonParts({ name: 'John', age: 30 }, 0)).toEqual(['{"name": "John", "age": 30}']);
+        expect(await renderJsonParts({ a: 1, b: true, c: null }, 0)).toEqual(['{"a": 1, "b": true, "c": null}']);
     });
 
     test('handles undefined values correctly', async () => {
         // Undefined at root level returns empty array
-        expect(await renderJsonParts(undefined)).toEqual([]);
+        expect(await renderJsonParts(undefined, 0)).toEqual([]);
         
         // Undefined in arrays is skipped
-        expect(await renderJsonParts([1, undefined, 3])).toEqual(['[1, 3]']);
+        expect(await renderJsonParts([1, undefined, 3], 0)).toEqual(['[1, 3]']);
         
         // Undefined in objects is omitted
-        expect(await renderJsonParts({ a: 1, b: undefined, c: 3 })).toEqual(['{"a": 1, "c": 3}']);
+        expect(await renderJsonParts({ a: 1, b: undefined, c: 3 }, 0)).toEqual(['{"a": 1, "c": 3}']);
     });
 
     test('renders nested structures', async () => {
@@ -68,7 +68,7 @@ describe('renderJsonParts', () => {
             }
         };
         
-        const result = await renderJsonParts(nested);
+        const result = await renderJsonParts(nested, 0);
         expect(result).toEqual(['{"user": {"name": "Alice", "scores": [95, 87, 92], "active": true}, "metadata": {"created": "2024-01-01", "tags": ["important", "verified"]}}']);
     });
 
@@ -80,7 +80,7 @@ describe('renderJsonParts', () => {
             price: 29.99
         };
         
-        const result = await renderJsonParts(data);
+        const result = await renderJsonParts(data, 0);
         expect(result.length).toBe(3);
         expect(result[0]).toBe('{"title": "Product", "image": ');
         expect(result[1]).toHaveProperty('__mockBamlImage', true);
@@ -98,7 +98,7 @@ describe('renderJsonParts', () => {
             after: 'final'
         };
         
-        const result = await renderJsonParts(data);
+        const result = await renderJsonParts(data, 0);
         expect(result.length).toBe(5);
         expect(result[0]).toBe('{"before": "text", "image1": ');
         expect(result[1]).toHaveProperty('__mockBamlImage', true);
@@ -111,7 +111,7 @@ describe('renderJsonParts', () => {
         const mockImage = new MockImage('img1');
         const data = ['start', mockImage, 'end'];
         
-        const result = await renderJsonParts(data);
+        const result = await renderJsonParts(data, 0);
         expect(result.length).toBe(3);
         expect(result[0]).toBe('["start", ');
         expect(result[1]).toHaveProperty('__mockBamlImage', true);
@@ -123,7 +123,7 @@ describe('renderJsonParts', () => {
         const mockImage2 = new MockImage('img2');
         const data = [mockImage1, mockImage2];
         
-        const result = await renderJsonParts(data);
+        const result = await renderJsonParts(data, 0);
         expect(result.length).toBe(5);
         expect(result[0]).toBe('[');
         expect(result[1]).toHaveProperty('__mockBamlImage', true);
@@ -147,7 +147,7 @@ describe('renderJsonParts', () => {
             ]
         };
         
-        const result = await renderJsonParts(data);
+        const result = await renderJsonParts(data, 0);
         // Should have multiple parts due to images
         expect(result.length).toBeGreaterThan(1);
         // First part should start with JSON
@@ -161,7 +161,7 @@ describe('renderJsonParts', () => {
         const mockImage = new MockImage('img1');
         const data = [mockImage, 'text'];
         
-        const result = await renderJsonParts(data);
+        const result = await renderJsonParts(data, 0);
         expect(result.length).toBe(3);
         expect(result[0]).toBe('[');
         expect(result[1]).toHaveProperty('__mockBamlImage', true);
@@ -172,7 +172,7 @@ describe('renderJsonParts', () => {
         const mockImage = new MockImage('img1');
         const data = ['text', mockImage];
         
-        const result = await renderJsonParts(data);
+        const result = await renderJsonParts(data, 0);
         expect(result.length).toBe(3);
         expect(result[0]).toBe('["text", ');
         expect(result[1]).toHaveProperty('__mockBamlImage', true);
@@ -187,10 +187,48 @@ describe('renderJsonParts', () => {
             backslash: 'C:\\Users\\Path'
         };
         
-        const result = await renderJsonParts(data);
+        const result = await renderJsonParts(data, 0);
         expect(result[0]).toContain('\\"Hello\\"');
         expect(result[0]).toContain('\\n');
         expect(result[0]).toContain('\\t');
         expect(result[0]).toContain('\\\\');
+    });
+
+    test('renders with proper indentation when indent is 2', async () => {
+        const data = {
+            name: 'John',
+            age: 30,
+            hobbies: ['reading', 'coding']
+        };
+        
+        const result = await renderJsonParts(data, 2);
+        expect(result).toEqual(['{\n  "name": "John",\n  "age": 30,\n  "hobbies": [\n    "reading",\n    "coding"\n  ]\n}']);
+    });
+
+    test('renders with proper indentation when indent is 4', async () => {
+        const data = {
+            user: {
+                name: 'Alice',
+                active: true
+            }
+        };
+        
+        const result = await renderJsonParts(data, 4);
+        expect(result).toEqual(['{\n    "user": {\n        "name": "Alice",\n        "active": true\n    }\n}']);
+    });
+
+    test('handles indentation with images', async () => {
+        const mockImage = new MockImage('img1');
+        const data = {
+            title: 'Product',
+            image: mockImage,
+            price: 29.99
+        };
+        
+        const result = await renderJsonParts(data, 2);
+        expect(result.length).toBe(3);
+        expect(result[0]).toBe('{\n  "title": "Product",\n  "image": ');
+        expect(result[1]).toHaveProperty('__mockBamlImage', true);
+        expect(result[2]).toBe(',\n  "price": 29.99\n}');
     });
 });
