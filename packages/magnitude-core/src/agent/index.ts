@@ -16,7 +16,7 @@ import { ConnectorInstructions, AgentContext, traceAsync, MultiMediaContentPart 
 import { telemetrifyAgent } from '@/telemetry/events';
 import { isClaude } from '@/ai/util';
 import { retryOnError } from '@/common';
-import { renderParts } from '@/memory/rendering';
+import { renderContentParts } from '@/memory/rendering';
 
 
 export interface AgentOptions {
@@ -302,7 +302,7 @@ export class Agent {
             // // }
             // const parts = renderParts(options.data);
             // description += "\n</data>";
-            dataContentParts = await renderParts(options.data);
+            dataContentParts = await renderContentParts(options.data, { mode: 'json' });
         }
         //this.events.emit('stepStart', description);
 

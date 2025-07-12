@@ -2,9 +2,8 @@
  * Convert observations to form that can be passed as BAML context, rendered as a custom XML-like structure.
  */
 import { Image as BamlImage } from '@boundaryml/baml';
-import { RenderableContent, ObservableDataObject, ObservableDataArray, ObservableDataPrimitive } from './observation';
-import { Image } from './image'; // Our custom Image class
-//import { MultiMediaContentPart } from '@/ai/baml_client';
+import { RenderableContent, ObservableDataObject, ObservableDataArray, ObservableDataPrimitive } from '@/memory/observation';
+import { Image } from '@/memory/image';
 
 
 export type MultiMediaContentPart = BamlImage | string;
@@ -114,7 +113,7 @@ async function buildXmlPartsRecursive(
     throw new Error(`Object type not supported for LLM context: ${typeof data}`);
 }
 
-export async function renderParts(data: RenderableContent): Promise<MultiMediaContentPart[]> {
+export async function renderXmlParts(data: RenderableContent): Promise<MultiMediaContentPart[]> {
     const rawList: MultiMediaContentPart[] = [];
     await buildXmlPartsRecursive(data, 0, rawList);
 

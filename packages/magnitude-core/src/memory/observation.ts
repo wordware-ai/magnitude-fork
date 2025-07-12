@@ -5,7 +5,7 @@ import { fnv1a32Hex } from '@/util';
 import { Image } from './image';
 import { MultiMediaJson, observableDataToJson } from './serde';
 import { MultiMediaMessage } from '@/ai/baml_client';
-import { type MultiMediaContentPart, renderParts } from './rendering';
+import { type MultiMediaContentPart, renderContentParts } from './rendering';
 
 // undefined in JSON is either removed if k/v or removed from array, not actually JSON-compatible technically
 export type ObservableDataPrimitive = Image | string | number | boolean | null | undefined; // | Observation
@@ -79,7 +79,7 @@ export class Observation {
         return {
             role: this.role,
             cacheControl: options?.cacheControl ?? false,
-            content: [ ...(options?.prefix ?? []), ...(await renderParts(this.content)), ...(options?.postfix ?? [])]
+            content: [ ...(options?.prefix ?? []), ...(await renderContentParts(this.content, { mode: 'json' })), ...(options?.postfix ?? [])]
         };
     }
 
