@@ -34,6 +34,8 @@ export interface PageStabilityOptions {
     waitForNetworkIdleTime?: number;
     /** Maximum time to wait for page load before proceeding anyway */
     maximumWaitPageLoadTime?: number;
+    /** Whether to disable visual stability checking */
+    disableVisualStability?: boolean;
 }
 
 /**
@@ -53,7 +55,8 @@ export class PageStabilityAnalyzer {
             checkInterval: options.checkInterval ?? 100, // 200ms
             minimumWaitPageLoadTime: options.minimumWaitPageLoadTime ?? DEFAULT_MINIMUM_WAIT_PAGE_LOAD_TIME,
             waitForNetworkIdleTime: options.waitForNetworkIdleTime ?? DEFAULT_WAIT_FOR_NETWORK_IDLE_TIME,
-            maximumWaitPageLoadTime: options.maximumWaitPageLoadTime ?? DEFAULT_MAXIMUM_WAIT_PAGE_LOAD_TIME
+            maximumWaitPageLoadTime: options.maximumWaitPageLoadTime ?? DEFAULT_MAXIMUM_WAIT_PAGE_LOAD_TIME,
+            disableVisualStability: options.disableVisualStability ?? false
         };
         this.lastStart = Date.now();
         this.logger = logger.child(
@@ -360,9 +363,11 @@ export class PageStabilityAnalyzer {
             }
 
             // Wait for visual stability with whatever time remains, but don't exceed max wait time
-            const remainingForVisual = Math.max(0, maxWaitDeadline - Date.now());
-            if (remainingForVisual > 0) {
-                await this.waitForVisualStability(remainingForVisual);
+            if (!this.options.disableVisualStability) {
+                const remainingForVisual = Math.max(0, maxWaitDeadline - Date.now());
+                if (remainingForVisual > 0) {
+                    await this.waitForVisualStability(remainingForVisual);
+                }
             }
 
             // Ensure we've waited at least the minimum time

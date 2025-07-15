@@ -33,7 +33,7 @@ export class WebHarness { // implements StateComponent
         //this.page = page;
         this.context = context;
         this.options = options;
-        this.stability = new PageStabilityAnalyzer();
+        this.stability = new PageStabilityAnalyzer({ disableVisualStability: true });
         this.visualizer = new ActionVisualizer(this.context, this.options.visuals ?? {});
         this.transformer = new DOMTransformer();
         this.tabs = new TabManager(context);
