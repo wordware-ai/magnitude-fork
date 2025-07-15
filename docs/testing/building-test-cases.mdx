@@ -93,6 +93,15 @@ test('example', async (agent) => {
 });
 ```
 
+You can also do this at the test or group level to apply to all acts within that block.
+
+```typescript
+test.group('todo list', { prompt: 'Each todo should be exactly 5 words'}, () => {
+    test('can add todos', { url: 'https://magnitodo.com', prompt: 'All todos should be animal related' }, async (agent) => {
+        await agent.act('create 3 todos', { prompt: 'the first and last word on the todo must start with the same letter'});
+    });
+});
+```
 
 ### Example of migrating a Playwright test case to Magnitude
 
