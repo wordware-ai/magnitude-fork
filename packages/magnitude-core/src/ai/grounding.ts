@@ -71,7 +71,7 @@ export class GroundingService {
     async locateTarget(screenshot: Image, target: string): Promise<PixelCoordinate> {
         return await retryOnError(
             async () => this._locateTarget(screenshot, target),
-            { errorSubstrings: ['429', '503', '524'], retryLimit: 20, delayMs: 1000, warn: false }
+            { mode: 'retry_on_partial_message', errorSubstrings: ['429', '503', '524'], retryLimit: 20, delayMs: 1000, showWarnOnRetry: false }
         );
     }
 

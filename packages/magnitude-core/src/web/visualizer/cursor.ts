@@ -1,3 +1,4 @@
+import { retryOnError, retryOnErrorIsSuccess } from "@/common";
 import logger from "@/logger";
 import { Page } from "playwright";
 
@@ -13,19 +14,20 @@ export class CursorVisual {
         //this.page = page;
     }
 
-    setActivePage(page: Page) {
+    async setActivePage(page: Page) {
         this.page = page;
 
         page.on('load', async () => {
-            // Use a try-catch as page navigation might interrupt this
-            // TODO: should retry here
-            try {
-                await this.redrawLastPosition();
-            } catch (error) {
-                // Ignore errors that might occur during navigation races
-                // console.warn("Error redrawing visualizer on load:", error);
-            }
+            await retryOnErrorIsSuccess(
+                this.setupOnPage.bind(this),
+                { mode: 'retry_all', delayMs: 200, retryLimit: 10 }
+            );
         });
+
+        await retryOnErrorIsSuccess(
+            this.setupOnPage.bind(this),
+            { mode: 'retry_all', delayMs: 200, retryLimit: 5 }
+        );
     }
 
     async move(x: number, y: number): Promise<void> {
@@ -38,7 +40,7 @@ export class CursorVisual {
         await this.page.waitForTimeout(300);
     }
 
-    async redrawLastPosition(): Promise<void> {
+    async setupOnPage(): Promise<void> {
         if (this.lastPosition) {
             // Redraw the visual without the click effect
             await this._drawVisual(this.lastPosition.x, this.lastPosition.y, false);

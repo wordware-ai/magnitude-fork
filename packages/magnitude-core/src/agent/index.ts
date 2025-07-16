@@ -358,7 +358,13 @@ export class Agent {
                     },
                     // HTTP body is not JSON - comes from Anthropic sometimes, weird error
                     // Sometimes Anthropic will give 401 Unauthorized randomly even when authorized
-                    { errorSubstrings: ['HTTP body is not JSON', '401 Unauthorized', 'No actions generated'], retryLimit: 3, delayMs: 1000, warn: true }
+                    {
+                        mode: 'retry_on_partial_message',
+                        errorSubstrings: ['HTTP body is not JSON', '401 Unauthorized', 'No actions generated'],
+                        retryLimit: 3,
+                        delayMs: 1000,
+                        showWarnOnRetry: true
+                    }
                 );
             } catch (error: unknown) {
                 logger.error(`Error planning actions: ${error instanceof Error ? error.message : String(error)}`);

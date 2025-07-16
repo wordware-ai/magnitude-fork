@@ -37,16 +37,18 @@ export class ActionVisualizer {
     }
 
     async setup() {
-        await this.mouseEffects.setContext(this.context);
-        if (this.options.showTypeEffects) {
-            await this.typeEffects.setContext(this.context);
-        }
+        // await this.mouseEffects.setContext(this.context);
+        // if (this.options.showTypeEffects) {
+        //     await this.typeEffects.setContext(this.context);
+        // }
         //this.showAll();
     }
 
-    setActivePage(page: Page) {
+    async setActivePage(page: Page) {
         this.page = page;
-        this.cursor.setActivePage(page);
+        await this.cursor.setActivePage(page);
+        await this.mouseEffects.setActivePage(page);
+        await this.typeEffects.setActivePage(page);
     }
 
     async moveVirtualCursor(x: number, y: number) {

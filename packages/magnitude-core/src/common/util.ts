@@ -1,11 +1,11 @@
 import logger from "@/logger";
 
-export interface RetryOptions {
-    errorSubstrings: string[],
-    retryLimit: number,
-    delayMs: number,
-    warn: boolean
-}
+// export interface RetryOptions {
+//     errorSubstrings: string[],
+//     retryLimit: number,
+//     delayMs: number,
+//     warn: boolean
+// }
 
 // export type RetryOptions =
 //     ({ errorSubstrings: string[] } | { retryAll: true }) &
@@ -18,17 +18,53 @@ export interface RetryOptions {
 
 // }
 
+export type RetryMode = {
+    mode: 'retry_on_partial_message',
+    errorSubstrings: string[],
+} | {
+    mode: 'retry_all',
+};
+
+export type RetryParams = {
+    retryLimit: number,
+    delayMs: number,
+    showWarnOnRetry: boolean,
+    //throw: boolean
+}
+
+export type RetryOptions = RetryMode & RetryParams;
+
+export async function retryOnErrorIsSuccess<T>(
+    fnToRetry: () => Promise<T>,
+    retryOptions: RetryMode & Partial<RetryParams>
+): Promise<boolean> {
+    try {
+        await retryOnError(fnToRetry, retryOptions);
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
 export async function retryOnError<T>(
     fnToRetry: () => Promise<T>,
-    { errorSubstrings, retryLimit, delayMs, warn }: RetryOptions
+    retryOptions: RetryMode & Partial<RetryParams>
 ): Promise<T> {
     let lastError: any;
 
-    if (retryLimit < 0) {
-        retryLimit = 0;
+    const options: RetryOptions = {
+        ...retryOptions,
+        retryLimit: retryOptions.retryLimit ?? 3,
+        delayMs: retryOptions.delayMs ?? 200,
+        showWarnOnRetry: retryOptions.showWarnOnRetry ?? false,
+        //throw: retryOptions.throw ?? true
+    } as RetryOptions;
+
+    if (options.retryLimit < 0) {
+        options.retryLimit = 0;
     }
 
-    for (let attempt = 0; attempt <= retryLimit; attempt++) {
+    for (let attempt = 0; attempt <= options.retryLimit; attempt++) {
         try {
             return await fnToRetry();
         } catch (error: any) {
@@ -36,24 +72,28 @@ export async function retryOnError<T>(
 
             const errorMessage = String(error?.message ?? error);
 
-            const includesSubstring = errorSubstrings.some((substring) => errorMessage.includes(substring));
-
-            if (includesSubstring) {
-                if (warn) {
+            if (options.mode === 'retry_all') {
+                if (options.showWarnOnRetry) {
                     logger.warn(`Retrying on: ${errorMessage}`);
                 }
-                if (attempt === retryLimit) {
-                    throw lastError;
+            } else if (options.mode === 'retry_on_partial_message') {
+                const includesSubstring = options.errorSubstrings.some((substring) => errorMessage.includes(substring));
+
+                if (includesSubstring) {
+                    if (options.showWarnOnRetry) {
+                        logger.warn(`Retrying on: ${errorMessage}`);
+                    }
+                } else {
+                    // Error message does NOT contain the target substring. This error is not retryable.
+                    throw lastError; // Throw this current error immediately.
                 }
-            } else {
-                // Error message does NOT contain the target substring. This error is not retryable.
-                throw lastError; // Throw this current error immediately.
             }
         }
-        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        await new Promise((resolve) => setTimeout(resolve, options.delayMs));
     }
 
     throw lastError;
+    //if (options.throw) throw lastError;
 }
 
 /**
