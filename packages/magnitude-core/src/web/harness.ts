@@ -7,6 +7,7 @@ import logger from "@/logger";
 import { TabManager, TabState } from "./tabs";
 import { DOMTransformer } from "./transformer";
 import { Image } from '@/memory/image';
+import EventEmitter from "eventemitter3";
 //import { StateComponent } from "@/facets";
 
 
@@ -15,6 +16,10 @@ export interface WebHarnessOptions {
     // Some LLM operate best on certain screen dims
     virtualScreenDimensions?: { width: number, height: number }
     visuals?: ActionVisualizerOptions
+}
+
+export interface WebHarnessEvents {
+    'activePageChanged': (page: Page) => Promise<void>;
 }
 
 export class WebHarness { // implements StateComponent
@@ -28,6 +33,8 @@ export class WebHarness { // implements StateComponent
     public readonly visualizer: ActionVisualizer;
     private transformer: DOMTransformer;
     private tabs: TabManager;
+
+    public readonly events: EventEmitter<WebHarnessEvents> = new EventEmitter();
 
     constructor(context: BrowserContext, options: WebHarnessOptions = {}) {
         //this.page = page;
@@ -43,15 +50,20 @@ export class WebHarness { // implements StateComponent
         //     //logger.info('ayo we got a new page');
         // });
         this.tabs.events.on('tabChanged', async (page: Page) => {
-            this.stability.setActivePage(page);
-            this.visualizer.setActivePage(page);
-            this.transformer.setActivePage(page);
+            await this.setActivePage(page);
             // need to wait for page to load before evaluating a script
             //page.on('load', () => { this.transformer.setActivePage(page); });
             
             //console.log('tabs:', await this.tabs.getState())
 
-        });
+        }, this);
+    }
+
+    async setActivePage(page: Page) {
+        this.stability.setActivePage(page);
+        await this.visualizer.setActivePage(page);
+        this.transformer.setActivePage(page);
+        this.events.emit('activePageChanged', page);
     }
 
     async retrieveTabState(): Promise<TabState> {
