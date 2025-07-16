@@ -4,7 +4,7 @@
     "theme": "maple",
     "description": "Open source AI agents for web testing",
     "logo": "/logo.svg",
-    "favicon": "/favicon.png",
+    "favicon": "/logo.svg",
     "icons": {
         "library": "lucide"
     },
@@ -104,8 +104,9 @@
                         "group": "Contributing",
                         "pages": [
                             "contributing/introduction",
-                            "contributing/setup",
-                            "contributing/suggestions"
+                            "contributing/suggestions",
+                            "contributing/creating-prs",
+                            "contributing/setup"
                         ]
                     }
                 ]
