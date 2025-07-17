@@ -32,7 +32,8 @@ export interface AgentOptions {
 export interface ActOptions {
     prompt?: string // additional task-level system prompt instructions
     // TODO: reimpl, or maybe for tc agent specifically
-	data?: RenderableContent//string | Record<string, string>
+	data?: RenderableContent,//string | Record<string, string>
+    memory?: AgentMemory,// optional memory starting point
 }
 
 // Options for the startAgent helper function
@@ -241,7 +242,7 @@ export class Agent {
             ...(this.options.prompt ? [this.options.prompt] : []),
             ...(options.prompt ? [options.prompt] : []),
         ].join('\n');
-        const taskMemory = new AgentMemory({ ...this.memoryOptions, instructions: instructions === '' ? undefined : instructions });
+        const taskMemory = options.memory ?? new AgentMemory({ ...this.memoryOptions, instructions: instructions === '' ? undefined : instructions });
 
         if (Array.isArray(taskOrSteps)) {
             const steps = taskOrSteps;
@@ -270,9 +271,9 @@ export class Agent {
 
     async _traceAct(task: string, memory: AgentMemory, options: ActOptions = {}) {
         // memory not serializable to trace so bake it
-        await (traceAsync('act', async (task: string, options: ActOptions) => {
+        await (traceAsync('act', async (task: string) => {
             await this._act(task, memory, options);
-        })(task, options));
+        })(task));
     }
 
     private async _buildContext(memory: AgentMemory): Promise<AgentContext> {
