@@ -3,8 +3,8 @@ import { homedir } from 'os';
 import { join, dirname } from 'path';
 import crypto from 'crypto';
 import { bold, cyanBright } from 'ansis';
-import open from 'open';
 import { intro, outro, spinner, log, text, select, confirm, isCancel, multiselect } from '@clack/prompts';
+import { exec } from 'node:child_process';
 
 const CLIENT_ID = '9d1c250a-e61b-44d9-88ed-5944d1962f5e';
 const CREDS_PATH = join(homedir(), '.magnitude', 'credentials', 'claudeCode.json');
@@ -139,6 +139,32 @@ export async function getValidClaudeCodeAccessToken(): Promise<string | null> {
     }
 }
 
+function openUrl(url: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+        let command: string;
+
+        switch (process.platform) {
+            case 'darwin':
+                command = `open "${url}"`;
+                break;
+            case 'win32':
+                command = `start "${url}"`;
+                break;
+            default:
+                command = `xdg-open "${url}"`;
+                break;
+        }
+
+        exec(command, (error) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve();
+            }
+        });
+    });
+}
+
 export async function completeClaudeCodeAuthFlow(): Promise<string> {
     // Try to get existing valid token
     const existingToken = await getValidClaudeCodeAccessToken();
@@ -150,7 +176,7 @@ export async function completeClaudeCodeAuthFlow(): Promise<string> {
 
     log.message(cyanBright`Opening browser for authentication...`);
     try {
-        await open(authUrl);
+        await openUrl(authUrl);
     } catch (err) {
         log.message('Could not open browser automatically');
     }
