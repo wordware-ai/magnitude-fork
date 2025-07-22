@@ -192,8 +192,8 @@ export class WebHarness { // implements StateComponent
         };
     }
 
-    async click({ x, y }: { x: number, y: number }) {
-        ({ x, y } = await this.transformCoordinates({ x, y }));
+    async click({ x, y }: { x: number, y: number }, options?: { transform: boolean }) {
+        if (options?.transform ?? true) ({ x, y } = await this.transformCoordinates({ x, y }));
         // console.log("x:", x);
         // console.log("y:", y);
         //await this.visualizer.visualizeAction(x, y);
@@ -278,14 +278,14 @@ export class WebHarness { // implements StateComponent
         await this.visualizer.showAll();
     }
 
-    async rightClick({ x, y }: { x: number, y: number }) {
-        ({ x, y } = await this.transformCoordinates({ x, y }));
+    async rightClick({ x, y }: { x: number, y: number }, options?: { transform: boolean }) {
+        if (options?.transform ?? true) ({ x, y } = await this.transformCoordinates({ x, y }));
         await this._click(x, y, { button: "right" });
         await this.waitForStability();
     }
 
-    async doubleClick({ x, y }: { x: number, y: number }) {
-        ({ x, y } = await this.transformCoordinates({ x, y }));
+    async doubleClick({ x, y }: { x: number, y: number }, options?: { transform: boolean }) {
+        if (options?.transform ?? true) ({ x, y } = await this.transformCoordinates({ x, y }));
         await this.visualizer.moveVirtualCursor(x, y);
         await this.visualizer.hideAll();
         await this.page.mouse.dblclick(x, y);
@@ -293,9 +293,9 @@ export class WebHarness { // implements StateComponent
         await this.waitForStability();
     }
 
-    async drag({ x1, y1, x2, y2 }: { x1: number, y1: number, x2: number, y2: number }) {
-        ({ x: x1, y: y1 } = await this.transformCoordinates({ x: x1, y: y1 }));
-        ({ x: x2, y: y2 } = await this.transformCoordinates({ x: x2, y: y2 }));
+    async drag({ x1, y1, x2, y2 }: { x1: number, y1: number, x2: number, y2: number }, options?: { transform: boolean }) {
+        if (options?.transform ?? true) ({ x: x1, y: y1 } = await this.transformCoordinates({ x: x1, y: y1 }));
+        if (options?.transform ?? true) ({ x: x2, y: y2 } = await this.transformCoordinates({ x: x2, y: y2 }));
 
         //console.log(`Dragging: (${x1}, ${y1}) -> (${x2}, ${y2})`);
         
@@ -320,10 +320,10 @@ export class WebHarness { // implements StateComponent
         await this.waitForStability();
     }
 
-    async clickAndType({ x, y, content }: { x: number, y: number, content: string }) {
+    async clickAndType({ x, y, content }: { x: number, y: number, content: string }, options?: { transform: boolean }) {
         // TODO: transforms incorrect for moondream grounding with virtual screen dims (claude) - unsure why
         //console.log(`Pre transform: ${x}, ${y}`);
-        ({ x, y } = await this.transformCoordinates({ x, y }));
+        if (options?.transform ?? true) ({ x, y } = await this.transformCoordinates({ x, y }));
         //console.log(`Post transform: ${x}, ${y}`);
         await this.visualizer.moveVirtualCursor(x, y);
         this._click(x, y);
@@ -331,8 +331,8 @@ export class WebHarness { // implements StateComponent
         await this.waitForStability();
     }
     
-    async scroll({ x, y, deltaX, deltaY }: { x: number, y: number, deltaX: number, deltaY: number }) {
-        ({ x, y } = await this.transformCoordinates({ x, y }));
+    async scroll({ x, y, deltaX, deltaY }: { x: number, y: number, deltaX: number, deltaY: number }, options?: { transform: boolean }) {
+        if (options?.transform ?? true) ({ x, y } = await this.transformCoordinates({ x, y }));
         await this.visualizer.moveVirtualCursor(x, y);
         await this.page.mouse.move(x, y);
         await this.page.mouse.wheel(deltaX, deltaY);
