@@ -103,18 +103,35 @@ export class WebHarness { // implements StateComponent
         /**
          * Get b64 encoded string of screenshot (PNG) with screen dimensions
          */
-        const dpr = await this.page.evaluate(() => window.devicePixelRatio);
-        //console.log("DPR:", dpr);
-        //const viewportSize = this.page.viewportSize();
-        const buffer = await this.page.screenshot({ type: 'png', ...options }, );
+        
+        // Target page, context or browser has been closed
+        
+        let dpr!: number;
+        let buffer!: Buffer<ArrayBufferLike>;
 
-        // if (!viewportSize) {
-        //     throw Error("Invalid viewport for screenshot");
-        // }
+        const retries = 3;
 
+        for (let attempt = 0; attempt <= retries; attempt++) {
+            try {
+                dpr = await this.page.evaluate(() => window.devicePixelRatio)
+                buffer = await this.page.screenshot({ type: 'png', ...options }, );
+            } catch (err) {
+                // A few possibilities:
+                // 1. Target page, context or browser has been closed
+                // 2. Page navigation in progress
+                // In theory 2 shouldn't shouldn't happen during typical execution as we wait for page load - unless screenshot is triggered at an usual time.
+                const error = err as Error;
+                if (error.message.includes('Target page, context or browser has been closed')) {
+                    // Irrecoverable, no point in retrying
+                    throw new Error("Attempted to take screenshot but page, context or browser is closed");
+                }
+                if (attempt >= retries) {
+                    throw new Error(`Unable to capture screenshot after retries, error: ${error.message}`);
+                }
+            }
+        }
         const base64data = buffer.toString('base64');
 
-        //console.log("Screenshot DATA:", base64data.substring(0, 100));
         const image = Image.fromBase64(base64data);
 
         // Now, need to rescale the image based on DPR. This is so that:
@@ -122,21 +139,8 @@ export class WebHarness { // implements StateComponent
         // (2) More importantly, clicks happen in the standard resolution space, so need to do this for coordinates to be correct
         //     for any agent not using a virtual screen space (e.g. those that aren't Claude)
         const { width, height } = await image.getDimensions();
-        //console.log("Original screenshot dims:", { width, height });
-        //console.log("DPR-scaled dims:", { width: width / dpr, height: height / dpr });
         const rescaledImage = await image.resize(width / dpr, height / dpr);
-        //console.log("screenshot() final dims:", await rescaledImage.getDimensions());
-
-        //console.log("_locateTarget dims:", await screenshot.getDimensions());
         return rescaledImage;
-
-        // return {
-        //     image: `data:image/png;base64,${base64data}`,//buffer.toString('base64'),
-        //     dimensions: {
-        //         width: viewportSize.width,
-        //         height: viewportSize.height
-        //     }
-        // };
     }
  
     // async goto(url: string) {
