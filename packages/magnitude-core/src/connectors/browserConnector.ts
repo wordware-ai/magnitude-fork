@@ -98,6 +98,10 @@ export class BrowserConnector implements AgentConnector {
 
     async onStop(): Promise<void> {
         this.logger.info("Stopping...");
+        if (this.harness) {
+            await this.harness.stop();
+            this.logger.info("WebHarness cleaned up.");
+        }
         if (this.context) {
             await this.context.close();
             this.logger.info("Browser context closed.");

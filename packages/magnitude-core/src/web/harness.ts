@@ -95,6 +95,11 @@ export class WebHarness { // implements StateComponent
         await this.visualizer.setup();
     }
 
+    async stop() {
+        // Clean up tab manager resources
+        this.tabs.destroy();
+    }
+
     get page() {
         return this.tabs.getActivePage();
     }
