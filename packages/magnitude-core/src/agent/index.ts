@@ -219,15 +219,11 @@ export class Agent {
 
     protected async _recordConnectorObservations(memory: AgentMemory) {
         for (const connector of this.connectors) {
-            try {
-                // could do Promise.all if matters
-                const connObservations = connector.collectObservations ? await connector.collectObservations() : [];
-                //observations.push(...connObservations);
-                for (const obs of connObservations) {
-                    memory.recordObservation(obs);
-                }
-            } catch (error) {
-                logger.warn(`Agent: Error getting observations from connector ${connector.id}: ${error instanceof Error ? error.message : String(error)}`);
+            // could do Promise.all if matters
+            const connObservations = connector.collectObservations ? await connector.collectObservations() : [];
+            //observations.push(...connObservations);
+            for (const obs of connObservations) {
+                memory.recordObservation(obs);
             }
         }
     }
