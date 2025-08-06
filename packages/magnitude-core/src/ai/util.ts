@@ -74,9 +74,9 @@ export async function convertToBamlClientOptions(client: LLMClient): Promise<Rec
             project_id: client.options.projectId,
             credentials: client.options.credentials,
             model: client.options.model,
-            generationConfig: {
-                temperature: temp,
-            }
+            // generationConfig: {
+            //     temperature: temp,
+            // }
         };
     } else if (client.provider === 'openai') {
         options = {
