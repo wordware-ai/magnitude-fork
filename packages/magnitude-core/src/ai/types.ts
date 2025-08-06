@@ -58,7 +58,7 @@ export interface GoogleVertexClient {
     provider: 'vertex-ai',
     options: {
         model: string,
-        location: string,
+        location?: string,
         baseUrl?: string,
         projectId?: string,
         credentials?: string | object,
