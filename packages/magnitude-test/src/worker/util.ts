@@ -42,7 +42,7 @@ export type TestWorkerIncomingMessage = {
     type: "execute"
     test: RegisteredTest;
     browserOptions?: BrowserOptions;
-    llm?: LLMClient;
+    llm?: LLMClient | LLMClient[];
     grounding?: GroundingClient;
     telemetry?: boolean;
 } | {
