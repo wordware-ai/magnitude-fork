@@ -1,5 +1,5 @@
 {
-  "name": "create-magnitude-app",
+  "name": "@isaacdyor/create-magnitude-app",
   "version": "0.0.7",
   "description": "Create Magnitude apps quickly",
   "type": "module",

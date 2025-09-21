@@ -1,5 +1,5 @@
 {
-  "name": "magnitude-mcp",
+  "name": "@isaacdyor/magnitude-mcp",
   "version": "0.0.4",
   "description": "MCP server for Magnitude testing",
   "main": "build/index.js",

@@ -1,5 +1,5 @@
 {
-  "name": "magnitude-extract",
+  "name": "@isaacdyor/magnitude-extract",
   "version": "0.0.2",
   "description": "TypeScript DOM cleaning and structuring library",
   "type": "module",

@@ -1,4 +1,4 @@
-import { BrowserAgent, AgentOptions, BrowserConnectorOptions, buildDefaultBrowserAgentOptions, AgentError, AgentEvents } from "magnitude-core";
+import { BrowserAgent, AgentOptions, BrowserConnectorOptions, buildDefaultBrowserAgentOptions, AgentError, AgentEvents } from "@isaacdyor/magnitude-core";
 import z from "zod/v3";
 import EventEmitter from "eventemitter3";
 
