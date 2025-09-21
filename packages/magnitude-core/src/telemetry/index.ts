@@ -81,7 +81,7 @@ export async function sendTelemetry(eventName: string, properties: Record<string
 
     try {
         const props = {
-            source: "magnitude-core",
+            source: "@isaacdyor/magnitude-core",
             packageVersion: VERSION,
             //telemetryVersion: "0.1",
             codebase: codebaseId,
