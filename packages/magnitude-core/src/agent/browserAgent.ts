@@ -7,7 +7,7 @@ import z, { ZodSchema } from "zod/v3";
 
 type Schema = z.ZodSchema;
 import { renderMinimalAccessibilityTree } from "@/web/util";
-import { narrateAgent, narrateBrowserAgent } from "./narrator";
+import { narrateAgent, narrateBrowserAgent, LogCallback } from "./narrator";
 import { PartitionOptions, partitionHtml, MarkdownSerializerOptions, serializeToMarkdown } from 'magnitude-extract';
 import EventEmitter from "eventemitter3";
 import { retry } from "@/common/retry";
@@ -21,7 +21,7 @@ const DEFAULT_BROWSER_AGENT_TEMP = 0.2;
 
 // Helper function to start a web agent
 export async function startBrowserAgent(
-    options?: AgentOptions & BrowserConnectorOptions & { narrate?: boolean }//StartAgentWithWebOptions = {}
+    options?: AgentOptions & BrowserConnectorOptions & { onLog?: LogCallback }//StartAgentWithWebOptions = {}
 ): Promise<BrowserAgent> {
     //console.log("sba options:", options);
     const { agentOptions, browserOptions } = buildDefaultBrowserAgentOptions({ agentOptions: options ?? {}, browserOptions: options ?? {} });
@@ -31,9 +31,8 @@ export async function startBrowserAgent(
         browserOptions: browserOptions,
     });
 
-    if (options?.narrate || process.env.MAGNITUDE_NARRATE) {
-        narrateBrowserAgent(agent);
-        //agent.events.on('actionStarted', (action: any) => { console.log(action) })
+    if (options?.onLog) {
+        narrateBrowserAgent(agent, options.onLog);
     }
 
     //console.log('starting agent')

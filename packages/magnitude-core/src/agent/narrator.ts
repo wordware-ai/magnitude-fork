@@ -1,10 +1,31 @@
 import { Action } from '@/actions/types';
 import { ActOptions, Agent } from '@/agent';
-import { blueBright, bold, cyanBright, gray } from 'ansis';
 import { BrowserAgent } from './browserAgent';
 import { z } from 'zod/v3';
 
-export function narrateAgent(agent: Agent) {
+export type LogEntry = 
+    | { type: 'start'; message: string; timestamp: Date }
+    | { type: 'stop'; message: string; timestamp: Date; data: {
+        totalInputTokens: number;
+        totalOutputTokens: number;
+        totalCachedWriteInputTokens: number;
+        totalCachedReadInputTokens: number;
+        totalInputTokenCost: number;
+        totalOutputTokenCost: number;
+        numUniqueModels: number;
+        modelDescription: string;
+    }}
+    | { type: 'thought'; message: string; timestamp: Date }
+    | { type: 'act'; message: string; timestamp: Date; data: { task: string; options: ActOptions }}
+    | { type: 'action'; message: string; timestamp: Date; data: { action: Action; actionDefinition: string }}
+    | { type: 'nav'; message: string; timestamp: Date; data: { url: string }}
+    | { type: 'extractStarted'; message: string; timestamp: Date; data: { instructions: string; schema: z.ZodSchema }}
+    | { type: 'extractDone'; message: string; timestamp: Date; data: { instructions: string; result: any }};
+
+export type LogCallback = (logEntry: LogEntry) => void;
+
+
+export function narrateAgent(agent: Agent, onLog: LogCallback) {
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
     let totalCachedWriteInputTokens = 0;
@@ -22,56 +43,52 @@ export function narrateAgent(agent: Agent) {
     });
 
     agent.events.on('start', () => {
-        console.log(bold(blueBright(`▶ [start] agent started with ${agent.models.describe()}`)));
+        const message = `agent started with ${agent.models.describe()}`;
+        onLog({ type: 'start', message, timestamp: new Date() });
     });
 
     agent.events.on('stop', () => {
-        console.log(bold(blueBright(`■ [stop] agent stopped`)));
-
-        console.log(`  Total usage: ` + bold`${totalInputTokens + totalCachedWriteInputTokens + totalCachedReadInputTokens}` + ` input tokens` + (totalCachedWriteInputTokens > 0 || totalCachedReadInputTokens > 0 ? ` (${totalCachedWriteInputTokens} cache write, ${totalCachedReadInputTokens} cache read)` : '') + ` / ` + bold`${totalOutputTokens}` + ` output tokens`);
-        if (totalInputTokenCost > 0 || totalOutputTokenCost > 0) {
-            if (agent.models.numUniqueModels === 1 && agent.models.describe().startsWith('claude-code')) {
-                console.log(`  Cost: ` + cyanBright`None - using Claude Pro or Max subscription`)
-            } else {
-                console.log(`  Cost: $${(totalInputTokenCost + totalOutputTokenCost).toFixed(3)}`);
-            }
-        }
-        // Show token usage and cost if available
-        // if (totalInputTokenCost > 0 || totalOutputTokenCost > 0) {
-        //     console.log(`  Total usage: ` + bold`${totalInputTokens}` + ` input tokens (` + `$${totalInputTokenCost.toFixed(3)}` + `)` + ` / ` + bold`${totalOutputTokens}` + ` output tokens (` + `$${totalOutputTokenCost.toFixed(3)}` + `)`);
-        // } else {
-        //     console.log(`  Total usage: ` + bold`${totalInputTokens}` + ` input tokens` + ` / ` + bold`${totalOutputTokens}` + ` output tokens`);
-        // }
+        const message = 'agent stopped';
+        const tokenData = {
+            totalInputTokens: totalInputTokens + totalCachedWriteInputTokens + totalCachedReadInputTokens,
+            totalOutputTokens,
+            totalCachedWriteInputTokens,
+            totalCachedReadInputTokens,
+            totalInputTokenCost,
+            totalOutputTokenCost,
+            numUniqueModels: agent.models.numUniqueModels,
+            modelDescription: agent.models.describe()
+        };
+        onLog({ type: 'stop', message, data: tokenData, timestamp: new Date() });
     });
 
     agent.events.on('thought', (thought: string) => {
-        console.log(gray`${thought}`);
-        //console.log(gray`⚙︎ ${thought}`);
+        onLog({ type: 'thought', message: thought, timestamp: new Date() });
     });
 
     agent.events.on('actStarted', (task: string, options: ActOptions) => {
-        console.log(bold(cyanBright(`◆ [act] ${task}`)));
+        onLog({ type: 'act', message: `act started: ${task}`, data: { task, options }, timestamp: new Date() });
     });
 
     agent.events.on('actionStarted', (action: Action) => {
         const actionDefinition = agent.identifyAction(action);
-        console.log(bold`  ${actionDefinition.render(action)}`);
+        const message = actionDefinition.render(action);
+        onLog({ type: 'action', message: `action started: ${message}`, data: { action, actionDefinition: actionDefinition.name }, timestamp: new Date() });
     });
 }
 
-export function narrateBrowserAgent(agent: BrowserAgent) {
-    narrateAgent(agent);
+export function narrateBrowserAgent(agent: BrowserAgent, onLog: LogCallback) {
+    narrateAgent(agent, onLog);
 
     agent.browserAgentEvents.on('nav', (url: string) => {
-        console.log(bold(cyanBright`⛓︎ [nav] ${url}`));
+        onLog({ type: 'nav', message: `navigating to ${url}`, data: { url }, timestamp: new Date() });
     });
 
     agent.browserAgentEvents.on('extractStarted', (instructions: string, schema: z.ZodSchema) => {
-        console.log(bold(cyanBright`⛏ [extract] ${instructions}`));
+        onLog({ type: 'extractStarted', message: `extract started: ${instructions}`, data: { instructions, schema }, timestamp: new Date() });
     });
+
     agent.browserAgentEvents.on('extractDone', (instructions, data) => {
-        // console.log has a decent default formatter for arbitrary data e.g. objects
-        console.log(data);
-        //console.log(blueBright`${JSON.stringify(data, null, 2)}`);
+        onLog({ type: 'extractDone', message: `extract completed: ${instructions}`, data: { instructions, result: data }, timestamp: new Date() });
     });
 }

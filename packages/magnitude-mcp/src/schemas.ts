@@ -1,5 +1,5 @@
 import { z } from 'zod/v3';
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import { zodToJsonSchema } from '@finom/zod-to-json-schema';
 
 /**
  * Schema for initialize_project tool

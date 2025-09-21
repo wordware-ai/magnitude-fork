@@ -38,13 +38,14 @@
     },
     "packages/magnitude-core": {
       "name": "@isaacdyor/magnitude-core",
-      "version": "0.2.31",
+      "version": "0.2.37",
       "bin": {
         "magnus": "dist/cli.js",
       },
       "dependencies": {
         "@boundaryml/baml": "^0.202.0",
-        "@isaacdyor/magnitude-extract": "workspace:*",
+        "@finom/zod-to-json-schema": "^3.24.11",
+        "@isaacdyor/magnitude-extract": "^0.0.2",
         "@paralleldrive/cuid2": "^2.2.2",
         "@types/object-hash": "^3.0.6",
         "ansis": "^4.1.0",
@@ -58,7 +59,6 @@
         "posthog-node": "^5.1.1",
         "sharp": "^0.33.5",
         "zod": "^4.0.0",
-        "zod-to-json-schema": "^3.24.5",
       },
       "devDependencies": {
         "@types/node": "^22.13.4",
@@ -95,9 +95,9 @@
         "magnitude-mcp": "./build/index.js",
       },
       "dependencies": {
+        "@finom/zod-to-json-schema": "^3.24.11",
         "@modelcontextprotocol/sdk": "^1.9.0",
         "zod": "^4.0.0",
-        "zod-to-json-schema": "^3.24.5",
       },
       "devDependencies": {
         "@types/node": "^20.17.30",
@@ -260,6 +260,8 @@
     "@eslint/eslintrc": ["@eslint/eslintrc@2.1.4", "", { "dependencies": { "ajv": "^6.12.4", "debug": "^4.3.2", "espree": "^9.6.0", "globals": "^13.19.0", "ignore": "^5.2.0", "import-fresh": "^3.2.1", "js-yaml": "^4.1.0", "minimatch": "^3.1.2", "strip-json-comments": "^3.1.1" } }, "sha512-269Z39MS6wVJtsoUl10L60WdkhJVdPG24Q4eZTH3nnF6lpvSShEK3wQjDX9JRWAUPvPh7COouPpU9IrqaZFvtQ=="],
 
     "@eslint/js": ["@eslint/js@8.57.1", "", {}, "sha512-d9zaMRSTIKDLhctzH12MtXvJKSSUhaHcjV+2Z+GK+EEY7XKpP5yR4x+N3TAcHTcu963nIr+TMcCb4DBCYX1z6Q=="],
+
+    "@finom/zod-to-json-schema": ["@finom/zod-to-json-schema@3.24.11", "", { "peerDependencies": { "zod": "^4.0.14" } }, "sha512-fL656yBPiWebtfGItvtXLWrFNGlF1NcDFS0WdMQXMs9LluVg0CfT5E2oXYp0pidl0vVG53XkW55ysijNkU5/hA=="],
 
     "@humanwhocodes/config-array": ["@humanwhocodes/config-array@0.13.0", "", { "dependencies": { "@humanwhocodes/object-schema": "^2.0.3", "debug": "^4.3.1", "minimatch": "^3.0.5" } }, "sha512-DZLEEqFWQFiyK6h5YIeynKx7JlvCYWL0cImfSRXZ9l4Sg2efkFGTuFf6vzXjK1cq6IYkU+Eg/JizXw+TD2vRNw=="],
 
