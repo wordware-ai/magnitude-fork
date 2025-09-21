@@ -1,5 +1,5 @@
 import { ActionDefinition, ActionPayload, createAction } from ".";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { BrowserConnector } from "@/connectors/browserConnector"; // Changed from WebInteractionFacet
 import { AgentError } from "@/agent/errors"; // For error handling
 import { Agent } from "@/agent"; // Import Agent type for agent parameter

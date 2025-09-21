@@ -5,7 +5,7 @@ import {
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { z } from 'zod';
+import { z } from 'zod/v3';
 import { logger } from './utils/logger.js';
 
 // Import from tools file

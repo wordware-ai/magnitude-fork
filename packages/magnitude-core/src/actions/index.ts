@@ -1,6 +1,8 @@
 import { Agent } from "@/agent"
 import { RenderableContent } from "@/memory/observation";
-import { z, Schema, ZodTypeAny } from "zod"
+import { z, ZodTypeAny } from "zod/v3"
+
+type Schema<T = any> = z.ZodSchema<T>;
 
 export interface ActionDefinition<T> {
     name: string;

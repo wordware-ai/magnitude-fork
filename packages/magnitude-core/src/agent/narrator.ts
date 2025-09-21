@@ -2,7 +2,7 @@ import { Action } from '@/actions/types';
 import { ActOptions, Agent } from '@/agent';
 import { blueBright, bold, cyanBright, gray } from 'ansis';
 import { BrowserAgent } from './browserAgent';
-import { z } from 'zod';
+import { z } from 'zod/v3';
 
 export function narrateAgent(agent: Agent) {
     let totalInputTokens = 0;

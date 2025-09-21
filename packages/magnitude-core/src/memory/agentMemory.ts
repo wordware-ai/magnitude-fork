@@ -2,7 +2,7 @@ import {
     MultiMediaMessage
 } from '@/ai/baml_client';
 import { Observation, ObservationRetentionOptions, ObservationRole, ObservationSource } from './observation';
-import z from 'zod';
+import z from 'zod/v3';
 import EventEmitter from 'eventemitter3';
 import { jsonToObservableData, MultiMediaJson, observableDataToJson } from './serde';
 import { applyMask, maskObservations } from './masking';

@@ -66,7 +66,7 @@
     "playwright": "npm:patchright@^1.52.0",
     "posthog-node": "^5.1.1",
     "sharp": "^0.33.5",
-    "zod": "^3.24.4",
+    "zod": "^4.0.0",
     "zod-to-json-schema": "^3.24.5"
   }
 }

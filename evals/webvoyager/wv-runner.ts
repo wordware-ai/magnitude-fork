@@ -4,7 +4,7 @@ import { startBrowserAgent } from "../../packages/magnitude-core/src/agent/brows
 import * as fs from "fs";
 import * as path from "path";
 import { createAction } from "../../packages/magnitude-core/src/actions";
-import z from "zod";
+import z from "zod/v3";
 import { chromium } from "patchright";
 
 interface Task {

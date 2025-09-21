@@ -4,7 +4,7 @@ import * as fs from "fs";
 import * as readline from "readline";
 import * as path from "path";
 import { createAction } from "../../packages/magnitude-core/src/actions";
-import z from "zod";
+import z from "zod/v3";
 import { Command } from "commander";
 import * as p from "@clack/prompts";
 import { Agent } from "../../packages/magnitude-core/src/agent";

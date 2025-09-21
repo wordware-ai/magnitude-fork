@@ -1,5 +1,5 @@
 import { BrowserAgent, AgentOptions, BrowserConnectorOptions, buildDefaultBrowserAgentOptions, AgentError, AgentEvents } from "magnitude-core";
-import z from "zod";
+import z from "zod/v3";
 import EventEmitter from "eventemitter3";
 
 export async function startTestCaseAgent(
@@ -54,10 +54,11 @@ export class TestCaseAgent extends BrowserAgent {
 
         this.checkEvents.emit('checkStarted', description);
     
-        const response = await this.query(instructions, z.object({
+        const checkSchema = z.object({
             reasoning: z.string(),
             passed: z.boolean()
-        }));
+        });
+        const response = await this.query(instructions, checkSchema as any);
         
         this.memory.recordThought(response.reasoning);
 

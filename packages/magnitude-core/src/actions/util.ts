@@ -2,7 +2,9 @@ import { ActionDefinition } from ".";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import TypeBuilder from "@/ai/baml_client/type_builder";
 import { FieldType, ClassBuilder, ClassPropertyBuilder, EnumBuilder, EnumValueBuilder } from "@boundaryml/baml/native";
-import { Schema, z, ZodObject, ZodSchema } from "zod";
+import { z, ZodObject, ZodSchema } from "zod/v3";
+
+type Schema = z.ZodSchema;
 
 export interface JsonSchema {
     type?: string;
@@ -326,7 +328,7 @@ function convertJsonSchemaToBaml(tb: TypeBuilder, jsonSchema: JsonSchema): Field
     return parser.parse(jsonSchema);
 }
 
-export function convertZodToBaml(tb: TypeBuilder, schema: Schema) {
+export function convertZodToBaml(tb: TypeBuilder, schema: any) {
     const jsonSchema = zodToJsonSchema(schema) as JsonSchema;
     return convertJsonSchemaToBaml(tb, jsonSchema);
 }

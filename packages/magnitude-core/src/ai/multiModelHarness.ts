@@ -6,7 +6,7 @@ import { AgentContext } from "./baml_client";
 import { Action } from "@/actions/types";
 import { Image } from '@/memory/image';
 import EventEmitter from "eventemitter3";
-import z from "zod";
+import z from "zod/v3";
 
 
 export class MultiModelHarness {

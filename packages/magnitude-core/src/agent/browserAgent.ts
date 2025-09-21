@@ -3,8 +3,9 @@ import { Agent, AgentOptions } from ".";
 import { BrowserConnector, BrowserConnectorOptions } from "@/connectors/browserConnector";
 import { buildDefaultBrowserAgentOptions } from "@/ai/util";
 import { LLMClient } from "@/ai/types";
-import { Schema, ZodSchema } from "zod";
-import z from "zod";
+import z, { ZodSchema } from "zod/v3";
+
+type Schema = z.ZodSchema;
 import { renderMinimalAccessibilityTree } from "@/web/util";
 import { narrateAgent, narrateBrowserAgent } from "./narrator";
 import { PartitionOptions, partitionHtml, MarkdownSerializerOptions, serializeToMarkdown } from 'magnitude-extract';

@@ -12,7 +12,9 @@ import { LLMClient, ModelUsage } from "@/ai/types";
 import { TabState } from "@/web/tabs";
 import { ActionDefinition } from "@/actions";
 import TypeBuilder from "./baml_client/type_builder";
-import { Schema, z } from 'zod';
+import { z } from 'zod/v3';
+
+type Schema = z.ZodSchema;
 import { convertActionDefinitionsToBaml, convertZodToBaml } from "@/actions/util";
 import { Image } from '@/memory/image';
 import EventEmitter from "eventemitter3";

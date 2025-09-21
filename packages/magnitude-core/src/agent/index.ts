@@ -1,6 +1,6 @@
 import logger from '@/logger';
 import EventEmitter from "eventemitter3";
-import z from "zod";
+import z from "zod/v3";
 
 import { Action } from "@/actions/types";
 import { ModelHarness } from "@/ai/modelHarness";
