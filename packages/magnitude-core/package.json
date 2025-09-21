@@ -1,6 +1,6 @@
 {
   "name": "@isaacdyor/magnitude-core",
-  "version": "0.2.33",
+  "version": "0.2.36",
   "description": "Magnitude e2e testing agent",
   "publishConfig": {
     "access": "public"
@@ -58,7 +58,7 @@
     "ansis": "^4.1.0",
     "commander": "^13.1.0",
     "eventemitter3": "^5.0.1",
-    "@isaacdyor/magnitude-extract": "workspace:*",
+    "@isaacdyor/magnitude-extract": "^0.0.2",
     "moondream": "^0.1.0",
     "object-hash": "^3.0.0",
     "pino": "^9.6.0",
