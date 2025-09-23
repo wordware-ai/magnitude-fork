@@ -4,6 +4,7 @@ import { setLogLevel } from '@/ai/baml_client/config';
 export { Agent } from "@/agent";
 export { createAction } from '@/actions';
 export { BrowserAgent, startBrowserAgent } from '@/agent/browserAgent';
+export type { LogEntry as AgentLogEntry, LogCallback as AgentLogCallback } from '@/agent/narrator';
 //export { Magnus } from "@/agent/magnus";
 //export type { AgentOptions as TestCaseAgentOptions } from "@/agent";
 export * from "@/agent";
