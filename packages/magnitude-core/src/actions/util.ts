@@ -2,9 +2,7 @@ import { ActionDefinition } from ".";
 import { zodToJsonSchema } from "@finom/zod-to-json-schema";
 import TypeBuilder from "@/ai/baml_client/type_builder";
 import { FieldType, ClassBuilder, ClassPropertyBuilder, EnumBuilder, EnumValueBuilder } from "@boundaryml/baml/native";
-import { z, ZodObject, ZodSchema } from "zod/v3";
-
-type Schema = z.ZodSchema;
+import { Schema, z, ZodObject, ZodSchema } from "zod/v3";
 
 export interface JsonSchema {
     type?: string;
