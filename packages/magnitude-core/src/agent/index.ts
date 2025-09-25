@@ -26,6 +26,7 @@ export interface AgentOptions {
     actions?: ActionDefinition<any>[]; // any additional actions not provided by connectors
     prompt?: string | null; // additional agent-level system prompt instructions
     telemetry?: boolean;
+    signal?: AbortSignal; // abort signal for cancelling agent execution
     //executor?: GroundingClient;
 }
 
@@ -38,7 +39,7 @@ export interface ActOptions {
 
 // Options for the startAgent helper function
 
-const DEFAULT_CONFIG: Required<Omit<AgentOptions, 'actions'> & { actions: ActionDefinition<any>[] }> = {
+const DEFAULT_CONFIG: Required<Omit<AgentOptions, 'actions' | 'signal'> & { actions: ActionDefinition<any>[] }> = {
     actions: [...taskActions], // Default to taskActions; other actions come from connectors
     connectors: [],
     llm: {
@@ -54,7 +55,7 @@ const DEFAULT_CONFIG: Required<Omit<AgentOptions, 'actions'> & { actions: Action
 
 export class Agent {
     // maybe remove conns/actions from options since stored sep
-    private options: Required<AgentOptions>//Omit<Required<AgentOptions>, 'actions'>;
+    private options: Required<Omit<AgentOptions, 'signal'>> & Pick<AgentOptions, 'signal'>;
     private connectors: AgentConnector[];
     private actions: ActionDefinition<any>[]; // actions from connectors + any other additional ones configured
 
@@ -68,7 +69,7 @@ export class Agent {
 
     //protected readonly _emitter: EventEmitter<AgentEvents>;
     public readonly events: EventEmitter<AgentEvents> = new EventEmitter();
-    
+
     //public readonly memory: AgentMemory;
     private doneActing: boolean;
 
@@ -79,8 +80,9 @@ export class Agent {
             ...DEFAULT_CONFIG,
             ...baseConfig,
             connectors: baseConfig.connectors ?? [],
-            actions: [...(baseConfig.actions || DEFAULT_CONFIG.actions)], 
-        } as Required<AgentOptions>;
+            actions: [...(baseConfig.actions || DEFAULT_CONFIG.actions)],
+            signal: baseConfig.signal,
+        };
 
         this.connectors = this.options.connectors;
 
@@ -331,6 +333,12 @@ export class Agent {
         logger.info("Initial observations recorded");
 
         while (true) {
+            // Check for abort signal at the start of each loop iteration
+            if (this.options.signal?.aborted) {
+                logger.info("Agent execution aborted via signal");
+                break;
+            }
+
             // Removed direct screenshot/tabState access here; it's part of memoryContext via connectors
             logger.info(`Creating partial recipe`);
 
@@ -387,6 +395,12 @@ export class Agent {
 
             // Execute partial recipe
             for (const action of actions) {
+                // Check for abort signal before each action
+                if (this.options.signal?.aborted) {
+                    logger.info("Agent execution aborted via signal during actions");
+                    break;
+                }
+
                 await this.exec(action, memory);
 
                 // const postActionScreenshot = await this.screenshot();
@@ -399,7 +413,7 @@ export class Agent {
             // if (finished) {
             //     break;
             // }
-            if (this.doneActing) {
+            if (this.doneActing || this.options.signal?.aborted) {
                 break;
             }
         }

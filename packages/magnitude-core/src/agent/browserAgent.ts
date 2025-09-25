@@ -20,7 +20,7 @@ const DEFAULT_BROWSER_AGENT_TEMP = 0.2;
 
 // Helper function to start a web agent
 export async function startBrowserAgent(
-    options?: AgentOptions & BrowserConnectorOptions & { onLog?: LogCallback }//StartAgentWithWebOptions = {}
+    options?: AgentOptions & BrowserConnectorOptions & { onLog?: LogCallback; signal?: AbortSignal }//StartAgentWithWebOptions = {}
 ): Promise<BrowserAgent> {
     //console.log("sba options:", options);
     const { agentOptions, browserOptions } = buildDefaultBrowserAgentOptions({ agentOptions: options ?? {}, browserOptions: options ?? {} });
@@ -28,6 +28,7 @@ export async function startBrowserAgent(
     const agent = new BrowserAgent({
         agentOptions: agentOptions,
         browserOptions: browserOptions,
+        signal: options?.signal,
     });
 
     if (options?.onLog) {
@@ -94,11 +95,12 @@ async function getFullPageContent(page: Page): Promise<string> {
 export class BrowserAgent extends Agent {
     public readonly browserAgentEvents: EventEmitter<BrowserAgentEvents> = new EventEmitter();
 
-    constructor({ agentOptions, browserOptions }: { agentOptions?: Partial<AgentOptions>, browserOptions?: BrowserConnectorOptions }) {
+    constructor({ agentOptions, browserOptions, signal }: { agentOptions?: Partial<AgentOptions>, browserOptions?: BrowserConnectorOptions, signal?: AbortSignal }) {
         //console.log("agent options:", agent);
         //console.log("browser options:", browserOptions);
         super({
             ...agentOptions,
+            signal,
             connectors: [new BrowserConnector(browserOptions || {}), ...(agentOptions?.connectors ?? [])]
         });
     }
