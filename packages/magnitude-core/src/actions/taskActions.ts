@@ -1,6 +1,6 @@
 import { AgentError } from "@/agent/errors";
 import { ActionDefinition, ActionPayload, createAction } from ".";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 export const doneAction = createAction({
     name: 'task:done',

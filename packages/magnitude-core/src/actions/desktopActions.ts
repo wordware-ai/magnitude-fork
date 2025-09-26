@@ -1,5 +1,5 @@
 import { createAction } from ".";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { DesktopConnector } from "@/connectors/desktopConnector";
 
 // Mouse actions

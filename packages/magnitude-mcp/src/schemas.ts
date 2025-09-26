@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import { z } from 'zod/v3';
+import { zodToJsonSchema } from '@finom/zod-to-json-schema';
 
 /**
  * Schema for initialize_project tool
@@ -28,7 +28,7 @@ export const buildTestsSchema = z.object({}).strict();
  * @param description Tool description
  * @returns Tool definition compatible with MCP
  */
-export function createToolDefinition(schema: z.ZodType, name: string, description: string) {
+export function createToolDefinition(schema: any, name: string, description: string) {
   // Convert Zod schema to JSON Schema
   const inputSchema = zodToJsonSchema(schema, {
     $refStrategy: 'none',

@@ -1,5 +1,5 @@
 {
-  "name": "magnitude-test",
+  "name": "@isaacdyor/magnitude-test",
   "version": "0.3.10",
   "description": "A TypeScript client for running automated UI tests through the Magnitude testing platform",
   "publishConfig": {
@@ -75,12 +75,12 @@
     "glob": "^11.0.1",
     "jiti": "^2.4.2",
     "log-update": "^6.1.0",
-    "magnitude-core": "0.2.31",
+    "@isaacdyor/magnitude-core": "^0.2.34",
     "pino": "^9.6.0",
     "pino-pretty": "^13.0.0",
     "playwright": "^1.51.0",
     "posthog-node": "^4.18.0",
     "std-env": "^3.9.0",
-    "zod": "^3.24.2"
+    "zod": "4.1.5"
   }
 }

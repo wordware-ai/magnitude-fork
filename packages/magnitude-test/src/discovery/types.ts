@@ -1,6 +1,6 @@
 import { BrowserContext, BrowserContextOptions, LaunchOptions, Page } from "playwright";
 //import type { PlannerClient, ExecutorClient, TestCaseAgent, Magnus } from 'magnitude-core';
-import { BrowserOptions, GroundingClient, LLMClient } from "magnitude-core";
+import { BrowserOptions, GroundingClient, LLMClient } from "@isaacdyor/magnitude-core";
 import { TestCaseAgent } from "@/agent";
 
 export interface TestOptions {
