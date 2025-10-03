@@ -40,7 +40,7 @@ export interface ActOptions {
 // Options for the startAgent helper function
 
 const DEFAULT_CONFIG: Required<Omit<AgentOptions, 'actions' | 'signal'> & { actions: ActionDefinition<any>[] }> = {
-    actions: [...taskActions], // Default to taskActions; other actions come from connectors
+    actions: [], // Default to taskActions; other actions come from connectors
     connectors: [],
     llm: {
         provider: 'google-ai',
@@ -80,7 +80,7 @@ export class Agent {
             ...DEFAULT_CONFIG,
             ...baseConfig,
             connectors: baseConfig.connectors ?? [],
-            actions: [...(baseConfig.actions || DEFAULT_CONFIG.actions)],
+            actions: [...(baseConfig.actions || []), ...taskActions],
             signal: baseConfig.signal,
         };
 
